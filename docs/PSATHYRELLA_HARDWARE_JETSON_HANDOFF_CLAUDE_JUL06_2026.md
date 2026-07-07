@@ -27,20 +27,22 @@
 | MAS Psathyrella API | `192.168.0.188` | **8001** | `POST /api/psathyrella/psathyrella-1/command` → forwards `nav.*` to **8788** |
 | OpenClaw gateway | Jetson | 18789 | Not propulsion |
 
-**PWM channel map (NOT changed Jul 06):**
+**PWM channel map (Jul 06+ canonical — updated Jul 07):**
 
 | Logical | PCA channel | Hardware |
 |--------|-------------|----------|
-| Thruster 0–3 | **CH0–CH3** | DD WP ESCs |
+| Thruster 0–3 | **CH8–CH11** | DD WP ESCs |
 | Azimuth 0–3 | **CH4–CH7** | FEETECH FS90MR continuous servos |
 
-Env defaults on Jetson agent: `ESC_CH=0,1,2,3` · `SERVO_CH=4,5,6,7` · `PWM_FREQ=50` · `SERVO_MODE=continuous` · `PSATHYRELLA_BENCH_SINGLE_MOTOR=1` (only thruster id 0).
+Env defaults on Jetson agent: `ESC_CH=8,9,10,11` · `SERVO_CH=4,5,6,7` · `PWM_FREQ=50` · `SERVO_MODE=continuous` · `PSATHYRELLA_BENCH_SINGLE_MOTOR=0` (all four pods).
+
+**Jul 07 repo status:** Tracked `jetson_agent.py` includes `nav.az_zero`, `nav.esc_calibrate`, PCA re-probe, per-ESC neutral trim, INA226/leak hooks. MAS `7536f553e+` on 188. P1 completion: `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md`.
 
 ---
 
-## What Cursor changed Jul 06 (Jetson only — may affect GCS perception)
+## What Cursor changed Jul 06 (Jetson only — superseded by git Jul 07)
 
-### Changed
+### Changed (historical)
 
 1. **Live file only** (not committed to GitHub):  
    `/home/jetson/.openclaw/workspace/tools/psathyrella-agent/jetson_agent.py`  
@@ -173,7 +175,7 @@ systemctl --user status psathyrella-agent
 | TXS in circuit | **Out** for breakthrough; Morgan reinstalling for 5 V logic |
 | MAS / GCS API | **Unchanged** |
 | PWM channel map CH0–7 | **Unchanged** |
-| Repo git | **No commit** of Jetson patch yet |
+| Repo git | **Committed** Jul 07 (`7536f553e` lag/az_zero, P1 follow-up) |
 
 **Morgan quote (context):** “Servos just started moving” = real PWM after mock ended, not random GPIO.
 

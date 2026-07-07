@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
-import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -12,11 +12,14 @@ import httpx
 
 from mycosoft_mas.devices.psathyrella.comms_bridge import get_psathyrella_comms_bridge
 from mycosoft_mas.devices.psathyrella.constants import (
+    PSATHYRELLA_PROPULSION_AGENT_URL,
     PROJECT_OYSTER_ANCHOR,
     PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID,
     PSATHYRELLA_BENCH_SINGLE_MOTOR,
     PSATHYRELLA_DEVICE_ID,
+    PSATHYRELLA_MUSHROOM1_AGENT_URL,
     PSATHYRELLA_REGISTRY_ID,
+    resolve_public_device_id,
     resolve_mdp_device_id,
     resolve_registry_device_id,
 )
@@ -127,6 +130,26 @@ def _vision_url(device_id: str, source: str) -> Optional[str]:
     env_key = f"PSATHYRELLA_{source.upper()}_STREAM_URL"
     configured = (os.getenv(env_key) or "").strip()
     return configured or None
+
+
+def _telemetry_hub_url(device: Dict[str, Any], extra: Dict[str, Any], base_url: str) -> Optional[str]:
+    configured = extra.get("telemetry_hub_url") or extra.get("mycobrain_telemetry_hub_url")
+    if isinstance(configured, str) and configured.strip():
+        return configured.strip().rstrip("/")
+
+    if base_url.startswith("http://") or base_url.startswith("https://"):
+        scheme, remainder = base_url.split("://", 1)
+        hostname = remainder.split(":", 1)[0].rstrip("/")
+        return f"{scheme}://{hostname}:8790"
+
+    host = str(device.get("host") or "").strip()
+    if host.startswith("http://") or host.startswith("https://"):
+        scheme, remainder = host.split("://", 1)
+        hostname = remainder.split(":", 1)[0].rstrip("/")
+        return f"{scheme}://{hostname}:8790"
+    if host:
+        return f"http://{host}:8790"
+    return None
 
 
 def _parse_bme_from_status_text(text: str) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], bool]:
@@ -613,6 +636,48 @@ async def _fetch_mycobrain_bundle(
                     if sensors_ok or bme_a or bme_b or merged_payload:
                         return bme_a, bme_b, ts, sensors_ok, merged_payload
 
+            for status_path in ("/api/status", "/status"):
+                status_res = await client.get(f"{base}{status_path}", headers=headers)
+                if status_res.status_code != 200:
+                    continue
+                status_payload = status_res.json()
+                if not isinstance(status_payload, dict):
+                    continue
+
+                last_sensor = (
+                    status_payload.get("lastSensorReading")
+                    if isinstance(status_payload.get("lastSensorReading"), dict)
+                    else {}
+                )
+                if last_sensor:
+                    merged_payload = _deep_merge(merged_payload, last_sensor)
+
+                raw_lines = "\n".join(
+                    entry.get("line", "")
+                    for entry in status_payload.get("lastLines") or []
+                    if isinstance(entry, dict) and isinstance(entry.get("line"), str)
+                )
+                if raw_lines:
+                    merged_payload = _collect_merged_payload(raw_lines, merged_payload)
+
+                bme_a, bme_b, sensors_ok = _parse_bme_from_status_text(raw_lines)
+                if not bme_a and not bme_b:
+                    bme_a, bme_b = _bme_from_last_sensor_reading(last_sensor)
+                    sensors_ok = bool(
+                        (bme_a and bme_a.get("present"))
+                        or (bme_b and bme_b.get("present"))
+                        or bme_a
+                        or bme_b
+                    )
+
+                ts = (
+                    last_sensor.get("ts")
+                    or status_payload.get("lastHeartbeat")
+                    or datetime.now(timezone.utc).isoformat()
+                )
+                if sensors_ok or bme_a or bme_b or merged_payload:
+                    return bme_a, bme_b, ts, sensors_ok, merged_payload
+
             response = await client.post(
                 f"{base}/devices/{mdp_device_id}/command",
                 json={"command": "status"},
@@ -649,6 +714,66 @@ async def _fetch_mycobrain_bundle(
         return None, None, None, False, merged_payload
 
 
+async def _fetch_telemetry_hub_status(hub_url: Optional[str]) -> Dict[str, Any]:
+    if not hub_url:
+        return {}
+    try:
+        async with httpx.AsyncClient(timeout=2.0) as client:
+            response = await client.get(f"{hub_url.rstrip('/')}/status")
+        if response.status_code != 200:
+            return {}
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
+def _merge_hub_status_payload(merged_payload: Dict[str, Any], hub_status: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(hub_status, dict):
+        return merged_payload
+
+    merged = dict(merged_payload)
+    if isinstance(hub_status.get("propulsion"), dict):
+        merged = _deep_merge(merged, {"propulsion": hub_status["propulsion"]})
+    if isinstance(hub_status.get("telemetry"), dict):
+        telemetry_block = hub_status["telemetry"]
+        if isinstance(telemetry_block.get("propulsion"), dict):
+            merged = _deep_merge(merged, {"propulsion": telemetry_block["propulsion"]})
+        if isinstance(telemetry_block.get("safety"), dict):
+            merged = _deep_merge(merged, {"safety": telemetry_block["safety"]})
+    if isinstance(hub_status.get("safety"), dict):
+        merged = _deep_merge(merged, {"safety": hub_status["safety"]})
+    return merged
+
+
+def _bme_from_last_sensor_reading(reading: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    if not isinstance(reading, dict):
+        return None, None
+
+    mapped = _map_bme(
+        {
+            "temperature_c": reading.get("temperature_c_comp") or reading.get("ambient_temperature_c"),
+            "humidity_pct": reading.get("humidity_pct_comp") or reading.get("ambient_humidity_pct"),
+            "pressure_hpa": reading.get("pressure_hpa"),
+            "gas_resistance_ohm": reading.get("gas_resistance_ohm_comp") or reading.get("gas_resistance_ohm"),
+            "iaq": reading.get("iaq"),
+            "iaq_accuracy": reading.get("iaq_accuracy"),
+            "co2_equivalent": reading.get("eco2_ppm"),
+            "voc_equivalent": reading.get("bvoc_ppm"),
+            "present": reading.get("present", True),
+            "address": reading.get("address") or "0x77",
+        },
+        default_label="BME688 A - I2C-1 AMB",
+        default_address=str(reading.get("address") or "0x77"),
+    )
+    if not mapped:
+        return None, None
+    if str(reading.get("address") or "0x77").lower() == "0x76":
+        mapped["label"] = "BME688 B - I2C-2 ENV"
+        return None, mapped
+    return mapped, None
+
+
 async def _fetch_bme_from_mycobrain(
     base_url: str,
     mdp_device_id: str,
@@ -679,6 +804,47 @@ def _extract_power_from_registry(raw_telemetry: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def _extract_safety(payload: Dict[str, Any]) -> Dict[str, Any]:
+    safety = payload.get("safety") if isinstance(payload.get("safety"), dict) else {}
+    propulsion = payload.get("propulsion") if isinstance(payload.get("propulsion"), dict) else {}
+    thrusters = propulsion.get("thrusters") if isinstance(propulsion.get("thrusters"), list) else []
+
+    current_values = [
+        value
+        for entry in thrusters
+        if isinstance(entry, dict)
+        for value in [_num(entry.get("current_a") or entry.get("currentA"))]
+        if value is not None
+    ]
+    max_current = max(current_values) if current_values else None
+
+    return {
+        "deadmanSecondsRemaining": _num(
+            safety.get("deadmanSecondsRemaining") or safety.get("deadman_seconds_remaining")
+        ),
+        "killSwitchEngaged": safety.get("killSwitchEngaged")
+        if "killSwitchEngaged" in safety
+        else safety.get("kill_switch_engaged"),
+        "leakDetected": safety.get("leakDetected")
+        if "leakDetected" in safety
+        else safety.get("leak_detected"),
+        "maxEscTempC": _num(safety.get("maxEscTempC") or safety.get("max_esc_temp_c")),
+        "maxThrusterCurrentA": _num(
+            safety.get("maxThrusterCurrentA") or safety.get("max_thruster_current_a")
+        )
+        or max_current,
+        "lowBattery": safety.get("lowBattery")
+        if "lowBattery" in safety
+        else safety.get("low_battery"),
+        "armedToActuate": safety.get("armedToActuate")
+        if "armedToActuate" in safety
+        else propulsion.get("armedToActuate")
+        if isinstance(propulsion, dict)
+        else payload.get("armedToActuate"),
+        "mode": safety.get("mode") if "mode" in safety else payload.get("mode"),
+    }
+
+
 def _registry_last_contact_ms(registry_id: str) -> Optional[int]:
     """Ms since last device-registry heartbeat (RF proxy when radios not reporting)."""
     from mycosoft_mas.core.routers import device_registry_api
@@ -687,6 +853,20 @@ def _registry_last_contact_ms(registry_id: str) -> Optional[int]:
     if not last_seen:
         return None
     return max(0, int((datetime.now(timezone.utc) - last_seen).total_seconds() * 1000))
+
+
+async def _fetch_propulsion_state() -> Dict[str, Any]:
+    """Live propulsion agent :8788 /state — thruster currents, kill switch, leak."""
+    url = f"{PSATHYRELLA_PROPULSION_AGENT_URL.rstrip('/')}/state"
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(url)
+        if response.status_code != 200:
+            return {}
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
+    except Exception:  # noqa: BLE001
+        return {}
 
 
 async def build_buoy_telemetry(
@@ -700,15 +880,10 @@ async def build_buoy_telemetry(
     """
     from mycosoft_mas.core.routers import device_registry_api
 
-    catalog_id = PSATHYRELLA_DEVICE_ID if device_id in (
-        PSATHYRELLA_DEVICE_ID,
-        PSATHYRELLA_REGISTRY_ID,
-        resolve_registry_device_id(device_id),
-    ) else device_id
-
-    registry_id = resolve_registry_device_id(device_id)
+    catalog_id = resolve_public_device_id(device_id)
     device_registry_api._cleanup_expired_devices()  # noqa: SLF001
     registry = registry_snapshot or device_registry_api._device_registry  # noqa: SLF001
+    registry_id = resolve_registry_device_id(device_id, set(registry.keys()))
     device = registry.get(registry_id) or registry.get(device_id) or {}
 
     status = device_registry_api._get_device_status(registry_id) if registry_id in registry else "unknown"  # noqa: SLF001
@@ -716,8 +891,8 @@ async def build_buoy_telemetry(
     extra = device.get("extra") if isinstance(device.get("extra"), dict) else {}
     mdp_id = resolve_mdp_device_id(registry_id, extra)
 
-    base_url = MYCOBRAIN_FALLBACK_URL
-    if device.get("host"):
+    base_url = PSATHYRELLA_MUSHROOM1_AGENT_URL if catalog_id == PSATHYRELLA_DEVICE_ID else MYCOBRAIN_FALLBACK_URL
+    if catalog_id != PSATHYRELLA_DEVICE_ID and device.get("host"):
         host = str(device["host"])
         port = int(device.get("port") or 8003)
         if host.startswith("http"):
@@ -741,6 +916,13 @@ async def build_buoy_telemetry(
     )
     if raw_telemetry:
         mycobrain_payload = _deep_merge(mycobrain_payload, raw_telemetry)
+    hub_status = await _fetch_telemetry_hub_status(_telemetry_hub_url(device, extra, base_url))
+    if hub_status:
+        mycobrain_payload = _merge_hub_status_payload(mycobrain_payload, hub_status)
+    if catalog_id == PSATHYRELLA_DEVICE_ID:
+        propulsion_state = await _fetch_propulsion_state()
+        if propulsion_state:
+            mycobrain_payload = _deep_merge(mycobrain_payload, propulsion_state)
 
     lat, lon, gps_lock = _parse_location(device)
     link = _link_from_status(status, sensors_ok)
@@ -765,6 +947,7 @@ async def build_buoy_telemetry(
         satellite_state["bearer"] = runtime.preferred_bearer
 
     power = _merge_power_state(mycobrain_payload, raw_telemetry)
+    safety = _extract_safety(mycobrain_payload)
     camera_url = _vision_url(catalog_id, "camera")
     camera_block = (
         mycobrain_payload.get("camera") if isinstance(mycobrain_payload.get("camera"), dict) else {}
@@ -871,6 +1054,7 @@ async def build_buoy_telemetry(
             "activeMissionId": runtime.active_mission_id,
         },
         "power": power,
+        "safety": safety,
         "comms": comms,
         "camera": {
             "active": runtime.camera_active and bool(camera_url or camera_block.get("stream_url")),

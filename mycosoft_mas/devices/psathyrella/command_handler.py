@@ -336,6 +336,31 @@ async def handle_mdp_command(
             detail=detail,
         )
 
+    if cmd == "nav.esc_calibrate":
+        mdp_params = {k: v for k, v in params.items() if k in {"id", "dry_run", "hold_s"}}
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params=mdp_params,
+            timeout_s=30.0,
+        )
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
+        nested = response.get("response") if isinstance(response, dict) else None
+        detail = nested.get("detail") if isinstance(nested, dict) else "esc_calibrate"
+        return _wrap(
+            {"ok": True, "cmd": cmd, "response": response},
+            response=response,
+            detail=detail,
+        )
+
     if cmd == "nav.all_stop":
         runtime.commanded_vector = {"headingDeg": 0, "magnitudePct": 0, "yawRateDegS": 0}
         for t in runtime.thrusters:

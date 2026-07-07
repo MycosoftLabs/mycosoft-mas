@@ -41,6 +41,8 @@ Env: JETSON_AGENT_PORT|PORT(8788) MOCK(0) PWM_FREQ(50) ESC_CH(8,9,10,11) SERVO_C
      PCA9685_I2C_ADDRESS(0x60) ESC_NEUTRAL_US(1600) SERVO_STOP_US_BY_CHANNEL(4:1600,...)
      SERVO_MODE(continuous|positional) SERVO_DEG_PER_S(120) SERVO_RATE_SPAN_US(300)
      KILL_GPIO(18) THRUSTERS(4) DEADMAN_S(0) PSATHYRELLA_BENCH_SINGLE_MOTOR(0)
+     ESC_NEUTRAL_US_BY_CHANNEL(8:1600,9:1600,...) ESC_CAL_HOLD_S(2)
+     PCA_REPROBE_S(5) INA226_ENABLED(0) LEAK_GPIO(0)
 """
 
 from __future__ import annotations
@@ -51,7 +53,7 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
@@ -74,13 +76,13 @@ SERVO_DEG_PER_S = float(os.getenv("SERVO_DEG_PER_S", "120"))      # dead-reckon 
 DEADMAN_S = float(os.getenv("DEADMAN_S", "0"))              # 0 = off; set 15 for pool
 BENCH_SINGLE = (os.getenv("PSATHYRELLA_BENCH_SINGLE_MOTOR") or os.getenv("BENCH_SINGLE_MOTOR") or "0") == "1"
 MOCK = os.getenv("MOCK", "0") == "1"
+PCA_REPROBE_S = float(os.getenv("PCA_REPROBE_S", "5"))
+ESC_CAL_HOLD_S = float(os.getenv("ESC_CAL_HOLD_S", "2"))
+INA226_ENABLED = os.getenv("INA226_ENABLED", "0") == "1"
+LEAK_GPIO = int(os.getenv("LEAK_GPIO", "0") or "0")  # 0 = disabled; active-high = leak when HIGH
 
 
-def clamp(v: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, v))
-
-
-def _parse_servo_stop_overrides(raw: str) -> Dict[int, int]:
+def _parse_channel_pulse_overrides(raw: str, channels: List[int], default_us: int, env_prefix: str) -> Dict[int, int]:
     overrides: Dict[int, int] = {}
     for entry in raw.split(","):
         token = entry.strip()
@@ -93,8 +95,8 @@ def _parse_servo_stop_overrides(raw: str) -> Dict[int, int]:
         except ValueError:
             continue
         overrides[channel] = int(clamp(pulse_us, 1000, 2000))
-    for channel in SERVO_CH:
-        env_value = os.getenv(f"SERVO_STOP_US_CH{channel}")
+    for channel in channels:
+        env_value = os.getenv(f"{env_prefix}{channel}")
         if not env_value:
             continue
         try:
@@ -104,8 +106,23 @@ def _parse_servo_stop_overrides(raw: str) -> Dict[int, int]:
     return overrides
 
 
+def clamp(v: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, v))
+
+
+def _parse_servo_stop_overrides(raw: str) -> Dict[int, int]:
+    return _parse_channel_pulse_overrides(raw, SERVO_CH, SERVO_STOP_US, "SERVO_STOP_US_CH")
+
+
 SERVO_STOP_US_BY_CHANNEL = _parse_servo_stop_overrides(
     os.getenv("SERVO_STOP_US_BY_CHANNEL", "4:1600,5:1600,6:1600,7:1600")
+)
+
+ESC_NEUTRAL_US_BY_CHANNEL = _parse_channel_pulse_overrides(
+    os.getenv("ESC_NEUTRAL_US_BY_CHANNEL", ""),
+    ESC_CH,
+    ESC_NEUTRAL_US,
+    "ESC_NEUTRAL_US_CH",
 )
 
 
@@ -117,6 +134,16 @@ def servo_stop_us_for_thruster(tid: int) -> float:
     if 0 <= tid < len(SERVO_CH):
         return servo_stop_us_for_channel(SERVO_CH[tid])
     return float(SERVO_STOP_US)
+
+
+def esc_neutral_us_for_channel(channel: int) -> float:
+    return float(ESC_NEUTRAL_US_BY_CHANNEL.get(channel, ESC_NEUTRAL_US))
+
+
+def esc_neutral_us_for_thruster(tid: int) -> float:
+    if 0 <= tid < len(ESC_CH):
+        return esc_neutral_us_for_channel(ESC_CH[tid])
+    return float(ESC_NEUTRAL_US)
 
 
 def now_iso() -> str:
@@ -148,22 +175,54 @@ class PwmBackend:
         self.last_write_ok: Optional[bool] = None
         self.write_count = 0
         self.recent_errors: deque[Dict[str, Any]] = deque(maxlen=20)
+        self._init_lock = threading.Lock()
+        self.last_probe_at: Optional[str] = None
+        self.probe_attempts = 0
+        self.on_online: Optional[Callable[[], None]] = None
         if not MOCK:
+            self._try_init_hardware()
+            if not self.real and PCA_REPROBE_S > 0:
+                threading.Thread(target=self._reprobe_loop, daemon=True, name="pca-reprobe").start()
+        if not self.real:
+            log.info("MOCK PWM backend (no hardware output)")
+
+    def _try_init_hardware(self) -> bool:
+        if MOCK:
+            return False
+        with self._init_lock:
+            if self.real and self._pca is not None:
+                return True
+            self.probe_attempts += 1
+            self.last_probe_at = now_iso()
             try:
                 import board  # type: ignore
                 import busio  # type: ignore
                 from adafruit_pca9685 import PCA9685  # type: ignore
 
                 i2c = busio.I2C(board.SCL, board.SDA)
-                _pca_addr = int(os.getenv("PCA9685_I2C_ADDRESS", "0x60"), 0)
-                self._pca = PCA9685(i2c, address=_pca_addr)
-                self._pca.frequency = PWM_FREQ
+                pca_addr = int(os.getenv("PCA9685_I2C_ADDRESS", "0x60"), 0)
+                pca = PCA9685(i2c, address=pca_addr)
+                pca.frequency = PWM_FREQ
+                self._pca = pca
                 self.real = True
-                log.info("PCA9685 PWM backend up @ %d Hz", PWM_FREQ)
+                log.info("PCA9685 PWM backend up @ %d Hz (addr 0x%x)", PWM_FREQ, pca_addr)
+                if self.on_online:
+                    try:
+                        self.on_online()
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning("on_online callback failed: %s", exc)
+                return True
             except Exception as exc:  # noqa: BLE001
-                log.warning("PCA9685 unavailable (%s) — falling back to MOCK PWM", exc)
-        if not self.real:
-            log.info("MOCK PWM backend (no hardware output)")
+                log.warning("PCA9685 unavailable (%s)", exc)
+                return False
+
+    def _reprobe_loop(self) -> None:
+        log.info("PCA background re-probe every %.1fs until chip online", PCA_REPROBE_S)
+        while not self.real:
+            time.sleep(max(1.0, PCA_REPROBE_S))
+            if self._try_init_hardware():
+                log.info("PCA9685 online after background re-probe (attempt %d)", self.probe_attempts)
+                return
 
     def set_us(self, channel: int, pulse_us: float) -> None:
         period_us = 1_000_000 / PWM_FREQ
@@ -197,9 +256,81 @@ class PwmBackend:
             "last_write_at": self.last_write_at,
             "last_write_ok": self.last_write_ok,
             "write_count": self.write_count,
+            "last_probe_at": self.last_probe_at,
+            "probe_attempts": self.probe_attempts,
+            "reprobe_interval_s": PCA_REPROBE_S if not MOCK else None,
             "channels_us": {str(ch): us for ch, us in sorted(self.channels_us.items())},
             "recent_errors": list(self.recent_errors),
         }
+
+
+class PowerTelemetry:
+    """Optional INA226 per-ESC current + leak GPIO — null when hardware absent."""
+
+    def __init__(self) -> None:
+        self.enabled = INA226_ENABLED and not MOCK
+        self._sensors: List[Any] = []
+        self._addresses = [
+            int(token.strip(), 0)
+            for token in (os.getenv("INA226_ADDRESSES") or "").split(",")
+            if token.strip()
+        ]
+        if self.enabled:
+            self._init_sensors()
+
+    def _init_sensors(self) -> None:
+        try:
+            import board  # type: ignore
+            import busio  # type: ignore
+            from adafruit_ina226 import INA226  # type: ignore
+
+            i2c = busio.I2C(board.SCL, board.SDA)
+            addresses = self._addresses or [0x40, 0x41, 0x44, 0x45]
+            for addr in addresses[: len(ESC_CH)]:
+                try:
+                    self._sensors.append(INA226(i2c, address=addr))
+                except Exception as exc:  # noqa: BLE001
+                    log.warning("INA226 0x%x unavailable: %s", addr, exc)
+            if self._sensors:
+                log.info("INA226 telemetry: %d sensor(s)", len(self._sensors))
+            else:
+                self.enabled = False
+        except Exception as exc:  # noqa: BLE001
+            log.warning("INA226 init failed (%s)", exc)
+            self.enabled = False
+
+    def read_thruster_currents(self) -> Dict[int, Optional[float]]:
+        currents: Dict[int, Optional[float]] = {i: None for i in range(N_THRUSTERS)}
+        if not self.enabled or not self._sensors:
+            return currents
+        for idx, sensor in enumerate(self._sensors):
+            if idx >= N_THRUSTERS:
+                break
+            try:
+                currents[idx] = round(float(sensor.current), 3)
+            except Exception:  # noqa: BLE001
+                currents[idx] = None
+        return currents
+
+    def snapshot(self) -> Dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "addresses": [hex(a) for a in self._addresses] if self._addresses else None,
+            "sensor_count": len(self._sensors),
+        }
+
+
+def read_leak_detected() -> Optional[bool]:
+    if MOCK or LEAK_GPIO <= 0:
+        return None
+    try:
+        import Jetson.GPIO as GPIO  # type: ignore
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(LEAK_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        return GPIO.input(LEAK_GPIO) == GPIO.HIGH
+    except Exception:  # noqa: BLE001
+        return None
 
 
 # ── thruster state + control ─────────────────────────────────────────────────
@@ -224,6 +355,8 @@ class Thruster:
 class Propulsion:
     def __init__(self) -> None:
         self.pwm = PwmBackend()
+        self.pwm.on_online = self.neutral_all
+        self.power = PowerTelemetry()
         self.thrusters: List[Thruster] = [Thruster(i) for i in range(N_THRUSTERS)]
         self.armed = False
         self.mode = "MANUAL"
@@ -231,12 +364,20 @@ class Propulsion:
         self._lock = threading.Lock()
         self.last_cmd_ts = time.monotonic()
         self.last_command: Optional[Dict[str, Any]] = None
-        # Boot: ESC signal held at 1500 µs neutral -> DD ESC arming beeps complete on power-up.
+        self._refresh_power_telemetry()
+        # Boot: ESC signal held at neutral -> DD ESC arming beeps complete on power-up.
         self.neutral_all()
 
+    def _refresh_power_telemetry(self) -> None:
+        currents = self.power.read_thruster_currents()
+        for tid, amps in currents.items():
+            if 0 <= tid < len(self.thrusters):
+                self.thrusters[tid].current_a = amps
+
     # -- low-level pulse helpers --
-    def _esc_us(self, throttle_pct: float) -> float:
-        return ESC_NEUTRAL_US + (clamp(throttle_pct, -100, 100) / 100.0) * ESC_SPAN_US
+    def _esc_us(self, throttle_pct: float, *, tid: Optional[int] = None) -> float:
+        neutral = esc_neutral_us_for_thruster(tid) if tid is not None else float(ESC_NEUTRAL_US)
+        return neutral + (clamp(throttle_pct, -100, 100) / 100.0) * ESC_SPAN_US
 
     def _servo_positional_us(self, azimuth_deg: float) -> float:
         return SERVO_MIN_US + (clamp(azimuth_deg, 0, 360) / 360.0) * (SERVO_MAX_US - SERVO_MIN_US)
@@ -248,7 +389,7 @@ class Propulsion:
     def _apply_esc(self, t: Thruster) -> None:
         eff = t.throttle_pct if self.armed and not t.faulted else 0.0
         if t.id < len(ESC_CH):
-            self.pwm.set_us(ESC_CH[t.id], self._esc_us(eff))
+            self.pwm.set_us(ESC_CH[t.id], self._esc_us(eff, tid=t.id))
 
     def _servo_stop(self, t: Thruster) -> None:
         if t.id < len(SERVO_CH):
@@ -387,6 +528,59 @@ class Propulsion:
             "detail": detail,
         }
 
+    def esc_calibrate(
+        self,
+        *,
+        dry_run: bool,
+        thruster_ids: Optional[List[int]] = None,
+        hold_s: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """
+        DD WP ESC throttle-range teach: full forward -> full reverse -> neutral per ESC.
+        Disarmed only; props off; kill switch accessible.
+        """
+        hold = max(0.5, float(hold_s if hold_s is not None else ESC_CAL_HOLD_S))
+        ids = thruster_ids if thruster_ids is not None else list(range(len(self.thrusters)))
+        if self.armed:
+            return {"ok": False, "error": "disarm_before_esc_calibrate"}
+        actions: List[Dict[str, Any]] = []
+        with self._lock:
+            for tid in ids:
+                if not (0 <= tid < len(self.thrusters)):
+                    continue
+                note = self._bench_gate(tid)
+                if note:
+                    actions.append({"thruster_id": tid, "skipped": note})
+                    continue
+                if tid >= len(ESC_CH):
+                    continue
+                ch = ESC_CH[tid]
+                neutral = esc_neutral_us_for_thruster(tid)
+                fwd = self._esc_us(100.0, tid=tid)
+                rev = self._esc_us(-100.0, tid=tid)
+                steps = [
+                    ("full_forward", fwd),
+                    ("full_reverse", rev),
+                    ("neutral", neutral),
+                ]
+                for phase, pulse in steps:
+                    actions.append({"thruster_id": tid, "channel": ch, "phase": phase, "pulse_us": round(pulse, 1)})
+                    if not dry_run:
+                        self.pwm.set_us(ch, pulse)
+                        if phase != "neutral":
+                            time.sleep(hold)
+                if not dry_run and tid < len(self.thrusters):
+                    self.thrusters[tid].throttle_pct = 0.0
+            if not dry_run:
+                self.neutral_all()
+        return {
+            "ok": True,
+            "dry_run": dry_run,
+            "hold_s": hold,
+            "detail": "esc_range_calibration",
+            "actions": actions,
+        }
+
     def deadman_seconds_remaining(self) -> Optional[float]:
         if not self.armed or DEADMAN_S <= 0:
             return None
@@ -394,6 +588,9 @@ class Propulsion:
         return round(max(0.0, remaining), 3)
 
     def snapshot(self) -> Dict[str, Any]:
+        self._refresh_power_telemetry()
+        leak = read_leak_detected()
+        kill = read_kill_switch_engaged()
         return {
             "status": "ok",
             "service": "psathyrella-jetson-agent",
@@ -404,15 +601,25 @@ class Propulsion:
             "bench_single_motor": BENCH_SINGLE,
             "deadman_s": DEADMAN_S,
             "deadman_seconds_remaining": self.deadman_seconds_remaining(),
-            "kill_switch_engaged": read_kill_switch_engaged(),
+            "safety": {
+                "kill_switch_engaged": kill,
+                "killSwitchEngaged": kill,
+                "leak_detected": leak,
+                "leakDetected": leak,
+                "deadman_seconds_remaining": self.deadman_seconds_remaining(),
+            },
+            "kill_switch_engaged": kill,
+            "leak_detected": leak,
             "servo_mode": SERVO_MODE,
             "servo_stop_us_default": SERVO_STOP_US,
             "esc_neutral_us": ESC_NEUTRAL_US,
+            "esc_neutral_us_by_channel": {str(ch): pulse for ch, pulse in sorted(ESC_NEUTRAL_US_BY_CHANNEL.items())},
             "servo_stop_us_by_channel": {str(ch): pulse for ch, pulse in sorted(SERVO_STOP_US_BY_CHANNEL.items())},
             "channels": {
                 "esc": ESC_CH,
                 "servo": SERVO_CH,
             },
+            "power_telemetry": self.power.snapshot(),
             "last_command": self.last_command,
             "last_command_age_s": round(max(0.0, time.monotonic() - self.last_cmd_ts), 3),
             "pwm": self.pwm.snapshot(),
@@ -430,9 +637,10 @@ class Propulsion:
 
         if apply_neutral:
             if esc_channel is not None:
-                actions.append({"kind": "esc_neutral", "channel": esc_channel, "pulse_us": ESC_NEUTRAL_US})
+                neutral = esc_neutral_us_for_thruster(thruster_id)
+                actions.append({"kind": "esc_neutral", "channel": esc_channel, "pulse_us": neutral})
                 if not dry_run:
-                    self.pwm.set_us(esc_channel, ESC_NEUTRAL_US)
+                    self.pwm.set_us(esc_channel, neutral)
             if servo_channel is not None:
                 servo_pulse = servo_stop_us_for_channel(servo_channel) if SERVO_MODE == "continuous" else self._servo_positional_us(thruster.azimuth_deg)
                 actions.append({"kind": "servo_safe", "channel": servo_channel, "pulse_us": round(float(servo_pulse), 2)})
@@ -558,6 +766,19 @@ async def command(body: MdpCommand, request: Request) -> Dict[str, Any]:  # noqa
             detail = PROP.az_zero_home(int(tid_raw) if tid_raw is not None else None)
             PROP.note_command(cmd, p, detail)
             return _feedback(cmd, detail=detail)
+        if cmd == "nav.esc_calibrate":
+            tid_raw = p.get("id")
+            ids = [int(tid_raw)] if tid_raw is not None else None
+            result = PROP.esc_calibrate(
+                dry_run=bool(p.get("dry_run", False)),
+                thruster_ids=ids,
+                hold_s=p.get("hold_s"),
+            )
+            detail = result.get("detail") or result.get("error") or "esc_calibrate"
+            PROP.note_command(cmd, p, detail)
+            if not result.get("ok"):
+                return _feedback(cmd, ok=False, detail=str(result.get("error") or detail))
+            return {**_feedback(cmd, detail=detail), "calibration": result}
         if cmd == "nav.thruster_azimuth":
             tid = int(p.get("id", 0))
             if not (0 <= tid < len(PROP.thrusters)):

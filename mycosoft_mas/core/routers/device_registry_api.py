@@ -322,7 +322,20 @@ def _cleanup_expired_devices():
     now = datetime.now(timezone.utc)
     expired = []
 
+    try:
+        from mycosoft_mas.devices.psathyrella.constants import (
+            PSATHYRELLA_BENCH_REGISTRY_PERSIST,
+            is_psathyrella_device_id,
+        )
+    except ImportError:
+        PSATHYRELLA_BENCH_REGISTRY_PERSIST = False  # type: ignore[misc, assignment]
+
+        def is_psathyrella_device_id(_device_id: str) -> bool:  # type: ignore[misc]
+            return False
+
     for device_id, last_seen in list(_device_last_seen.items()):
+        if PSATHYRELLA_BENCH_REGISTRY_PERSIST and is_psathyrella_device_id(device_id):
+            continue
         if (now - last_seen).total_seconds() > DEVICE_TTL_SECONDS:
             expired.append(device_id)
 
@@ -538,6 +551,25 @@ async def list_devices_crep(
         "entities": entities,
         "server_time_ms": int(_time.time() * 1000),
     }
+
+
+@router.get("/network")
+async def list_network_devices(
+    include_offline_mycobrain: bool = Query(
+        False,
+        description="Include MycoBrain rows past heartbeat TTL (offline)",
+    ),
+    include_meshtastic: bool = Query(True, description="Include MINDEX meshtastic nodes"),
+    include_observers: bool = Query(True, description="Include MINDEX meshtastic observers"),
+    mesh_node_limit: int = Query(2000, ge=1, le=2000),
+):
+    """Alias for /unified-network (website BFF and dashboards use /api/devices/network)."""
+    return await list_unified_network_devices(
+        include_offline_mycobrain=include_offline_mycobrain,
+        include_meshtastic=include_meshtastic,
+        include_observers=include_observers,
+        mesh_node_limit=mesh_node_limit,
+    )
 
 
 @router.get("/unified-network")
@@ -952,9 +984,9 @@ async def _post_agent_command(
 
     payload = {"command": {"cmd": cmd.command, **cmd.params}}
     mdp_payload = {
-        "target": "side_a",
+        "target": (cmd.params or {}).get("target") or "side_b",
         "cmd": cmd.command,
-        "params": cmd.params or {},
+        "params": {k: v for k, v in (cmd.params or {}).items() if k != "target"},
         "ack_requested": True,
         "timeout_ms": int((cmd.timeout or 5) * 1000),
     }

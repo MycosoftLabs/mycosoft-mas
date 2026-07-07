@@ -289,5 +289,7 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 
 **Completion doc:** `docs/PSATHYRELLA_LAG_AZ_ZERO_COMPLETE_JUL07_2026.md`
 
-**Still P1 (unchanged):** AS5600 closed-loop azimuth, ESC range cal, per-ESC neutral trim, PCA re-probe, registry heartbeat, INA226/kill-switch telemetry.
+**Still P1 (hardware only):** AS5600 closed-loop azimuth encoders.
+
+**P1 software (Jul 07):** Complete — see `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` (ESC cal, per-ESC neutral, PCA re-probe, registry keepalive, INA226/leak hooks).
 

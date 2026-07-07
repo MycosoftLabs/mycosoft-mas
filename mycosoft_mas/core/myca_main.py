@@ -1788,6 +1788,14 @@ async def _mas_background_startup() -> None:
     except Exception as exc:
         logger.warning("Telemetry pipeline failed to start: %s", exc)
 
+    try:
+        from mycosoft_mas.devices.psathyrella.registry_keepalive import start_psathyrella_registry_keepalive
+
+        start_psathyrella_registry_keepalive()
+        logger.info("✓ Psathyrella registry keepalive started")
+    except Exception as exc:
+        logger.warning("Psathyrella registry keepalive failed to start: %s", exc)
+
     # Start WorkflowAutoMonitor (n8n health + drift detection + auto-sync).
     # Keep it opt-in so invalid n8n credentials cannot block MAS API recovery.
     workflow_auto_monitor_enabled = os.getenv("WORKFLOW_AUTO_MONITOR_ENABLED", "0") == "1"

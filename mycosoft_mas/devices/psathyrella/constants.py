@@ -42,6 +42,18 @@ PSATHYRELLA_BENCH_SINGLE_MOTOR = os.getenv("PSATHYRELLA_BENCH_SINGLE_MOTOR", "")
     "on",
 }
 PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID = int(os.getenv("PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID", "0") or "0")
+PSATHYRELLA_BENCH_REGISTRY_PERSIST = os.getenv("PSATHYRELLA_BENCH_REGISTRY_PERSIST", "1").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+PSATHYRELLA_REGISTRY_KEEPALIVE = os.getenv("PSATHYRELLA_REGISTRY_KEEPALIVE", "1").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 PSATHYRELLA_DEVICE_ALIASES = frozenset(
     {

@@ -22,6 +22,7 @@ NAV_MDP_COMMANDS = frozenset(
         "nav.all_stop",
         "nav.arm",
         "nav.az_zero",
+        "nav.esc_calibrate",
         "nav.pwm_raw",
         "nav.set_mode",
         "nav.station_keep",

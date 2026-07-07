@@ -69,11 +69,11 @@ python scripts/_sync_jetson_propulsion_agent.py
 
 ## Follow-up (P1, not in this task)
 
-- AS5600 magnetic encoders for closed-loop azimuth
-- ESC range calibration + per-ESC neutral trim env
-- PCA background re-probe in agent
-- Registry heartbeat / bench no-expiry
-- INA226 / kill-switch / leak telemetry hooks
+- ~~ESC range calibration + per-ESC neutral trim env~~ → **Done** `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md`
+- ~~PCA background re-probe in agent~~ → **Done**
+- ~~Registry heartbeat / bench no-expiry~~ → **Done**
+- ~~INA226 / kill-switch / leak telemetry hooks~~ → **Done**
+- AS5600 magnetic encoders for closed-loop azimuth — **hardware P1, still open**
 
 ---
 
