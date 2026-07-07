@@ -125,3 +125,4 @@ python scripts/_sync_jetson_propulsion_agent.py
 
 - PCA one-shot-at-boot was a foot-gun with 5V VCC after kill switch; background re-probe removes ordering dependency.
 - Registry TTL expiry made bench contact look “dark”; immortal psathyrella ids + keepalive fixes GCS contact state without fake RF.
+- Production MAS VM sets `MAS_INGESTION_ONLY_STARTUP=1`; keepalive must start in `startup_event`, not only in heavy background init.
