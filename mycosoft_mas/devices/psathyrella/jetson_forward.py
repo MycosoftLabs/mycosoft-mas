@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from json import JSONDecodeError
@@ -20,12 +21,61 @@ NAV_MDP_COMMANDS = frozenset(
         "nav.thrust_vector",
         "nav.all_stop",
         "nav.arm",
+        "nav.az_zero",
         "nav.pwm_raw",
         "nav.set_mode",
         "nav.station_keep",
         "nav.fight_current",
     }
 )
+
+_propulsion_http_client: Optional[httpx.AsyncClient] = None
+_propulsion_client_lock = asyncio.Lock()
+
+
+def _request_timeout(timeout_s: float) -> httpx.Timeout:
+    connect = min(2.0, max(0.5, timeout_s))
+    return httpx.Timeout(timeout_s, connect=connect)
+
+
+async def _get_propulsion_http_client() -> httpx.AsyncClient:
+    """Reuse one keep-alive client for Jetson :8788 — avoids ~1s TCP SYN RTO per command."""
+    global _propulsion_http_client
+    async with _propulsion_client_lock:
+        if _propulsion_http_client is None or _propulsion_http_client.is_closed:
+            _propulsion_http_client = httpx.AsyncClient(
+                limits=httpx.Limits(
+                    max_keepalive_connections=4,
+                    max_connections=8,
+                    keepalive_expiry=60.0,
+                ),
+                timeout=_request_timeout(8.0),
+            )
+        return _propulsion_http_client
+
+
+async def _post_with_connect_retry(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    json: Dict[str, Any],
+    headers: Dict[str, str],
+    timeout_s: float,
+) -> httpx.Response:
+    timeout = _request_timeout(timeout_s)
+    last_exc: Optional[BaseException] = None
+    for attempt in range(2):
+        try:
+            return await client.post(url, json=json, headers=headers, timeout=timeout)
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            last_exc = exc
+            if attempt == 0:
+                await asyncio.sleep(0.05)
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("post_with_connect_retry: unreachable")
 
 
 def _mycobrain_forward_headers() -> Dict[str, str]:
@@ -124,22 +174,28 @@ async def _post_mdp_payload(
     }
     headers = _mycobrain_forward_headers()
     http_failures: list[tuple[str, int]] = []
-    async with httpx.AsyncClient(timeout=timeout_s) as client:
-        for path, body in (
-            ("/command", mdp_body),
-            ("/side-b/command", {"command": cmd, "params": params, "ack_requested": True}),
-            ("/side-a/command", {"command": cmd, "params": params, "ack_requested": True}),
-        ):
-            try:
-                response = await client.post(f"{base_url}{path}", json=body, headers=headers)
-                if response.status_code != 200:
-                    http_failures.append((path, response.status_code))
-                    continue
-                payload, err = _decode_json_response(response, path)
-                return payload, err
-            except Exception as exc:  # noqa: BLE001
-                logger.debug("MDP forward %s failed: %s", path, exc)
+    client = await _get_propulsion_http_client()
+    for path, body in (
+        ("/command", mdp_body),
+        ("/side-b/command", {"command": cmd, "params": params, "ack_requested": True}),
+        ("/side-a/command", {"command": cmd, "params": params, "ack_requested": True}),
+    ):
+        try:
+            response = await _post_with_connect_retry(
+                client,
+                f"{base_url}{path}",
+                json=body,
+                headers=headers,
+                timeout_s=timeout_s,
+            )
+            if response.status_code != 200:
+                http_failures.append((path, response.status_code))
                 continue
+            payload, err = _decode_json_response(response, path)
+            return payload, err
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("MDP forward %s failed: %s", path, exc)
+            continue
     if http_failures and all(status == 404 for _, status in http_failures):
         return None, "agent_no_command_endpoint"
     if http_failures:
@@ -156,12 +212,15 @@ async def propulsion_agent_reachable(
     """True when the Jetson :8788 propulsion agent responds to /health."""
     base_url = _propulsion_base_url(device)
     try:
-        async with httpx.AsyncClient(timeout=timeout_s) as client:
-            response = await client.get(f"{base_url}/health")
-            if response.status_code != 200:
-                return False
-            payload = response.json()
-            return isinstance(payload, dict) and payload.get("status") == "ok"
+        client = await _get_propulsion_http_client()
+        response = await client.get(
+            f"{base_url}/health",
+            timeout=_request_timeout(timeout_s),
+        )
+        if response.status_code != 200:
+            return False
+        payload = response.json()
+        return isinstance(payload, dict) and payload.get("status") == "ok"
     except Exception:  # noqa: BLE001
         return False
 

@@ -416,3 +416,38 @@ async def test_nav_thrust_vector_queues_when_dark_and_jetson_down(
     assert result.get("queued") is True
     assert result["ack"]["state"] == "sent"
     assert "queued" in (result["ack"].get("detail") or "")
+
+
+@pytest.mark.asyncio
+async def test_nav_az_zero_forwards_and_updates_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict = {}
+
+    async def _fake_forward(registry_id, *, target, cmd, params, timeout_s=8.0):
+        captured.update({"cmd": cmd, "params": params, "target": target})
+        return {
+            "relay": "jetson_mdp",
+            "response": {"ok": True, "detail": "azimuth home set for [0, 1, 2, 3]"},
+        }
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.command_handler.forward_mdp_command",
+        _fake_forward,
+    )
+
+    runtime = get_runtime(PSATHYRELLA_DEVICE_ID)
+    runtime.thrusters[0].azimuth_deg = 263.0
+    runtime.thrusters[1].azimuth_deg = 90.0
+
+    result = await handle_mdp_command(
+        PSATHYRELLA_DEVICE_ID,
+        target="side_b",
+        cmd="nav.az_zero",
+        params={},
+    )
+
+    assert result["ok"] is True
+    assert captured["cmd"] == "nav.az_zero"
+    assert captured["params"] == {}
+    assert runtime.thrusters[0].azimuth_deg == 0.0
+    assert runtime.thrusters[1].azimuth_deg == 0.0
+    assert result["ack"]["state"] == "applied"

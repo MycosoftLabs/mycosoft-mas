@@ -308,6 +308,26 @@ class Propulsion:
                 else self._servo_positional_us(t.azimuth_deg),
             )
 
+    def az_zero_home(self, tid: Optional[int] = None) -> str:
+        """Declare the pod's current physical orientation as 0° home — no rotation."""
+        with self._lock:
+            ids = [int(tid)] if tid is not None else list(range(len(self.thrusters)))
+            touched: List[int] = []
+            for i in ids:
+                if not (0 <= i < len(self.thrusters)):
+                    continue
+                note = self._bench_gate(i)
+                if note:
+                    continue
+                t = self.thrusters[i]
+                t.az_cancel.set()
+                t.azimuth_deg = 0.0
+                t.az_actual = 0.0
+                if t.id < len(SERVO_CH) and SERVO_MODE == "continuous":
+                    self.pwm.set_us(SERVO_CH[t.id], servo_stop_us_for_thruster(t.id))
+                touched.append(i)
+            return f"azimuth home set for {touched}"
+
     # -- command surface --
     def _bench_gate(self, tid: int) -> Optional[str]:
         if BENCH_SINGLE and tid != 0:
@@ -533,6 +553,11 @@ async def command(body: MdpCommand, request: Request) -> Dict[str, Any]:  # noqa
             note = PROP.set_thruster(int(p.get("id", 0)), p.get("throttle"), p.get("azimuth"))
             PROP.note_command(cmd, p, note or "applied")
             return _feedback(cmd, detail=note or "applied")
+        if cmd == "nav.az_zero":
+            tid_raw = p.get("id")
+            detail = PROP.az_zero_home(int(tid_raw) if tid_raw is not None else None)
+            PROP.note_command(cmd, p, detail)
+            return _feedback(cmd, detail=detail)
         if cmd == "nav.thruster_azimuth":
             tid = int(p.get("id", 0))
             if not (0 <= tid < len(PROP.thrusters)):

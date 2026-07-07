@@ -303,6 +303,39 @@ async def handle_mdp_command(
             )
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
+    if cmd == "nav.az_zero":
+        mdp_params: Dict[str, Any] = {}
+        if params.get("id") is not None:
+            thr_id = int(params["id"])
+            mdp_params["id"] = thr_id
+            if 0 <= thr_id < len(runtime.thrusters):
+                runtime.thrusters[thr_id].azimuth_deg = 0.0
+        else:
+            for t in runtime.thrusters:
+                t.azimuth_deg = 0.0
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params=mdp_params,
+        )
+        apply_thruster_feedback(runtime, response)
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
+        nested = response.get("response") if isinstance(response, dict) else None
+        detail = nested.get("detail") if isinstance(nested, dict) else None
+        return _wrap(
+            {"ok": True, "cmd": cmd, "response": response},
+            response=response,
+            detail=detail,
+        )
+
     if cmd == "nav.all_stop":
         runtime.commanded_vector = {"headingDeg": 0, "magnitudePct": 0, "yawRateDegS": 0}
         for t in runtime.thrusters:
