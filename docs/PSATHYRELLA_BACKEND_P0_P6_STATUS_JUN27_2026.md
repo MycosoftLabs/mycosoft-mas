@@ -291,5 +291,5 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 
 **Still P1 (hardware only):** AS5600 closed-loop azimuth encoders.
 
-**P1 software (Jul 07):** Complete — see `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` (ESC cal, per-ESC neutral, PCA re-probe, registry keepalive, INA226/leak hooks).
+**P1 software (Jul 07):** Complete — see `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` (ESC cal, per-ESC neutral, PCA re-probe, registry keepalive, INA226/leak hooks). MAS `000412638` deployed; keepalive call-site fix in `8577a5b70+`.
 

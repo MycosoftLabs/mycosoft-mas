@@ -206,12 +206,12 @@ async def _post_mdp_payload(
 
 
 async def propulsion_agent_reachable(
-    device: Dict[str, Any],
+    device: Optional[Dict[str, Any]] = None,
     *,
     timeout_s: float = 1.5,
 ) -> bool:
     """True when the Jetson :8788 propulsion agent responds to /health."""
-    base_url = _propulsion_base_url(device)
+    base_url = _propulsion_base_url(device or {})
     try:
         client = await _get_propulsion_http_client()
         response = await client.get(

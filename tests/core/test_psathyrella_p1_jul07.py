@@ -64,6 +64,33 @@ def test_psathyrella_bench_registry_not_expired(monkeypatch: pytest.MonkeyPatch)
     device_registry_api._device_registry.pop(device_id, None)  # noqa: SLF001
 
 
+@pytest.mark.asyncio
+async def test_registry_keepalive_heartbeat_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    upserts: list[str] = []
+
+    async def _reachable(_device=None, *, timeout_s=1.5):
+        return True
+
+    def _fake_upsert(heartbeat):
+        upserts.append(heartbeat.device_id)
+        return {"status": "registered", "device_id": heartbeat.device_id}
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.registry_keepalive.propulsion_agent_reachable",
+        _reachable,
+    )
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.registry_keepalive.device_registry_api._upsert_device_heartbeat",
+        _fake_upsert,
+    )
+
+    from mycosoft_mas.devices.psathyrella.registry_keepalive import _heartbeat_once
+
+    ok = await _heartbeat_once()
+    assert ok is True
+    assert upserts == [PSATHYRELLA_CANONICAL_DEVICE_ID]
+
+
 def test_esc_neutral_channel_override_parsing() -> None:
     raw = "8:1610,9:1595,10:1600,11:1605"
     neutral_default = 1600

@@ -2,7 +2,15 @@
 
 ## Psathyrella backend architecture (June 25, 2026)
 
-- `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — **P0–P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.
+- `docs/SINE_PSATHYRELLA_SECURITY_AND_INTEGRATION_JUN25_2026.md` — **Security + integration map**: repo/path/API/NAS/env/CI guardrails for SINE acoustic stack and Psathyrella control buoy; defer private-repo flip; buoy+NAS verification checklist.
+- `docs/NVIDIA_NEMOCLAW_NEMOTRON_NIM_LANDSCAPE_JUN28_2026.md` — **NVIDIA agent/LLM glossary**: NemoClaw, OpenClaw, OpenShell, Nemotron 3, NIM, Ollama vs Meta/Llama (not OpenCL).
+- `CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` — **Bench quick-ref**: Jetson `:8787` MDP vs `:18789` OpenClaw/NemoClaw, motor curl examples, hardware wiring, uplink ack/SSE paths.
+- `CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` — **Hardware wiring plan (Jul 01)**: LiFePO4 12 V bus, Jetson+PCA9685 ESC/servo PWM, Tier A bench + Tier B pool wire tables, DD ESC arming, power budget, kill switch, MG996R 180° vs 360° azimuth.
+- `CODE/docs/PSATHYRELLA_PROCUREMENT_BRIEFING_JUL01_2026.md` — **CEO procurement briefing (Jul 01)**: Morgan inventory vs buy-now cart (ASINs + Amazon links), Tier A bench + Tier B pool add-ons, do-not-buy list, power wiring chain, software NO-GO until Jetson `:8787` MDP agent, tonight checklist.
+- `CODE/docs/PSATHYRELLA_ASSEMBLY_MANUAL_JUL01_2026.md` — **Internal electronics assembly & wiring manual (Jul 01)**: Lego-style, bag-by-bag, pin-by-pin build of the buoy internals — SENSORS lane (Mushroom 1 MycoBrain → Jetson) vs PROPULSION lane (Jetson + PCA9685), step-by-step connections with verify/stop checks. Step-by-step build companion to the hardware wire plan and procurement briefing.
+- `docs/PSATHYRELLA_JETSON_MYCOBRAIN_COMMS_ARCHITECTURE_JUN28_2026.md` — **Buoy comms split (canonical)**: GCS→MAS→Jetson `:8787` downlink, SSE uplink, MycoBrain COM3 sensors-only, pool test wiring.
+- `CODE/docs/PSATHYRELLA_JETSON_PROP_TEST_JUN28_2026.md` — Jetson `:8787` handler options, env vars, verification curls.
+- `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` — **P1 bench software complete (Jul 07)**: ESC calibrate, per-ESC neutral trim, PCA re-probe, registry keepalive + bench TTL, INA226/leak telemetry hooks; deploy `000412638`.
 - `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` — **P0 completion record** (superseded by P0–P6 status for full picture).
 - `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` — MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
 - `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` — **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
@@ -19,6 +27,14 @@
 - `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` — **Execution plan**: owners, repos, P0–P3 priorities.
 - `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` — **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
 - `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` — **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
+
+## Defense / License / CI (June 25, 2026)
+
+- `docs/DEFENSE_LICENSE_CI_HANDOFF_JUN25_2026.md` — 25 proprietary LICENSE PRs merged; CI fixes (MAS, NatureOS, mycobrain); repos remain PUBLIC.
+- `docs/CURSOR_HANDOFF_DEFENSE_LICENSE_JUN25_2026.md` — Amended Cursor handoff (no Phase 3 private flip).
+
+- `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` — Morgan review list before any private flip (FUSARIUM, OEI/CREP, SINE, Psathyrella, TACO, etc.).
+- `docs/REPO_LICENSE_README_SWEEP_COMPLETE_JUN25_2026.md` — Per-repo LICENSE/NOTICE/README sweep (local branches, not pushed).
 
 ## UniFi / NAS / CISA KEV (June 25, 2026)
 
@@ -954,6 +970,13 @@
 - `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) — 55-dataset verified acquisition catalog with keys and endpoints.
 - `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — Production audit Jun 21; MAS 188 unreachable.
 
-## Worldview API (June 17, 2026)
+## Psathyrella buoy GCS + backend (Jun 27, 2026)
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` — **Bench quick-ref (Jun 28)**: motor/servo `:8787`, optional AI `:18789`, wiring split, curl examples; aligned with MAS architecture doc.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` — **Hardware wiring plan (Jul 01)**: component matrix, Tier A/B wire tables, ESC arming, PCA9685 channel map, power/fusing.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CLAUDE_FRONTEND_HANDOFF_JUN27_2026.md` — Claude GCS lane handoff: feature table, bench prop+servo UI expectations, env checklist.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CURSOR_BACKEND_HANDOFF_JUN27_2026.md` — Cursor backend lane handoff: inventory, Jetson forward slice, phased work, acceptance criteria.
+- `MAS/mycosoft-mas/docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — Backend P0–P6 status (MAS 188 overlay @ `f69fd3ea`; Jun 28 comms cross-links).
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md` — GCS P0–P6 integration status (Claude lane).
+
 - `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` — Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
 - `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — Backend readiness audit, blockers, implementation order, verification commands.

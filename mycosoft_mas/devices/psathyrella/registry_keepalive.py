@@ -28,7 +28,7 @@ def _jetson_host() -> str:
 
 
 async def _heartbeat_once() -> bool:
-    propulsion_up = await propulsion_agent_reachable()
+    propulsion_up = await propulsion_agent_reachable({})
     mushroom_url = PSATHYRELLA_MUSHROOM1_AGENT_URL.rstrip("/")
     sensors_up = False
     if mushroom_url:
