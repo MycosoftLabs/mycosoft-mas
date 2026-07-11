@@ -41,12 +41,15 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - "autoheal=true"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\").read()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - mas-network
 

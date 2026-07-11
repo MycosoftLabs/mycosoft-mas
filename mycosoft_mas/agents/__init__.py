@@ -84,6 +84,7 @@ _safe_import(".crypto.ows_wallet_agent", "OWSWalletAgent")
 # Security Agents
 _safe_import(".crep_security_agent", "CREPSecurityAgent")
 _safe_import(".security.compliance_agent", "CmmcComplianceAgent")
+_safe_import(".security.reports_agent", "ReportsAgent")
 _safe_import(".security.export_control_agent", "ExportControlAgent")
 
 # Network Agents

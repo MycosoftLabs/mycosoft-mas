@@ -1,0 +1,2766 @@
+{
+  "provenance": {
+    "source": "mas_provisional_catalog_jul10_2026",
+    "catalog": "NIST SP 800-171 Rev 2 public control list (110)",
+    "posture": "109 implemented / 1 planned (3.3.4 POA&M close 2026-11-09)",
+    "note": "Statuses are the sprint target overlay pending Perplexity SSP confirmation. Claude website catalog/posture file should replace this when available."
+  },
+  "controls": [
+    {
+      "control_id": "3.1.1",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Limit system access to authorized users, processes, and devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit system access to authorized users, processes, and devices",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.1",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Limit system access to authorized users, processes, and devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit system access to authorized users, processes, and devices",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.1"
+      }
+    },
+    {
+      "control_id": "3.1.2",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Limit system access to types of transactions and functions authorized",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit system access to types of transactions and functions authorized",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.2",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Limit system access to types of transactions and functions authorized",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit system access to types of transactions and functions authorized",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.2"
+      }
+    },
+    {
+      "control_id": "3.1.3",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Control CUI flow in accordance with approved authorizations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control CUI flow in accordance with approved authorizations",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.3",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Control CUI flow in accordance with approved authorizations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control CUI flow in accordance with approved authorizations",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.3"
+      }
+    },
+    {
+      "control_id": "3.1.4",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Separate duties of individuals to reduce risk of malevolent activity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Separate duties of individuals to reduce risk of malevolent activity",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.4",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Separate duties of individuals to reduce risk of malevolent activity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Separate duties of individuals to reduce risk of malevolent activity",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.4"
+      }
+    },
+    {
+      "control_id": "3.1.5",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Employ least privilege principle including privileged accounts",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ least privilege principle including privileged accounts",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.5",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Employ least privilege principle including privileged accounts",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ least privilege principle including privileged accounts",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.5"
+      }
+    },
+    {
+      "control_id": "3.1.6",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Use non-privileged accounts when accessing nonsecurity functions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use non-privileged accounts when accessing nonsecurity functions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.6",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Use non-privileged accounts when accessing nonsecurity functions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use non-privileged accounts when accessing nonsecurity functions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.6"
+      }
+    },
+    {
+      "control_id": "3.1.7",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Prevent non-privileged users from executing privileged functions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent non-privileged users from executing privileged functions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.7",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Prevent non-privileged users from executing privileged functions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent non-privileged users from executing privileged functions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.7"
+      }
+    },
+    {
+      "control_id": "3.1.8",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Limit unsuccessful logon attempts",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit unsuccessful logon attempts",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.8",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Limit unsuccessful logon attempts",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit unsuccessful logon attempts",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.8"
+      }
+    },
+    {
+      "control_id": "3.1.9",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Provide privacy and security notices consistent with applicable CUI rules",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide privacy and security notices consistent with applicable CUI rules",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.9",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Provide privacy and security notices consistent with applicable CUI rules",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide privacy and security notices consistent with applicable CUI rules",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.9"
+      }
+    },
+    {
+      "control_id": "3.1.10",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Use session lock with pattern-hiding displays",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use session lock with pattern-hiding displays",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.10",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Use session lock with pattern-hiding displays",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use session lock with pattern-hiding displays",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.10"
+      }
+    },
+    {
+      "control_id": "3.1.11",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Terminate user sessions after defined conditions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Terminate user sessions after defined conditions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.11",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Terminate user sessions after defined conditions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Terminate user sessions after defined conditions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.11"
+      }
+    },
+    {
+      "control_id": "3.1.12",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Monitor and control remote access sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor and control remote access sessions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.12",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Monitor and control remote access sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor and control remote access sessions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.12"
+      }
+    },
+    {
+      "control_id": "3.1.13",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Employ cryptographic mechanisms for remote access sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ cryptographic mechanisms for remote access sessions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.13",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Employ cryptographic mechanisms for remote access sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ cryptographic mechanisms for remote access sessions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.13"
+      }
+    },
+    {
+      "control_id": "3.1.14",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Route remote access through managed access control points",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Route remote access through managed access control points",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.14",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Route remote access through managed access control points",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Route remote access through managed access control points",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.14"
+      }
+    },
+    {
+      "control_id": "3.1.15",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Authorize remote execution of privileged commands",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authorize remote execution of privileged commands",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.15",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Authorize remote execution of privileged commands",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authorize remote execution of privileged commands",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.15"
+      }
+    },
+    {
+      "control_id": "3.1.16",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Authorize wireless access prior to allowing connections",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authorize wireless access prior to allowing connections",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.16",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Authorize wireless access prior to allowing connections",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authorize wireless access prior to allowing connections",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.16"
+      }
+    },
+    {
+      "control_id": "3.1.17",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Protect wireless access using authentication and encryption",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect wireless access using authentication and encryption",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.17",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Protect wireless access using authentication and encryption",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect wireless access using authentication and encryption",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.17"
+      }
+    },
+    {
+      "control_id": "3.1.18",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Control connection of mobile devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control connection of mobile devices",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.18",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Control connection of mobile devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control connection of mobile devices",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.18"
+      }
+    },
+    {
+      "control_id": "3.1.19",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Encrypt CUI on mobile devices and mobile computing platforms",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Encrypt CUI on mobile devices and mobile computing platforms",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.19",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Encrypt CUI on mobile devices and mobile computing platforms",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Encrypt CUI on mobile devices and mobile computing platforms",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.19"
+      }
+    },
+    {
+      "control_id": "3.1.20",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Verify and control connections to external systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Verify and control connections to external systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.20",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Verify and control connections to external systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Verify and control connections to external systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.20"
+      }
+    },
+    {
+      "control_id": "3.1.21",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Limit use of portable storage devices on external systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit use of portable storage devices on external systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.21",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Limit use of portable storage devices on external systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit use of portable storage devices on external systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.21"
+      }
+    },
+    {
+      "control_id": "3.1.22",
+      "framework": "NIST_800_171",
+      "family": "AC",
+      "title": "Control CUI posted or processed on publicly accessible systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control CUI posted or processed on publicly accessible systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AC.L2-3.1.22",
+      "framework": "CMMC_L2",
+      "family": "AC",
+      "title": "Control CUI posted or processed on publicly accessible systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control CUI posted or processed on publicly accessible systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.1.22"
+      }
+    },
+    {
+      "control_id": "3.2.1",
+      "framework": "NIST_800_171",
+      "family": "AT",
+      "title": "Ensure managers, systems administrators, and users are aware of security risks",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure managers, systems administrators, and users are aware of security risks",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AT.L2-3.2.1",
+      "framework": "CMMC_L2",
+      "family": "AT",
+      "title": "Ensure managers, systems administrators, and users are aware of security risks",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure managers, systems administrators, and users are aware of security risks",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.2.1"
+      }
+    },
+    {
+      "control_id": "3.2.2",
+      "framework": "NIST_800_171",
+      "family": "AT",
+      "title": "Ensure personnel are trained to carry out assigned information security duties",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure personnel are trained to carry out assigned information security duties",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AT.L2-3.2.2",
+      "framework": "CMMC_L2",
+      "family": "AT",
+      "title": "Ensure personnel are trained to carry out assigned information security duties",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure personnel are trained to carry out assigned information security duties",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.2.2"
+      }
+    },
+    {
+      "control_id": "3.2.3",
+      "framework": "NIST_800_171",
+      "family": "AT",
+      "title": "Provide security awareness training on recognizing and reporting insider threats",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide security awareness training on recognizing and reporting insider threats",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AT.L2-3.2.3",
+      "framework": "CMMC_L2",
+      "family": "AT",
+      "title": "Provide security awareness training on recognizing and reporting insider threats",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide security awareness training on recognizing and reporting insider threats",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.2.3"
+      }
+    },
+    {
+      "control_id": "3.3.1",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Create and retain system audit logs to enable monitoring and investigation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Create and retain system audit logs to enable monitoring and investigation",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.1",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Create and retain system audit logs to enable monitoring and investigation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Create and retain system audit logs to enable monitoring and investigation",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.1"
+      }
+    },
+    {
+      "control_id": "3.3.2",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Ensure actions of individual system users can be uniquely traced",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure actions of individual system users can be uniquely traced",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.2",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Ensure actions of individual system users can be uniquely traced",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure actions of individual system users can be uniquely traced",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.2"
+      }
+    },
+    {
+      "control_id": "3.3.3",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Review and update logged events",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Review and update logged events",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.3",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Review and update logged events",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Review and update logged events",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.3"
+      }
+    },
+    {
+      "control_id": "3.3.4",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Alert in the event of an audit logging process failure",
+      "implementation_state": "planned",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Alert in the event of an audit logging process failure",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "notes": "On POA&M \u2014 audit logging process failure alerting",
+        "poam": true,
+        "poam_close": "2026-11-09"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.4",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Alert in the event of an audit logging process failure",
+      "implementation_state": "planned",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Alert in the event of an audit logging process failure",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "notes": "On POA&M \u2014 audit logging process failure alerting",
+        "poam": true,
+        "poam_close": "2026-11-09",
+        "nist_800_171": "3.3.4"
+      }
+    },
+    {
+      "control_id": "3.3.5",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Correlate audit record review, analysis, and reporting processes",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Correlate audit record review, analysis, and reporting processes",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.5",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Correlate audit record review, analysis, and reporting processes",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Correlate audit record review, analysis, and reporting processes",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.5"
+      }
+    },
+    {
+      "control_id": "3.3.6",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Provide audit record reduction and report generation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide audit record reduction and report generation",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.6",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Provide audit record reduction and report generation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide audit record reduction and report generation",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.6"
+      }
+    },
+    {
+      "control_id": "3.3.7",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Provide a system capability that compares and synchronizes internal clocks",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide a system capability that compares and synchronizes internal clocks",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.7",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Provide a system capability that compares and synchronizes internal clocks",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide a system capability that compares and synchronizes internal clocks",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.7"
+      }
+    },
+    {
+      "control_id": "3.3.8",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Protect audit information and audit logging tools from unauthorized access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect audit information and audit logging tools from unauthorized access",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.8",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Protect audit information and audit logging tools from unauthorized access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect audit information and audit logging tools from unauthorized access",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.8"
+      }
+    },
+    {
+      "control_id": "3.3.9",
+      "framework": "NIST_800_171",
+      "family": "AU",
+      "title": "Limit management of audit logging functionality to privileged users",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit management of audit logging functionality to privileged users",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "AU.L2-3.3.9",
+      "framework": "CMMC_L2",
+      "family": "AU",
+      "title": "Limit management of audit logging functionality to privileged users",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit management of audit logging functionality to privileged users",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.3.9"
+      }
+    },
+    {
+      "control_id": "3.4.1",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Establish and maintain baseline configurations and inventories",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and maintain baseline configurations and inventories",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.1",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Establish and maintain baseline configurations and inventories",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and maintain baseline configurations and inventories",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.1"
+      }
+    },
+    {
+      "control_id": "3.4.2",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Establish and enforce security configuration settings",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and enforce security configuration settings",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.2",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Establish and enforce security configuration settings",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and enforce security configuration settings",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.2"
+      }
+    },
+    {
+      "control_id": "3.4.3",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Track, review, approve/disapprove, and log changes to systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Track, review, approve/disapprove, and log changes to systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.3",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Track, review, approve/disapprove, and log changes to systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Track, review, approve/disapprove, and log changes to systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.3"
+      }
+    },
+    {
+      "control_id": "3.4.4",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Analyze security impact of changes prior to implementation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Analyze security impact of changes prior to implementation",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.4",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Analyze security impact of changes prior to implementation",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Analyze security impact of changes prior to implementation",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.4"
+      }
+    },
+    {
+      "control_id": "3.4.5",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Define, document, approve, and enforce physical and logical access restrictions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Define, document, approve, and enforce physical and logical access restrictions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.5",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Define, document, approve, and enforce physical and logical access restrictions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Define, document, approve, and enforce physical and logical access restrictions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.5"
+      }
+    },
+    {
+      "control_id": "3.4.6",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Employ least functionality principle",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ least functionality principle",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.6",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Employ least functionality principle",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ least functionality principle",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.6"
+      }
+    },
+    {
+      "control_id": "3.4.7",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Restrict, disable, or prevent use of nonessential programs, functions, ports",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Restrict, disable, or prevent use of nonessential programs, functions, ports",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.7",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Restrict, disable, or prevent use of nonessential programs, functions, ports",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Restrict, disable, or prevent use of nonessential programs, functions, ports",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.7"
+      }
+    },
+    {
+      "control_id": "3.4.8",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Apply deny-by-exception (blacklisting) policy to prevent unauthorized software",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Apply deny-by-exception (blacklisting) policy to prevent unauthorized software",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.8",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Apply deny-by-exception (blacklisting) policy to prevent unauthorized software",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Apply deny-by-exception (blacklisting) policy to prevent unauthorized software",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.8"
+      }
+    },
+    {
+      "control_id": "3.4.9",
+      "framework": "NIST_800_171",
+      "family": "CM",
+      "title": "Control and monitor user-installed software",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor user-installed software",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CM.L2-3.4.9",
+      "framework": "CMMC_L2",
+      "family": "CM",
+      "title": "Control and monitor user-installed software",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor user-installed software",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.4.9"
+      }
+    },
+    {
+      "control_id": "3.5.1",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Identify system users, processes acting on behalf of users, and devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify system users, processes acting on behalf of users, and devices",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.1",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Identify system users, processes acting on behalf of users, and devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify system users, processes acting on behalf of users, and devices",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.1"
+      }
+    },
+    {
+      "control_id": "3.5.2",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Authenticate identities of users, processes, or devices before access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authenticate identities of users, processes, or devices before access",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.2",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Authenticate identities of users, processes, or devices before access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Authenticate identities of users, processes, or devices before access",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.2"
+      }
+    },
+    {
+      "control_id": "3.5.3",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Use multifactor authentication for local and network access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use multifactor authentication for local and network access",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.3",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Use multifactor authentication for local and network access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Use multifactor authentication for local and network access",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.3"
+      }
+    },
+    {
+      "control_id": "3.5.4",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Employ replay-resistant authentication mechanisms",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ replay-resistant authentication mechanisms",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.4",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Employ replay-resistant authentication mechanisms",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ replay-resistant authentication mechanisms",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.4"
+      }
+    },
+    {
+      "control_id": "3.5.5",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Prevent reuse of identifiers for a defined period",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent reuse of identifiers for a defined period",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.5",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Prevent reuse of identifiers for a defined period",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent reuse of identifiers for a defined period",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.5"
+      }
+    },
+    {
+      "control_id": "3.5.6",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Disable identifiers after a defined period of inactivity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Disable identifiers after a defined period of inactivity",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.6",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Disable identifiers after a defined period of inactivity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Disable identifiers after a defined period of inactivity",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.6"
+      }
+    },
+    {
+      "control_id": "3.5.7",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Enforce minimum password complexity and change of characters",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Enforce minimum password complexity and change of characters",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.7",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Enforce minimum password complexity and change of characters",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Enforce minimum password complexity and change of characters",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.7"
+      }
+    },
+    {
+      "control_id": "3.5.8",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Prohibit password reuse for a specified number of generations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit password reuse for a specified number of generations",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.8",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Prohibit password reuse for a specified number of generations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit password reuse for a specified number of generations",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.8"
+      }
+    },
+    {
+      "control_id": "3.5.9",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Allow temporary password use for system logons with immediate change",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Allow temporary password use for system logons with immediate change",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.9",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Allow temporary password use for system logons with immediate change",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Allow temporary password use for system logons with immediate change",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.9"
+      }
+    },
+    {
+      "control_id": "3.5.10",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Store and transmit only cryptographically-protected passwords",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Store and transmit only cryptographically-protected passwords",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.10",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Store and transmit only cryptographically-protected passwords",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Store and transmit only cryptographically-protected passwords",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.10"
+      }
+    },
+    {
+      "control_id": "3.5.11",
+      "framework": "NIST_800_171",
+      "family": "IA",
+      "title": "Obscure feedback of authentication information",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Obscure feedback of authentication information",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IA.L2-3.5.11",
+      "framework": "CMMC_L2",
+      "family": "IA",
+      "title": "Obscure feedback of authentication information",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Obscure feedback of authentication information",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.5.11"
+      }
+    },
+    {
+      "control_id": "3.6.1",
+      "framework": "NIST_800_171",
+      "family": "IR",
+      "title": "Establish operational incident-handling capability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish operational incident-handling capability",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IR.L2-3.6.1",
+      "framework": "CMMC_L2",
+      "family": "IR",
+      "title": "Establish operational incident-handling capability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish operational incident-handling capability",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.6.1"
+      }
+    },
+    {
+      "control_id": "3.6.2",
+      "framework": "NIST_800_171",
+      "family": "IR",
+      "title": "Track, document, and report incidents to designated officials",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Track, document, and report incidents to designated officials",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IR.L2-3.6.2",
+      "framework": "CMMC_L2",
+      "family": "IR",
+      "title": "Track, document, and report incidents to designated officials",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Track, document, and report incidents to designated officials",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.6.2"
+      }
+    },
+    {
+      "control_id": "3.6.3",
+      "framework": "NIST_800_171",
+      "family": "IR",
+      "title": "Test the organizational incident response capability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Test the organizational incident response capability",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "IR.L2-3.6.3",
+      "framework": "CMMC_L2",
+      "family": "IR",
+      "title": "Test the organizational incident response capability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Test the organizational incident response capability",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.6.3"
+      }
+    },
+    {
+      "control_id": "3.7.1",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Perform maintenance on organizational systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Perform maintenance on organizational systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.1",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Perform maintenance on organizational systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Perform maintenance on organizational systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.1"
+      }
+    },
+    {
+      "control_id": "3.7.2",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Provide controls on tools, techniques, mechanisms, and personnel",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide controls on tools, techniques, mechanisms, and personnel",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.2",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Provide controls on tools, techniques, mechanisms, and personnel",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide controls on tools, techniques, mechanisms, and personnel",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.2"
+      }
+    },
+    {
+      "control_id": "3.7.3",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Ensure equipment removed for off-site maintenance is sanitized",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure equipment removed for off-site maintenance is sanitized",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.3",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Ensure equipment removed for off-site maintenance is sanitized",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure equipment removed for off-site maintenance is sanitized",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.3"
+      }
+    },
+    {
+      "control_id": "3.7.4",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Check media containing diagnostic tools for malicious code",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Check media containing diagnostic tools for malicious code",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.4",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Check media containing diagnostic tools for malicious code",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Check media containing diagnostic tools for malicious code",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.4"
+      }
+    },
+    {
+      "control_id": "3.7.5",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Require multifactor authentication to establish nonlocal maintenance sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Require multifactor authentication to establish nonlocal maintenance sessions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.5",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Require multifactor authentication to establish nonlocal maintenance sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Require multifactor authentication to establish nonlocal maintenance sessions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.5"
+      }
+    },
+    {
+      "control_id": "3.7.6",
+      "framework": "NIST_800_171",
+      "family": "MA",
+      "title": "Supervise maintenance activities of maintenance personnel",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Supervise maintenance activities of maintenance personnel",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MA.L2-3.7.6",
+      "framework": "CMMC_L2",
+      "family": "MA",
+      "title": "Supervise maintenance activities of maintenance personnel",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Supervise maintenance activities of maintenance personnel",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.7.6"
+      }
+    },
+    {
+      "control_id": "3.8.1",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Protect system media containing CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect system media containing CUI",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.1",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Protect system media containing CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect system media containing CUI",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.1"
+      }
+    },
+    {
+      "control_id": "3.8.2",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Limit access to CUI on system media to authorized users",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit access to CUI on system media to authorized users",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.2",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Limit access to CUI on system media to authorized users",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit access to CUI on system media to authorized users",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.2"
+      }
+    },
+    {
+      "control_id": "3.8.3",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Sanitize or destroy system media containing CUI before disposal",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Sanitize or destroy system media containing CUI before disposal",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.3",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Sanitize or destroy system media containing CUI before disposal",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Sanitize or destroy system media containing CUI before disposal",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.3"
+      }
+    },
+    {
+      "control_id": "3.8.4",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Mark media with necessary CUI markings",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Mark media with necessary CUI markings",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.4",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Mark media with necessary CUI markings",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Mark media with necessary CUI markings",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.4"
+      }
+    },
+    {
+      "control_id": "3.8.5",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Control access to media containing CUI and maintain accountability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control access to media containing CUI and maintain accountability",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.5",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Control access to media containing CUI and maintain accountability",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control access to media containing CUI and maintain accountability",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.5"
+      }
+    },
+    {
+      "control_id": "3.8.6",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Implement cryptographic mechanisms to protect CUI on digital media",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement cryptographic mechanisms to protect CUI on digital media",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.6",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Implement cryptographic mechanisms to protect CUI on digital media",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement cryptographic mechanisms to protect CUI on digital media",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.6"
+      }
+    },
+    {
+      "control_id": "3.8.7",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Control use of removable media on system components",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control use of removable media on system components",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.7",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Control use of removable media on system components",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control use of removable media on system components",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.7"
+      }
+    },
+    {
+      "control_id": "3.8.8",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Prohibit use of portable storage devices when no identifiable owner",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit use of portable storage devices when no identifiable owner",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.8",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Prohibit use of portable storage devices when no identifiable owner",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit use of portable storage devices when no identifiable owner",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.8"
+      }
+    },
+    {
+      "control_id": "3.8.9",
+      "framework": "NIST_800_171",
+      "family": "MP",
+      "title": "Protect confidentiality of backup CUI at storage locations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect confidentiality of backup CUI at storage locations",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "MP.L2-3.8.9",
+      "framework": "CMMC_L2",
+      "family": "MP",
+      "title": "Protect confidentiality of backup CUI at storage locations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect confidentiality of backup CUI at storage locations",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.8.9"
+      }
+    },
+    {
+      "control_id": "3.9.1",
+      "framework": "NIST_800_171",
+      "family": "PS",
+      "title": "Screen individuals prior to authorizing access to systems containing CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Screen individuals prior to authorizing access to systems containing CUI",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PS.L2-3.9.1",
+      "framework": "CMMC_L2",
+      "family": "PS",
+      "title": "Screen individuals prior to authorizing access to systems containing CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Screen individuals prior to authorizing access to systems containing CUI",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.9.1"
+      }
+    },
+    {
+      "control_id": "3.9.2",
+      "framework": "NIST_800_171",
+      "family": "PS",
+      "title": "Ensure CUI and systems are protected during personnel actions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure CUI and systems are protected during personnel actions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PS.L2-3.9.2",
+      "framework": "CMMC_L2",
+      "family": "PS",
+      "title": "Ensure CUI and systems are protected during personnel actions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Ensure CUI and systems are protected during personnel actions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.9.2"
+      }
+    },
+    {
+      "control_id": "3.10.1",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Limit physical access to systems, equipment, and operating environments",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit physical access to systems, equipment, and operating environments",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.1",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Limit physical access to systems, equipment, and operating environments",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Limit physical access to systems, equipment, and operating environments",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.1"
+      }
+    },
+    {
+      "control_id": "3.10.2",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Protect and monitor physical facility and support infrastructure",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect and monitor physical facility and support infrastructure",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.2",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Protect and monitor physical facility and support infrastructure",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect and monitor physical facility and support infrastructure",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.2"
+      }
+    },
+    {
+      "control_id": "3.10.3",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Escort visitors and monitor visitor activity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Escort visitors and monitor visitor activity",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.3",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Escort visitors and monitor visitor activity",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Escort visitors and monitor visitor activity",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.3"
+      }
+    },
+    {
+      "control_id": "3.10.4",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Maintain audit logs of physical access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Maintain audit logs of physical access",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.4",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Maintain audit logs of physical access",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Maintain audit logs of physical access",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.4"
+      }
+    },
+    {
+      "control_id": "3.10.5",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Control and manage physical access devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and manage physical access devices",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.5",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Control and manage physical access devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and manage physical access devices",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.5"
+      }
+    },
+    {
+      "control_id": "3.10.6",
+      "framework": "NIST_800_171",
+      "family": "PE",
+      "title": "Enforce safeguarding measures for CUI at alternate work sites",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Enforce safeguarding measures for CUI at alternate work sites",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "PE.L2-3.10.6",
+      "framework": "CMMC_L2",
+      "family": "PE",
+      "title": "Enforce safeguarding measures for CUI at alternate work sites",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Enforce safeguarding measures for CUI at alternate work sites",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.10.6"
+      }
+    },
+    {
+      "control_id": "3.11.1",
+      "framework": "NIST_800_171",
+      "family": "RA",
+      "title": "Periodically assess risk to organizational operations and assets",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Periodically assess risk to organizational operations and assets",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "RA.L2-3.11.1",
+      "framework": "CMMC_L2",
+      "family": "RA",
+      "title": "Periodically assess risk to organizational operations and assets",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Periodically assess risk to organizational operations and assets",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.11.1"
+      }
+    },
+    {
+      "control_id": "3.11.2",
+      "framework": "NIST_800_171",
+      "family": "RA",
+      "title": "Scan for vulnerabilities and remediate",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Scan for vulnerabilities and remediate",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "RA.L2-3.11.2",
+      "framework": "CMMC_L2",
+      "family": "RA",
+      "title": "Scan for vulnerabilities and remediate",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Scan for vulnerabilities and remediate",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.11.2"
+      }
+    },
+    {
+      "control_id": "3.11.3",
+      "framework": "NIST_800_171",
+      "family": "RA",
+      "title": "Remediate vulnerabilities in accordance with risk assessments",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Remediate vulnerabilities in accordance with risk assessments",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "RA.L2-3.11.3",
+      "framework": "CMMC_L2",
+      "family": "RA",
+      "title": "Remediate vulnerabilities in accordance with risk assessments",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Remediate vulnerabilities in accordance with risk assessments",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.11.3"
+      }
+    },
+    {
+      "control_id": "3.12.1",
+      "framework": "NIST_800_171",
+      "family": "CA",
+      "title": "Periodically assess security controls",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Periodically assess security controls",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CA.L2-3.12.1",
+      "framework": "CMMC_L2",
+      "family": "CA",
+      "title": "Periodically assess security controls",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Periodically assess security controls",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.12.1"
+      }
+    },
+    {
+      "control_id": "3.12.2",
+      "framework": "NIST_800_171",
+      "family": "CA",
+      "title": "Develop and implement plans of action designed to correct deficiencies",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Develop and implement plans of action designed to correct deficiencies",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CA.L2-3.12.2",
+      "framework": "CMMC_L2",
+      "family": "CA",
+      "title": "Develop and implement plans of action designed to correct deficiencies",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Develop and implement plans of action designed to correct deficiencies",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.12.2"
+      }
+    },
+    {
+      "control_id": "3.12.3",
+      "framework": "NIST_800_171",
+      "family": "CA",
+      "title": "Monitor security controls on an ongoing basis",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor security controls on an ongoing basis",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CA.L2-3.12.3",
+      "framework": "CMMC_L2",
+      "family": "CA",
+      "title": "Monitor security controls on an ongoing basis",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor security controls on an ongoing basis",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.12.3"
+      }
+    },
+    {
+      "control_id": "3.12.4",
+      "framework": "NIST_800_171",
+      "family": "CA",
+      "title": "Develop, document, and periodically update system security plans",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Develop, document, and periodically update system security plans",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "CA.L2-3.12.4",
+      "framework": "CMMC_L2",
+      "family": "CA",
+      "title": "Develop, document, and periodically update system security plans",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Develop, document, and periodically update system security plans",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.12.4"
+      }
+    },
+    {
+      "control_id": "3.13.1",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Monitor, control, and protect communications at external boundaries",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor, control, and protect communications at external boundaries",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.1",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Monitor, control, and protect communications at external boundaries",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor, control, and protect communications at external boundaries",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.1"
+      }
+    },
+    {
+      "control_id": "3.13.2",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Employ architectural designs and techniques that promote effective security",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ architectural designs and techniques that promote effective security",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.2",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Employ architectural designs and techniques that promote effective security",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ architectural designs and techniques that promote effective security",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.2"
+      }
+    },
+    {
+      "control_id": "3.13.3",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Separate user functionality from system management functionality",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Separate user functionality from system management functionality",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.3",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Separate user functionality from system management functionality",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Separate user functionality from system management functionality",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.3"
+      }
+    },
+    {
+      "control_id": "3.13.4",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Prevent unauthorized transfer of information via shared resources",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent unauthorized transfer of information via shared resources",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.4",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Prevent unauthorized transfer of information via shared resources",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent unauthorized transfer of information via shared resources",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.4"
+      }
+    },
+    {
+      "control_id": "3.13.5",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Implement subnetworks for publicly accessible system components",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement subnetworks for publicly accessible system components",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.5",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Implement subnetworks for publicly accessible system components",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement subnetworks for publicly accessible system components",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.5"
+      }
+    },
+    {
+      "control_id": "3.13.6",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Deny network communications traffic by default",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Deny network communications traffic by default",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.6",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Deny network communications traffic by default",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Deny network communications traffic by default",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.6"
+      }
+    },
+    {
+      "control_id": "3.13.7",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Prevent remote devices from simultaneously establishing non-remote connections",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent remote devices from simultaneously establishing non-remote connections",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.7",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Prevent remote devices from simultaneously establishing non-remote connections",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prevent remote devices from simultaneously establishing non-remote connections",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.7"
+      }
+    },
+    {
+      "control_id": "3.13.8",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Implement cryptographic mechanisms to prevent unauthorized disclosure",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement cryptographic mechanisms to prevent unauthorized disclosure",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.8",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Implement cryptographic mechanisms to prevent unauthorized disclosure",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Implement cryptographic mechanisms to prevent unauthorized disclosure",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.8"
+      }
+    },
+    {
+      "control_id": "3.13.9",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Terminate network connections associated with communications sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Terminate network connections associated with communications sessions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.9",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Terminate network connections associated with communications sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Terminate network connections associated with communications sessions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.9"
+      }
+    },
+    {
+      "control_id": "3.13.10",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Establish and manage cryptographic keys",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and manage cryptographic keys",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.10",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Establish and manage cryptographic keys",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Establish and manage cryptographic keys",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.10"
+      }
+    },
+    {
+      "control_id": "3.13.11",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Employ FIPS-validated cryptography when used to protect CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ FIPS-validated cryptography when used to protect CUI",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.11",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Employ FIPS-validated cryptography when used to protect CUI",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Employ FIPS-validated cryptography when used to protect CUI",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.11"
+      }
+    },
+    {
+      "control_id": "3.13.12",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Prohibit remote activation of collaborative computing devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit remote activation of collaborative computing devices",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.12",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Prohibit remote activation of collaborative computing devices",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Prohibit remote activation of collaborative computing devices",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.12"
+      }
+    },
+    {
+      "control_id": "3.13.13",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Control and monitor use of mobile code",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor use of mobile code",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.13",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Control and monitor use of mobile code",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor use of mobile code",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.13"
+      }
+    },
+    {
+      "control_id": "3.13.14",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Control and monitor use of Voice over Internet Protocol (VoIP)",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor use of Voice over Internet Protocol (VoIP)",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.14",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Control and monitor use of Voice over Internet Protocol (VoIP)",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Control and monitor use of Voice over Internet Protocol (VoIP)",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.14"
+      }
+    },
+    {
+      "control_id": "3.13.15",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Protect authenticity of communications sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect authenticity of communications sessions",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.15",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Protect authenticity of communications sessions",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect authenticity of communications sessions",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.15"
+      }
+    },
+    {
+      "control_id": "3.13.16",
+      "framework": "NIST_800_171",
+      "family": "SC",
+      "title": "Protect confidentiality of CUI at rest",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect confidentiality of CUI at rest",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SC.L2-3.13.16",
+      "framework": "CMMC_L2",
+      "family": "SC",
+      "title": "Protect confidentiality of CUI at rest",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Protect confidentiality of CUI at rest",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.13.16"
+      }
+    },
+    {
+      "control_id": "3.14.1",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Identify, report, and correct system flaws in a timely manner",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify, report, and correct system flaws in a timely manner",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.1",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Identify, report, and correct system flaws in a timely manner",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify, report, and correct system flaws in a timely manner",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.1"
+      }
+    },
+    {
+      "control_id": "3.14.2",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Provide protection from malicious code at designated locations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide protection from malicious code at designated locations",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.2",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Provide protection from malicious code at designated locations",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Provide protection from malicious code at designated locations",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.2"
+      }
+    },
+    {
+      "control_id": "3.14.3",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Monitor system security alerts and take action",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor system security alerts and take action",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.3",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Monitor system security alerts and take action",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor system security alerts and take action",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.3"
+      }
+    },
+    {
+      "control_id": "3.14.4",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Update malicious code protection mechanisms when new releases available",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Update malicious code protection mechanisms when new releases available",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.4",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Update malicious code protection mechanisms when new releases available",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Update malicious code protection mechanisms when new releases available",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.4"
+      }
+    },
+    {
+      "control_id": "3.14.5",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Perform periodic scans and real-time scans of files from external sources",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Perform periodic scans and real-time scans of files from external sources",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.5",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Perform periodic scans and real-time scans of files from external sources",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Perform periodic scans and real-time scans of files from external sources",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.5"
+      }
+    },
+    {
+      "control_id": "3.14.6",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Monitor organizational systems including inbound and outbound communications",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor organizational systems including inbound and outbound communications",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.6",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Monitor organizational systems including inbound and outbound communications",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Monitor organizational systems including inbound and outbound communications",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.6"
+      }
+    },
+    {
+      "control_id": "3.14.7",
+      "framework": "NIST_800_171",
+      "family": "SI",
+      "title": "Identify unauthorized use of organizational systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify unauthorized use of organizational systems",
+        "provenance": "provisional_sprint_target_jul10_2026"
+      }
+    },
+    {
+      "control_id": "SI.L2-3.14.7",
+      "framework": "CMMC_L2",
+      "family": "SI",
+      "title": "Identify unauthorized use of organizational systems",
+      "implementation_state": "implemented",
+      "evidence_uri": null,
+      "state_snapshot": {
+        "summary": "Identify unauthorized use of organizational systems",
+        "provenance": "provisional_sprint_target_jul10_2026",
+        "nist_800_171": "3.14.7"
+      }
+    }
+  ]
+}
