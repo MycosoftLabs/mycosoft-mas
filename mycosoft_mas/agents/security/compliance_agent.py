@@ -11,6 +11,10 @@ from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus
+from mycosoft_mas.security.compliance_evidence_gate import (
+    evaluate_control_response,
+    is_control_met,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,18 +36,13 @@ CMMC_DOMAINS = [
     "SI",  # System and Information Integrity
 ]
 
-# CMMC Level 1: 17 practices (FAR 52.204-21)
 CMMC_L1_PRACTICE_COUNT = 17
-# CMMC Level 2: 110 practices (NIST 800-171)
 CMMC_L2_PRACTICE_COUNT = 110
-# CMMC Level 3: 20 enhanced practices (NIST 800-172)
 CMMC_L3_PRACTICE_COUNT = 20
 
 
 class CmmcComplianceAgent(BaseAgent):
-    """
-    Agent for CMMC/NIST 800-171 compliance self-assessment and POA&M.
-    """
+    """Agent for evidence-gated CMMC/NIST 800-171 self-assessment and POA&M work."""
 
     def __init__(
         self,
@@ -119,21 +118,24 @@ class CmmcComplianceAgent(BaseAgent):
     def _run_gap_analysis(
         self,
         assessment_id: str,
-        responses: Dict[str, str],
+        responses: Dict[str, Any],
         level: int,
     ) -> Dict[str, Any]:
-        """Identify non-compliant controls from assessment responses."""
+        """Identify gaps; a Met status requires evidence_uri and SAO validation."""
         total = {
             1: CMMC_L1_PRACTICE_COUNT,
             2: CMMC_L2_PRACTICE_COUNT,
             3: CMMC_L3_PRACTICE_COUNT,
         }.get(level, 0)
-        compliant = sum(
-            1 for v in responses.values() if v in ("met", "implemented", "yes", "compliant")
-        )
-        gaps = [
-            k for k, v in responses.items() if v not in ("met", "implemented", "yes", "compliant")
-        ]
+
+        compliant = sum(1 for value in responses.values() if is_control_met(value))
+        gaps = [control_id for control_id, value in responses.items() if not is_control_met(value)]
+        unverified_assertions: Dict[str, str] = {}
+        for control_id, value in responses.items():
+            result = evaluate_control_response(value)
+            if result.status in {"met", "implemented", "yes", "compliant"} and not result.allowed_met:
+                unverified_assertions[control_id] = result.reason
+
         return {
             "assessment_id": assessment_id,
             "level": level,
@@ -143,6 +145,8 @@ class CmmcComplianceAgent(BaseAgent):
             "compliance_pct": round(100 * compliant / total, 1) if total else 0,
             "gaps": gaps[:50],
             "gap_count": len(gaps),
+            "unverified_assertions": unverified_assertions,
+            "evidence_gate": "Met requires evidence_uri and sao_validated=true",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -151,7 +155,7 @@ class CmmcComplianceAgent(BaseAgent):
         gap_analysis: Dict[str, Any],
         priority: str = "high",
     ) -> Dict[str, Any]:
-        """Generate Plan of Action and Milestones for gaps."""
+        """Generate Plan of Action and Milestones for evidence-gated gaps."""
         gaps = gap_analysis.get("gaps", [])
         items = []
         for i, control_id in enumerate(gaps, 1):
@@ -159,7 +163,7 @@ class CmmcComplianceAgent(BaseAgent):
                 {
                     "id": f"POAM-{i:04d}",
                     "control_id": control_id,
-                    "finding": f"Control {control_id} not yet implemented",
+                    "finding": f"Control {control_id} is not supported by validated evidence",
                     "priority": priority,
                     "responsible": "TBD",
                     "due_date": "TBD",
@@ -197,16 +201,24 @@ class CmmcComplianceAgent(BaseAgent):
             assessment_id = task.get("assessment_id")
             if not assessment_id or assessment_id not in self._assessments:
                 return {"status": "error", "message": "Unknown assessment_id"}
-            a = self._assessments[assessment_id]
-            gap = self._run_gap_analysis(assessment_id, a["responses"], a["level"])
+            assessment = self._assessments[assessment_id]
+            gap = self._run_gap_analysis(
+                assessment_id,
+                assessment["responses"],
+                assessment["level"],
+            )
             return {"status": "success", "result": gap}
         if task_type == "generate_poam":
             gap = task.get("gap_analysis")
             if not gap:
                 assessment_id = task.get("assessment_id")
                 if assessment_id and assessment_id in self._assessments:
-                    a = self._assessments[assessment_id]
-                    gap = self._run_gap_analysis(assessment_id, a["responses"], a["level"])
+                    assessment = self._assessments[assessment_id]
+                    gap = self._run_gap_analysis(
+                        assessment_id,
+                        assessment["responses"],
+                        assessment["level"],
+                    )
                 else:
                     return {"status": "error", "message": "gap_analysis or assessment_id required"}
             poam = self._generate_poam(gap, task.get("priority", "high"))
@@ -219,6 +231,9 @@ class CmmcComplianceAgent(BaseAgent):
             return {"status": "success", "result": result}
         if task_type == "nist_mapping":
             level = task.get("level", 2)
-            fw = self._get_control_framework(level)
-            return {"status": "success", "result": {"mapping": fw["nist_mapping"], "framework": fw}}
+            framework = self._get_control_framework(level)
+            return {
+                "status": "success",
+                "result": {"mapping": framework["nist_mapping"], "framework": framework},
+            }
         return {"status": "error", "message": f"Unknown task type: {task_type}"}
