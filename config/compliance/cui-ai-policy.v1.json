@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "policy_id": "MYC-CUI-AI-ROB-1.0",
+  "version": "1.0",
+  "effective_date": "2026-07-15",
+  "owner": "Morgan Rockcoons (SAO)",
+  "organization": "Mycosoft, LLC",
+  "parent": "Mycosoft, Inc.",
+  "policy_sha256": "350442fb938e5e14114817e7ddfc08a16ecb84bf3a50b705977b4a68655beb19",
+  "assessment_state": "pursuing_cmmc_level_2_not_assessed_compliant",
+  "cui_processing_authorized": false,
+  "authorized_cui_systems": ["PreVeil"],
+  "outside_boundary_systems": [
+    "ChatGPT commercial",
+    "OpenAI commercial API",
+    "Claude commercial",
+    "Anthropic commercial API",
+    "Cursor",
+    "Cursor Cloud",
+    "Perplexity",
+    "Gemini commercial",
+    "GitHub",
+    "Google Drive and Workspace",
+    "Gmail",
+    "Slack",
+    "Notion",
+    "Asana",
+    "Supabase",
+    "Copilot",
+    "MYCA commercial inference"
+  ],
+  "mandatory_behaviors": {
+    "unknown_classification": "stop_and_route_to_preveil",
+    "suspected_spillage": "stop_contain_notify_sao_log_assess_reporting",
+    "secrets": "never_prompt_log_commit_or_transmit",
+    "government_submission": "human_only",
+    "control_status": "met_only_with_evidence_uri_and_sao_validation",
+    "public_repo": "no_cui_no_secrets",
+    "cui_output": "prohibited"
+  },
+  "canonical_identity": {
+    "sao": "Morgan Rockcoons",
+    "cfo": "RJ Ricasata",
+    "cmmc_entity": "Mycosoft, LLC",
+    "parent_entity": "Mycosoft, Inc.",
+    "performance_model": "self_perform"
+  },
+  "enforcement": {
+    "mode": "fail_closed",
+    "content_logging": false,
+    "blocked_event_metadata": ["policy_id", "policy_sha256", "source", "fingerprint", "payload_bytes", "rule_ids", "timestamp"],
+    "required_agent_metadata": ["cui_policy_id", "cui_policy_sha256", "cui_authorized"]
+  }
+}
