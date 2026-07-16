@@ -1,260 +1,287 @@
 # Master Document Index
 
+## CMMC L2 / compliance (July 15, 2026)
+
+- `CODE/docs/AI_AGENT_CUI_RULES_OF_BEHAVIOR_JUL15_2026.md` — **MANDATORY AI Agent CUI Rules of Behavior** (every Cursor/Claude/ChatGPT/Perplexity/Gemini agent). Cursor alwaysApply rule: `.cursor/rules/ai-agent-cui-rules-of-behavior.mdc`.
+- `CODE/docs/AI_AGENT_CUI_ROB_SYSTEMWIDE_ROLLOUT_JUL15_2026.md` — System-wide RoB wiring status (rules, agents, sync).
+- `CODE/docs/CMMC_L2_DOCUMENT_PRODUCTION_CATALOG_JUL15_2026.md` ? **Master document production catalog** (SSP TOC, Have/Partial/Missing, Phases 0-3, source pack, 42 paste-ready prompts). Downloads: `C:\Users\Owner1\Downloads\CMMC_L2_DOCUMENT_PRODUCTION_CATALOG_JUL15_2026.md`.
+- `CODE/docs/CMMC_L2_NEXT_ACTIONS_AND_DOC_PROMPTS_JUL15_2026.md` ? Flip posture + 14 prompts (absorbed as P-01?P-14 in production catalog).
+- `CODE/docs/CMMC_L2_READY_NOW_FLIP_STATUS_JUL15_2026.md` ? Ready-now honesty-gated soc_ops flips (12 implemented / 6 partial / CM+AU+SI blocked).
+- `CODE/docs/CMMC_L2_AUTOMATED_VERIFICATION_RUNBOOK_JUL15_2026.md` ? Automated 110-control verification runbook + harness.
+- `CODE/docs/CURSOR_TO_CLAUDE_COMPLIANCE_HANDOFF_JUL15_2026.md` ? **Cursor?Claude compliance handoff (Jul 15)**: paste-into-context operational handoff (PROV tokens, completed work, open lanes, evidence index, AT PROV/PROV+2). Downloads twin for attach.
+- `CODE/docs/CMMC_L2_SELFASSESS_CURSOR_RUN_STATUS_JUL15_2026.md` ? Cursor self-assessment run status (6 reports, soc_ops notes, Wazuh manager, UniFi/Proxmox/physical).
+- `CODE/docs/CMMC_L2_CURSOR_TECHNICAL_STATUS_JUL15_2026.md` ? Technical punchlist status (Batch A/E, reports LLM, blockers).
+- `CODE/docs/CURSOR_CMMC_SELFASSESS_RUN_JUL15_2026.md` ? Original Claude?Cursor runbook (steps 0?6).
+- `CODE/docs/CUI_AUDIT_MORGAN_FIX_INSTRUCTIONS_JUL15_2026.md` ? Morgan human fix instructions (Maps, GitHub, Supabase).
+- `CODE/docs/CMMC_PROXMOX_READONLY_AUDIT_JUL15_2026.md` ? Proxmox RO inventory (no mutations).
+- `CODE/docs/CMMC_UNIFI_NETWORK_AUDIT_JUL15_2026.md` ? UniFi draft/`endpoints-cmmc` (401; no push).
+- `CODE/docs/CMMC_PHYSICAL_HOME_OFFICE_SOP_JUL15_2026.md` ? Physical/home-office SOP draft for signature.
+- `WEBSITE/website/docs/audits/2026-07-15-cui-security-audit/` ? Lane A audit pack (executive-summary, findings.jsonl, REMEDIATION_STATUS).
+
 ## Psathyrella backend architecture (June 25, 2026)
 
-- `docs/SINE_PSATHYRELLA_SECURITY_AND_INTEGRATION_JUN25_2026.md` — **Security + integration map**: repo/path/API/NAS/env/CI guardrails for SINE acoustic stack and Psathyrella control buoy; defer private-repo flip; buoy+NAS verification checklist.
-- `docs/NVIDIA_NEMOCLAW_NEMOTRON_NIM_LANDSCAPE_JUN28_2026.md` — **NVIDIA agent/LLM glossary**: NemoClaw, OpenClaw, OpenShell, Nemotron 3, NIM, Ollama vs Meta/Llama (not OpenCL).
-- `CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` — **Bench quick-ref**: Jetson `:8787` MDP vs `:18789` OpenClaw/NemoClaw, motor curl examples, hardware wiring, uplink ack/SSE paths.
-- `CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` — **Hardware wiring plan (Jul 01)**: LiFePO4 12 V bus, Jetson+PCA9685 ESC/servo PWM, Tier A bench + Tier B pool wire tables, DD ESC arming, power budget, kill switch, MG996R 180° vs 360° azimuth.
-- `CODE/docs/PSATHYRELLA_PROCUREMENT_BRIEFING_JUL01_2026.md` — **CEO procurement briefing (Jul 01)**: Morgan inventory vs buy-now cart (ASINs + Amazon links), Tier A bench + Tier B pool add-ons, do-not-buy list, power wiring chain, software NO-GO until Jetson `:8787` MDP agent, tonight checklist.
-- `CODE/docs/PSATHYRELLA_ASSEMBLY_MANUAL_JUL01_2026.md` — **Internal electronics assembly & wiring manual (Jul 01)**: Lego-style, bag-by-bag, pin-by-pin build of the buoy internals — SENSORS lane (Mushroom 1 MycoBrain → Jetson) vs PROPULSION lane (Jetson + PCA9685), step-by-step connections with verify/stop checks. Step-by-step build companion to the hardware wire plan and procurement briefing.
-- `docs/PSATHYRELLA_JETSON_MYCOBRAIN_COMMS_ARCHITECTURE_JUN28_2026.md` — **Buoy comms split (canonical)**: GCS→MAS→Jetson `:8787` downlink, SSE uplink, MycoBrain COM3 sensors-only, pool test wiring.
-- `CODE/docs/PSATHYRELLA_JETSON_PROP_TEST_JUN28_2026.md` — Jetson `:8787` handler options, env vars, verification curls.
-- `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` — **P1 bench software complete (Jul 07)**: ESC calibrate, per-ESC neutral trim, PCA re-probe, registry keepalive + bench TTL, INA226/leak telemetry hooks; deploy `000412638`.
-- `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` — **P0 completion record** (superseded by P0–P6 status for full picture).
-- `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` — MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
-- `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` — **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
+- `docs/PSATHYRELLA_HUB_DOWN_GCS_FRONTEND_PROTECT_HANDOFF_CLAUDE_JUL10_2026.md` ? **Give Claude this (Jul 10)**: hub-down looked like GPS/radios dead; Cursor restored+watchdog; Claude must probe `:8790`, banner pipeline failures, honest `site` vs `locked` GPS in GCS.
+- `docs/PSATHYRELLA_RADIOS_SIDEAB_GCS_HANDOFF_CLAUDE_JUL09_2026.md` ? **Claude/GCS buoy handoff (Jul 09)**: Side B USB-JSON 2.1.7 LoRa/BLE, Side A NeoPixel recovery, hub GPS/SIM, MAS telemetry radios+pose, no BOOT button. **Give Claude this for GCS buoy test.**
+- `docs/PSATHYRELLA_WIFI_4G_GCS_FIX_JUL09_2026.md` ? **Wi?Fi/4G GCS fix (Jul 09)**: Side B was overwriting host wifi/sim; hub hysteresis + RSSI; all four radios stable on MAS.
+- `docs/PSATHYRELLA_HUB_BOOT_ORDER_FIX_JUL09_2026.md` ? **Hub boot race fix (Jul 09)**: wait for Side A+B USB by-id, Side A reconnect loop, start-limit disabled + 60s watchdog; hands-free reboot.
+- `docs/PSATHYRELLA_DRY_TRANSDUCER_UW_COMMS_HANDOFF_CLAUDE_JUL09_2026.md` ? **Claude GCS handoff (Jul 09)**: dry PT-2040PQ as temp UW-comms; Jetson `:8791` API; never touch propulsion `0x60`.
+- `docs/PSATHYRELLA_PINS27_28_BUS1_INA3221_CLASH_FIX_JUL09_2026.md` ? **Root cause (Jul 09)**: pins 27/28 = Linux `i2c-1` (not `i2c-2`); factory PCA `0x40` collides with onboard `ina3221`; solder A0?`0x41`; ALLCALL beep proven.
+- `docs/PSATHYRELLA_SECOND_PCA_SMALL_PIEZO_WIRING_JUL09_2026.md` ? **Second PCA + small PT-2040PQ dry beep**: on 27/28 use **`0x41` (A0)**, buoy stays `0x60` on bus 7; CH0+resistor; ~4 kHz.
+- `docs/PSATHYRELLA_I2C2_PINS27_28_ENABLE_JUL09_2026.md` ? **Pins 27/28 pinmux enable**: HDR40 overlay + reboot; corrected: Linux bus is `i2c-1` / `gen2_i2c`.
+- `docs/PSATHYRELLA_HARDWARE_JETSON_HANDOFF_CLAUDE_JUL06_2026.md` ? **Claude propulsion handoff (Jul 06)**: PCA 0x60, TXS, Jetson :8788.
+- `docs/SINE_PSATHYRELLA_SECURITY_AND_INTEGRATION_JUN25_2026.md` ? **Security + integration map**: repo/path/API/NAS/env/CI guardrails for SINE acoustic stack and Psathyrella control buoy; defer private-repo flip; buoy+NAS verification checklist.
+- `docs/NVIDIA_NEMOCLAW_NEMOTRON_NIM_LANDSCAPE_JUN28_2026.md` ? **NVIDIA agent/LLM glossary**: NemoClaw, OpenClaw, OpenShell, Nemotron 3, NIM, Ollama vs Meta/Llama (not OpenCL).
+- `CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` ? **Bench quick-ref**: Jetson `:8787` MDP vs `:18789` OpenClaw/NemoClaw, motor curl examples, hardware wiring, uplink ack/SSE paths.
+- `CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` ? **Hardware wiring plan (Jul 01)**: LiFePO4 12 V bus, Jetson+PCA9685 ESC/servo PWM, Tier A bench + Tier B pool wire tables, DD ESC arming, power budget, kill switch, MG996R 180? vs 360? azimuth.
+- `CODE/docs/PSATHYRELLA_PROCUREMENT_BRIEFING_JUL01_2026.md` ? **CEO procurement briefing (Jul 01)**: Morgan inventory vs buy-now cart (ASINs + Amazon links), Tier A bench + Tier B pool add-ons, do-not-buy list, power wiring chain, software NO-GO until Jetson `:8787` MDP agent, tonight checklist.
+- `CODE/docs/PSATHYRELLA_ASSEMBLY_MANUAL_JUL01_2026.md` ? **Internal electronics assembly & wiring manual (Jul 01)**: Lego-style, bag-by-bag, pin-by-pin build of the buoy internals ? SENSORS lane (Mushroom 1 MycoBrain ? Jetson) vs PROPULSION lane (Jetson + PCA9685), step-by-step connections with verify/stop checks. Step-by-step build companion to the hardware wire plan and procurement briefing.
+- `docs/PSATHYRELLA_JETSON_MYCOBRAIN_COMMS_ARCHITECTURE_JUN28_2026.md` ? **Buoy comms split (canonical)**: GCS?MAS?Jetson `:8787` downlink, SSE uplink, MycoBrain COM3 sensors-only, pool test wiring.
+- `CODE/docs/PSATHYRELLA_JETSON_PROP_TEST_JUN28_2026.md` ? Jetson `:8787` handler options, env vars, verification curls.
+- `docs/PSATHYRELLA_P1_COMPLETE_JUL07_2026.md` ? **P1 bench software complete (Jul 07)**: ESC calibrate, per-ESC neutral trim, PCA re-probe, registry keepalive + bench TTL, INA226/leak telemetry hooks; deploy `000412638`.
+- `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` ? **P0 completion record** (superseded by P0?P6 status for full picture).
+- `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` ? MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
+- `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` ? **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
 
-## Earth Simulator — full capabilities audit (June 25, 2026)
+## Earth Simulator ? full capabilities audit (June 25, 2026)
 
-- `WEBSITE/website/docs/EARTH_SIMULATOR_FULL_CAPABILITIES_AUDIT_JUN25_2026.md` — **Master audit**: V2/V3/V4 model, all layers/filters/UI, MYCA analysis & control, MINDEX pipeline, MycoBrain/MDP, Arraylake fields, BFF APIs, assets, plans & gaps. Indexed from `EARTH_SIMULATOR_DOCS_INDEX.md`.
-- `WEBSITE/website/docs/EARTH_SIMULATOR_ARRAYLAKE_FIELDS_COMPLETE_JUN27_2026.md` — **Complete**: all 16 Arraylake field layers baked (ERA5, HRRR, MRMS, Helios, ALIVE, biomass, canopy, Sentinel NDVI/truecolor, GEO wind); UI/BFF/baker fixes; verification steps.
+- `WEBSITE/website/docs/EARTH_SIMULATOR_FULL_CAPABILITIES_AUDIT_JUN25_2026.md` ? **Master audit**: V2/V3/V4 model, all layers/filters/UI, MYCA analysis & control, MINDEX pipeline, MycoBrain/MDP, Arraylake fields, BFF APIs, assets, plans & gaps. Indexed from `EARTH_SIMULATOR_DOCS_INDEX.md`.
+- `WEBSITE/website/docs/EARTH_SIMULATOR_ARRAYLAKE_FIELDS_COMPLETE_JUN27_2026.md` ? **Complete**: all 16 Arraylake field layers baked (ERA5, HRRR, MRMS, Helios, ALIVE, biomass, canopy, Sentinel NDVI/truecolor, GEO wind); UI/BFF/baker fixes; verification steps.
 
-## Nature Learning Model (NLM) — status & narrative (June 25, 2026)
+## Nature Learning Model (NLM) ? status & narrative (June 25, 2026)
 
-- `docs/NLM_FULL_STATUS_AND_INDEX_JUN25_2026.md` — **Full inventory**: code, docs, URLs, capabilities, gaps.
-- `docs/NLM_UNIFIED_PUBLIC_NARRATIVE_JUN25_2026.md` — **Public story** for Perplexity merge, press, website alignment.
-- `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` — **Execution plan**: owners, repos, P0–P3 priorities.
-- `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` — **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
-- `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` — **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
+- `docs/NLM_FULL_STATUS_AND_INDEX_JUN25_2026.md` ? **Full inventory**: code, docs, URLs, capabilities, gaps.
+- `docs/NLM_UNIFIED_PUBLIC_NARRATIVE_JUN25_2026.md` ? **Public story** for Perplexity merge, press, website alignment.
+- `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` ? **Execution plan**: owners, repos, P0?P3 priorities.
+- `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` ? **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
+- `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` ? **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
 
 ## Defense / License / CI (June 25, 2026)
 
-- `docs/DEFENSE_LICENSE_CI_HANDOFF_JUN25_2026.md` — 25 proprietary LICENSE PRs merged; CI fixes (MAS, NatureOS, mycobrain); repos remain PUBLIC.
-- `docs/CURSOR_HANDOFF_DEFENSE_LICENSE_JUN25_2026.md` — Amended Cursor handoff (no Phase 3 private flip).
+- `docs/DEFENSE_LICENSE_CI_HANDOFF_JUN25_2026.md` ? 25 proprietary LICENSE PRs merged; CI fixes (MAS, NatureOS, mycobrain); repos remain PUBLIC.
+- `docs/CURSOR_HANDOFF_DEFENSE_LICENSE_JUN25_2026.md` ? Amended Cursor handoff (no Phase 3 private flip).
 
-- `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` — Morgan review list before any private flip (FUSARIUM, OEI/CREP, SINE, Psathyrella, TACO, etc.).
-- `docs/REPO_LICENSE_README_SWEEP_COMPLETE_JUN25_2026.md` — Per-repo LICENSE/NOTICE/README sweep (local branches, not pushed).
+- `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` ? Morgan review list before any private flip (FUSARIUM, OEI/CREP, SINE, Psathyrella, TACO, etc.).
+- `docs/REPO_LICENSE_README_SWEEP_COMPLETE_JUN25_2026.md` ? Per-repo LICENSE/NOTICE/README sweep (local branches, not pushed).
 
 ## UniFi / NAS / CISA KEV (June 25, 2026)
 
-- `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` — **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
-- `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` — **CISA KEV remediation**: CVE-2026-34908/09/10 (UniFi PATCHED), CVE-2025-67038 (Lantronix not in inventory); `/api/network/kev` + probe scripts.
+- `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` ? **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
+- `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` ? **CISA KEV remediation**: CVE-2026-34908/09/10 (UniFi PATCHED), CVE-2025-67038 (Lantronix not in inventory); `/api/network/kev` + probe scripts.
 
 ## Platform recovery (June 23, 2026)
 
-- `docs/PLATFORM_RECOVERY_COMPLETE_JUN23_2026.md` — **Partial recovery**: investor v6 live, 187 untouched (HTTP-only), Legion retired, local dev env + MAS `/network` route (188 deploy blocked on SSH), MYCA 191/MQTT pending credentials.
+- `docs/PLATFORM_RECOVERY_COMPLETE_JUN23_2026.md` ? **Partial recovery**: investor v6 live, 187 untouched (HTTP-only), Legion retired, local dev env + MAS `/network` route (188 deploy blocked on SSH), MYCA 191/MQTT pending credentials.
 
 ## Earth Sim Phase 7 website handoff (June 22, 2026)
 
-- `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` — **Claude website handoff**: Phases 0–7 MINDEX backend complete on VM 189, biology lock, API contracts, registry/BFF tasks for Earth Simulator, known bugs (weather SELECT, guild ETL 0 rows), MAS 188 down, credentials/SSH patterns, verification matrix.
+- `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` ? **Claude website handoff**: Phases 0?7 MINDEX backend complete on VM 189, biology lock, API contracts, registry/BFF tasks for Earth Simulator, known bugs (weather SELECT, guild ETL 0 rows), MAS 188 down, credentials/SSH patterns, verification matrix.
 
 ## Live audit & Claude handoff (June 21, 2026)
 
-- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — **Live prod audit + Claude Code handoff**: page/API matrix, MAS 188 down (P0), MINDEX up, Earth Sim/device video status post PR #228, prioritized Claude tasks.
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` ? **Live prod audit + Claude Code handoff**: page/API matrix, MAS 188 down (P0), MINDEX up, Earth Sim/device video status post PR #228, prioritized Claude tasks.
 
-## Earth Simulator P0–P2 (June 20, 2026)
+## Earth Simulator P0?P2 (June 20, 2026)
 
-- `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` — **Capabilities reference**: provenance table, P0–P2 fix summary, experiment briefs, verification commands.
-- `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` — **Science agent packet**: endpoints, sample bboxes, hypothesis templates for autonomous research agents.
+- `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` ? **Capabilities reference**: provenance table, P0?P2 fix summary, experiment briefs, verification commands.
+- `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` ? **Science agent packet**: endpoints, sample bboxes, hypothesis templates for autonomous research agents.
 
-## Worldview API readiness (June 17–19, 2026)
+## Worldview API readiness (June 17?19, 2026)
 
-- `docs/INGESTION_PIPELINE_CURSOR_HANDOFF_JUN19_2026.md` — **Cursor → Claude handoff (Jun 19)**: full MAS 188 / MINDEX 189 ingestion work — root causes, commits, VM deploy, `MINDEX_INTERNAL_TOKEN` 401 fix, ops scripts, env state, verification, Claude next steps (OpenSky OAuth2, AIS on 187).
-- `docs/WEBSITE_BLUEGREEN_DEPLOY_ABORT_ENV_JUN19_2026.md` — **Earth Sim deploy abort (Jun 19)**: prod VM `.env` line 167 malformed bare token; blue-green keep-blue OK; live site 200; Claude fixing cutover script + `.env`.
-- `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` — **Claude Code website handoff (Jun 18)**: live sandbox/MAS/MINDEX health, Worldview/search/earth-sim route matrix, Supabase metering, env vars, known gaps, deploy checklist.
-- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — **Worldview API readiness handoff**: current website gateway, MINDEX Worldview zone, MAS Worldstate/collector architecture, endpoint inventory, P0/P1 blockers, exact implementation sequence, and verification commands.
+- `docs/INGESTION_PIPELINE_CURSOR_HANDOFF_JUN19_2026.md` ? **Cursor ? Claude handoff (Jun 19)**: full MAS 188 / MINDEX 189 ingestion work ? root causes, commits, VM deploy, `MINDEX_INTERNAL_TOKEN` 401 fix, ops scripts, env state, verification, Claude next steps (OpenSky OAuth2, AIS on 187).
+- `docs/WEBSITE_BLUEGREEN_DEPLOY_ABORT_ENV_JUN19_2026.md` ? **Earth Sim deploy abort (Jun 19)**: prod VM `.env` line 167 malformed bare token; blue-green keep-blue OK; live site 200; Claude fixing cutover script + `.env`.
+- `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` ? **Claude Code website handoff (Jun 18)**: live sandbox/MAS/MINDEX health, Worldview/search/earth-sim route matrix, Supabase metering, env vars, known gaps, deploy checklist.
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` ? **Worldview API readiness handoff**: current website gateway, MINDEX Worldview zone, MAS Worldstate/collector architecture, endpoint inventory, P0/P1 blockers, exact implementation sequence, and verification commands.
 
-## Investor data room — NotebookLM hub (June 15, 2026)
+## Investor data room ? NotebookLM hub (June 15, 2026)
 
-- `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` — **NotebookLM / data room TOC**: links primary data story to architecture, MINDEX/ETL, CREP, Worldview, NLM/grounding, devices, MYCA, AWS Jun 15 waves, validation, upload bundles, and external (Perplexity) inputs.
+- `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` ? **NotebookLM / data room TOC**: links primary data story to architecture, MINDEX/ETL, CREP, Worldview, NLM/grounding, devices, MYCA, AWS Jun 15 waves, validation, upload bundles, and external (Perplexity) inputs.
 
 ## Section 9 Gap Remediation (June 15, 2026)
 
-- `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` — **Plan complete**: AWS GPU Wave 0, SSE BFF, 501 cleanup, NVIDIA/AWS GPU lanes, NatureOS Defense v2, device registry, terminology updates.
-- `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` — Website `/api/stream/*` proxies and client migration.
-- `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` — MAS/MINDEX proxy fixes and 503 reclassification.
-- `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` — AWS IAM, budgets, `scripts/aws/`.
-- `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` — `GPU_VOICE_PROVIDER` production switch.
-- `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md` — NVIDIA dev platform PersonaPlex test lane.
-- `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` — `/natureos/defense/*` operator shell.
-- `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` — Agaric + Psathyrella in production.
-- `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` — AWS scale-up Wave 1 prep (GPU, NAS, MQTT, Earth2, NLM).
-- `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` — **W1 complete**: KMS + SSE-KMS NAS→S3 pilot sync.
-- `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` — **W5 complete**: Worldview v1 local metering smoke (401/catalog/health).
-- `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` — **W6 complete**: MAS 188 collectors + CREP gateway fix (no website deploy).
-- `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` — Credits maximization + Worldview revenue.
-- `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` — Investor data story; Section 9 gaps updated.
+- `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` ? **Plan complete**: AWS GPU Wave 0, SSE BFF, 501 cleanup, NVIDIA/AWS GPU lanes, NatureOS Defense v2, device registry, terminology updates.
+- `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` ? Website `/api/stream/*` proxies and client migration.
+- `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` ? MAS/MINDEX proxy fixes and 503 reclassification.
+- `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` ? AWS IAM, budgets, `scripts/aws/`.
+- `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` ? `GPU_VOICE_PROVIDER` production switch.
+- `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md` ? NVIDIA dev platform PersonaPlex test lane.
+- `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` ? `/natureos/defense/*` operator shell.
+- `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` ? Agaric + Psathyrella in production.
+- `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` ? AWS scale-up Wave 1 prep (GPU, NAS, MQTT, Earth2, NLM).
+- `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` ? **W1 complete**: KMS + SSE-KMS NAS?S3 pilot sync.
+- `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` ? **W5 complete**: Worldview v1 local metering smoke (401/catalog/health).
+- `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` ? **W6 complete**: MAS 188 collectors + CREP gateway fix (no website deploy).
+- `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` ? Credits maximization + Worldview revenue.
+- `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` ? Investor data story; Section 9 gaps updated.
 
 ## Earth Simulator + MYCA Deploy Verification (May 26, 2026)
 
-- `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` — **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
+- `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` ? **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
 
 ## MYCA + MAS Coordination (May 19, 2026)
 - `docs/MYCA_MAS_COORDINATION_MASTER_MAY19_2026.md` ? **Canonical MYCA/MAS entry point**: document hierarchy, extended integration matrix (desktop MCP, A2A, WebMCP, omnichannel, AI Studio), work stream registry, claim verification policy, external tool matrix, MAS coordination API endpoints (`/api/myca/capabilities`, `/api/coordination/*`, `/api/mcp/tools`, `/api/myca/openapi`). Read this first for all MYCA coordination work.
 
 ## Voice-to-Voice MYCA on /test-voice (May 19, 2026)
-- `docs/VOICE_TOPOLOGY_LOCKED_MAY19_2026.md` — **Locked topology**: Voice Legion 241 vs local GPU; env contracts.
-- `docs/VOICE_TO_VOICE_VERIFICATION_MAY19_2026.md` — **Verification gates**: script results, diagnostics 0–5, browser smoke.
+- `docs/VOICE_TOPOLOGY_LOCKED_MAY19_2026.md` ? **Locked topology**: Voice Legion 241 vs local GPU; env contracts.
+- `docs/VOICE_TO_VOICE_VERIFICATION_MAY19_2026.md` ? **Verification gates**: script results, diagnostics 0?5, browser smoke.
 
 ## Meshtastic MAS / MINDEX chain (May 6, 2026)
 
-- `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` — **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** — passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.
-- `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` — **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
-- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` — **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
-- `docs/MESHTASTIC_MQTT_ENABLE_DEVICE_CRASH_WORKAROUNDS_MAY05_2026.md` — **ESP32/app crashes when enabling MQTT**: Wi-Fi-before-MQTT, **TLS off** on port **1883**, CLI workaround and recovery (`mqtt.enabled false`), upstream firmware issue pointers.
+- `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` ? **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** ? passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.
+- `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` ? **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` ? **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
+- `docs/MESHTASTIC_MQTT_ENABLE_DEVICE_CRASH_WORKAROUNDS_MAY05_2026.md` ? **ESP32/app crashes when enabling MQTT**: Wi-Fi-before-MQTT, **TLS off** on port **1883**, CLI workaround and recovery (`mqtt.enabled false`), upstream firmware issue pointers.
 
 ## GitHub sync + verification + next plan (May 3, 2026)
 
-- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` — **Meshtastic TennMesh-style**: website map activity overlay (packet-derived positions), systemd/env templates for `mqtt_meshtastic_bridge` on broker VM **196**, SSH smoke script, operator checklist for Mosquitto/LilyGO; live MAS `/api/meshtastic` deploy note when OpenAPI lacks routes.
-- `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` — **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 → 188 → 187 + Cloudflare).
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` ? **Meshtastic TennMesh-style**: website map activity overlay (packet-derived positions), systemd/env templates for `mqtt_meshtastic_bridge` on broker VM **196**, SSH smoke script, operator checklist for Mosquitto/LilyGO; live MAS `/api/meshtastic` deploy note when OpenAPI lacks routes.
+- `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` ? **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 ? 188 ? 187 + Cloudflare).
 
-- `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` — **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.
-- `docs/AGARIC_DEVICE_REGISTRY_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: push website + MAS, Sandbox 187 Docker + NAS mount + Cloudflare, MAS 188 restart, verification matrix.
-- `docs/AGENT100_PREFLIGHT_MAY03_2026.md` — **Agent100** Worldview validation preflight (treasury caps, kill switch, rate limits, env).
-- `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` — **Agent100** program map (`mycosoft_mas/agent100/`, `scripts/agent100/`, Supabase SQL).
-- `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` — **Agent100** test report template (post–wave3).
-- `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` — **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
-- `docs/MINDEX_APP_OVERHAUL_PROGRESS_MAY03_2026.md` — **MINDEX App overhaul (increment)**: website `health/all` wiring, env templates (MAS + MINDEX VM + website), MAS v2 pipeline agents (anchor / synthesis / QA / chemistry), MINDEX `network` router + migration 0031 pointer; remaining phases listed.
+- `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` ? **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.
+- `docs/AGARIC_DEVICE_REGISTRY_DEPLOY_HANDOFF_MAY04_2026.md` ? **Deploy handoff** for another agent: push website + MAS, Sandbox 187 Docker + NAS mount + Cloudflare, MAS 188 restart, verification matrix.
+- `docs/AGENT100_PREFLIGHT_MAY03_2026.md` ? **Agent100** Worldview validation preflight (treasury caps, kill switch, rate limits, env).
+- `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` ? **Agent100** program map (`mycosoft_mas/agent100/`, `scripts/agent100/`, Supabase SQL).
+- `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` ? **Agent100** test report template (post?wave3).
+- `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` ? **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
+- `docs/MINDEX_APP_OVERHAUL_PROGRESS_MAY03_2026.md` ? **MINDEX App overhaul (increment)**: website `health/all` wiring, env templates (MAS + MINDEX VM + website), MAS v2 pipeline agents (anchor / synthesis / QA / chemistry), MINDEX `network` router + migration 0031 pointer; remaining phases listed.
 
-## Security SOC — real systems rebuild (May 3, 2026)
+## Security SOC ? real systems rebuild (May 3, 2026)
 
-- `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` — **Plan delivery**: Postgres `soc_ops` schema, mock removal on `/security`, incidents + Redis `security:events`, network discovery → `device_inventory`, red team L1–L3 + UI SOC tab, compliance doc engine + website MAS tab; verify/deploy checklist.
-- `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` — UniFi / ARP / MQTT / HTTP / Jetson reconciler and inventory APIs.
-- `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` — L1 SAFE, L2 scoped nmap, L3 Claude planner; `soc-runs` / `soc-findings` APIs.
-- `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` — Perplexity → Claude → OpenAI pipeline; versioned SSP/POA&M in Postgres.
-- `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` — **Completion record** for the security real-systems rebuild (verify + deploy follow-ups).
-- `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: 189 → 188 → 187 + Cloudflare, verify curls.
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` ? **Plan delivery**: Postgres `soc_ops` schema, mock removal on `/security`, incidents + Redis `security:events`, network discovery ? `device_inventory`, red team L1?L3 + UI SOC tab, compliance doc engine + website MAS tab; verify/deploy checklist.
+- `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` ? UniFi / ARP / MQTT / HTTP / Jetson reconciler and inventory APIs.
+- `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` ? L1 SAFE, L2 scoped nmap, L3 Claude planner; `soc-runs` / `soc-findings` APIs.
+- `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` ? Perplexity ? Claude ? OpenAI pipeline; versioned SSP/POA&M in Postgres.
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` ? **Completion record** for the security real-systems rebuild (verify + deploy follow-ups).
+- `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` ? **Deploy handoff** for another agent: 189 ? 188 ? 187 + Cloudflare, verify curls.
 
-## Platform audit — inventory + gaps (May 2, 2026)
+## Platform audit ? inventory + gaps (May 2, 2026)
 
-- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — **Cross-repo inventory**: VMs, Cursor subagents, MAS agents, website surfaces, BFF **Appendix A** (`501` by design), n8n/MINDEX health evidence, Prometheus status (remediate via runbook), gap-scan summary; replaces missing `MASTER_INVENTORY_MAY02_2026.md` pointer below until that file is generated.
-- `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` — **Prometheus on MAS 188**: diagnose Docker/firewall, LAN verification; use `scripts/diagnose_prometheus_mas188.py` when `.credentials.local` is visible to the shell.
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` ? **Cross-repo inventory**: VMs, Cursor subagents, MAS agents, website surfaces, BFF **Appendix A** (`501` by design), n8n/MINDEX health evidence, Prometheus status (remediate via runbook), gap-scan summary; replaces missing `MASTER_INVENTORY_MAY02_2026.md` pointer below until that file is generated.
+- `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` ? **Prometheus on MAS 188**: diagnose Docker/firewall, LAN verification; use `scripts/diagnose_prometheus_mas188.py` when `.credentials.local` is visible to the shell.
 
-## MAY02 continuation rollout — closure (May 2, 2026)
+## MAY02 continuation rollout ? closure (May 2, 2026)
 
-- `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` — **P0–P3** operationalization outcomes, verification, follow-ups.
-- `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` — Queued May 1 plan shells (six tracks) for dedicated sprints.
-- `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` — Draft contract for CREP layer entitlements / agent keys.
+- `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` ? **P0?P3** operationalization outcomes, verification, follow-ups.
+- `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` ? Queued May 1 plan shells (six tracks) for dedicated sprints.
+- `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` ? Draft contract for CREP layer entitlements / agent keys.
 
-## MAY03 — May01 shells MVP closure + waypoints (May 3, 2026)
+## MAY03 ? May01 shells MVP closure + waypoints (May 3, 2026)
 
-- `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` — **Agaric** `/devices/agaric`, portal + nav, Earth Simulator catalog merge, MAS `device_role` doc, `device-tracker` subagent, verification notes.
-- `docs/DEVICES_REGISTRY_MAY03_2026.md` — **Master device roster** (human); keep in sync with `WEBSITE/website/lib/devices/catalog.ts` and `@device-tracker`.
-- `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` — Session log: paths touched, verification curls, manifest refresh.
-- `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` — CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
-- `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` — Ancestry explorer kingdom + pagination MVP.
-- `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` — OpenAQ + Safecast + virus deferral MVP.
-- `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` — ChemputerAgent + BFF + UI MVP.
-- `docs/GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md` — Growth analytics agent + instrument summary MVP.
-- `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md` — Tools hub deep links + health strip MVP.
-- `docs/BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md` — Unreal Pixel Streaming spike + env contract + UI panel.
+- `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` ? **Agaric** `/devices/agaric`, portal + nav, Earth Simulator catalog merge, MAS `device_role` doc, `device-tracker` subagent, verification notes.
+- `docs/DEVICES_REGISTRY_MAY03_2026.md` ? **Master device roster** (human); keep in sync with `WEBSITE/website/lib/devices/catalog.ts` and `@device-tracker`.
+- `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` ? Session log: paths touched, verification curls, manifest refresh.
+- `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` ? CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
+- `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` ? Ancestry explorer kingdom + pagination MVP.
+- `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` ? OpenAQ + Safecast + virus deferral MVP.
+- `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` ? ChemputerAgent + BFF + UI MVP.
+- `docs/GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md` ? Growth analytics agent + instrument summary MVP.
+- `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md` ? Tools hub deep links + health strip MVP.
+- `docs/BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md` ? Unreal Pixel Streaming spike + env contract + UI panel.
 
-## MYCA Alive — 4-phase program (May 2, 2026)
+## MYCA Alive ? 4-phase program (May 2, 2026)
 
-- `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` — **Master**: P1–P4 deliverables, verification, cross-links.
-- `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` — **Plan completion** summary (implementation vs live acceptance).
-- `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` — Voice (241) + Earth-2 (249) health runbook.
-- `docs/REDUNDANCY_AND_DR_MAY02_2026.md` — Proxmox, backups, DR checklist (CC-2).
-- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — CC-1 inventory (manual + gap scan); optional codegen: `build_master_inventory.py` if restored.
+- `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` ? **Master**: P1?P4 deliverables, verification, cross-links.
+- `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` ? **Plan completion** summary (implementation vs live acceptance).
+- `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` ? Voice (241) + Earth-2 (249) health runbook.
+- `docs/REDUNDANCY_AND_DR_MAY02_2026.md` ? Proxmox, backups, DR checklist (CC-2).
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` ? CC-1 inventory (manual + gap scan); optional codegen: `build_master_inventory.py` if restored.
 
-## Petri Dish v2 — hybrid Rust/WASM + headless engine (May 2, 2026)
+## Petri Dish v2 ? hybrid Rust/WASM + headless engine (May 2, 2026)
 
-- `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` — **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
-- `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` — **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
-- `scripts/deploy_petri_v2_stack_vm187.py` — Deploy Rust engine **8050** + MyceliumSeg API **8051** on Sandbox **187**.
-- `scripts/set_petri_engine_env_mas188.py` — Append `PETRI_ENGINE_V2_URL` to MAS **188** `~/mycosoft/mas/.env` and restart `mas-orchestrator`.
-- `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` — **Plan completion** summary and verification checklist.
+- `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` ? **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
+- `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` ? **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
+- `scripts/deploy_petri_v2_stack_vm187.py` ? Deploy Rust engine **8050** + MyceliumSeg API **8051** on Sandbox **187**.
+- `scripts/set_petri_engine_env_mas188.py` ? Append `PETRI_ENGINE_V2_URL` to MAS **188** `~/mycosoft/mas/.env` and restart `mas-orchestrator`.
+- `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` ? **Plan completion** summary and verification checklist.
 
-## NatureOS — full gap map, integrations, documentation (May 2, 2026)
+## NatureOS ? full gap map, integrations, documentation (May 2, 2026)
 
-- `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` — **Plan completion** summary, verification, backlog pointers (supersedes ad-hoc status for the gaps-and-integrations program).
-- `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` — **Canonical** NatureOS-A vs B, env matrix, mermaid, verification, cross-links.
-- `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` — Staging / smoke curls (BFF, MAS, MINDEX, .NET).
-- `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` — Post-merge deploy order (187 / 188 / 189 / .NET).
-- `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` — Waypoints, chat, entitlements, Fusarium deferral, route decision.
-- `docs/NATUREOS_BFF_MATLAB_LAB_PROXY_MAP_MAY02_2026.md` — Website `app/api/natureos/matlab/*` ↔ .NET `MatlabController`; lab TBD.
-- `docs/NATUREOS_BFF_DEVICES_TWIN_MAY02_2026.md` — MycoBrain / devices BFF and registry alignment.
-- `docs/NATUREOS_MINDEX_PER_APP_AND_AEROSOL_MAY02_2026.md` — MINDEX + aerosol ETL notes.
-- `docs/NATUREOS_DOTNET_CORE_API_RUNBOOK_MAY02_2026.md` — `core-api` runbook.
-- `docs/NATUREOS_SIGNALR_VS_WEB_SSE_MAY02_2026.md` — Realtime pattern note.
-- `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` — Agents: Worldview catalog first.
-- `scripts/natureos_bff_route_inventory.py` — BFF route inventory (run from MAS repo).
+- `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` ? **Plan completion** summary, verification, backlog pointers (supersedes ad-hoc status for the gaps-and-integrations program).
+- `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` ? **Canonical** NatureOS-A vs B, env matrix, mermaid, verification, cross-links.
+- `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` ? Staging / smoke curls (BFF, MAS, MINDEX, .NET).
+- `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` ? Post-merge deploy order (187 / 188 / 189 / .NET).
+- `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` ? Waypoints, chat, entitlements, Fusarium deferral, route decision.
+- `docs/NATUREOS_BFF_MATLAB_LAB_PROXY_MAP_MAY02_2026.md` ? Website `app/api/natureos/matlab/*` ? .NET `MatlabController`; lab TBD.
+- `docs/NATUREOS_BFF_DEVICES_TWIN_MAY02_2026.md` ? MycoBrain / devices BFF and registry alignment.
+- `docs/NATUREOS_MINDEX_PER_APP_AND_AEROSOL_MAY02_2026.md` ? MINDEX + aerosol ETL notes.
+- `docs/NATUREOS_DOTNET_CORE_API_RUNBOOK_MAY02_2026.md` ? `core-api` runbook.
+- `docs/NATUREOS_SIGNALR_VS_WEB_SSE_MAY02_2026.md` ? Realtime pattern note.
+- `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` ? Agents: Worldview catalog first.
+- `scripts/natureos_bff_route_inventory.py` ? BFF route inventory (run from MAS repo).
 
-## NatureOS Apps — cloud-style reorg (May 1, 2026)
+## NatureOS Apps ? cloud-style reorg (May 1, 2026)
 
-- `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` — **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
-- `docs/NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md` — Nature Statistics (`/natureos/nature-statistics`).
-- `docs/NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md` — Fungi Compute.
-- `docs/NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md` — Earth Simulator.
-- `docs/NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md` — Virtual Petri Dish + MyceliumSeg notes.
-- `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` — Biology Simulator landing.
-- `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` — Compound Analyser.
-- `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` — Aerosol + BFF routes.
-- `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` — Ancestry Database under `/natureos/ancestry`.
-- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` — All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-ups).
-- `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` (MINDEX repo) — All-life ETL orchestration and storage notes.
-- `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` — Growth Analytics.
-- `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` — Tools hub (`/natureos/tools` index).
+- `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` ? **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
+- `docs/NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md` ? Nature Statistics (`/natureos/nature-statistics`).
+- `docs/NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md` ? Fungi Compute.
+- `docs/NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md` ? Earth Simulator.
+- `docs/NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md` ? Virtual Petri Dish + MyceliumSeg notes.
+- `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` ? Biology Simulator landing.
+- `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` ? Compound Analyser.
+- `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` ? Aerosol + BFF routes.
+- `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` ? Ancestry Database under `/natureos/ancestry`.
+- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` ? All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-ups).
+- `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` (MINDEX repo) ? All-life ETL orchestration and storage notes.
+- `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` ? Growth Analytics.
+- `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` ? Tools hub (`/natureos/tools` index).
 - **Follow-up plan shells (May 1, 2026):** `docs/BIOLOGY_SIMULATOR_UNREAL_INTEGRATION_PLAN_MAY01_2026.md`, `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md`, `docs/ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md`, `docs/GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md`, `docs/AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md`, `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md`.
 
-## AWS + MVT tile pipeline — IAM, bake, stub (Apr 17, 2026)
+## AWS + MVT tile pipeline ? IAM, bake, stub (Apr 17, 2026)
 
-- `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` — **Ops**: budget, GitHub secret names, IAM user checklist; no keys in repo. Policy JSON: `scripts/aws/crep_baker_iam/`.
-- `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` — **Handoff runbook** (R2, Legions 8230, `bake_mvt_tiles.sh`, env vars).
-- `scripts/bake_mvt_tiles.sh` — **tippecanoe** pmtiles bake + R2 `aws s3 sync` (requires `R2_*`).
-- `scripts/aws_bake_spot.py` — **Optional** EC2 spot launch (env-configured AMI/SG).
-- `scripts/verify_mvt_tile_pipeline.py` — **Health** check for `TILE_RENDER_*` upstreams + optional CDN.
-- `services/crep_tile_render_stub/main.py` — **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `density` (241) for layer allowlists; `scripts/run_crep_tile_stub_8230.sh` / `.ps1`.
-- `scripts/ensure_sandbox_lan_api_urls.py` — **Merges** `TILE_RENDER_EARTH2_URL`, `TILE_RENDER_DENSITY_URL`, `TILE_RENDER_CDN_FALLBACK`, `NEXT_PUBLIC_TILES_CDN` on Sandbox VM 187.
-- `.github/workflows/nightly-mvt-bake.yml` — **GHA** template (`workflow_dispatch`; `if: false` until R2 secrets).
+- `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` ? **Ops**: budget, GitHub secret names, IAM user checklist; no keys in repo. Policy JSON: `scripts/aws/crep_baker_iam/`.
+- `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` ? **Handoff runbook** (R2, Legions 8230, `bake_mvt_tiles.sh`, env vars).
+- `scripts/bake_mvt_tiles.sh` ? **tippecanoe** pmtiles bake + R2 `aws s3 sync` (requires `R2_*`).
+- `scripts/aws_bake_spot.py` ? **Optional** EC2 spot launch (env-configured AMI/SG).
+- `scripts/verify_mvt_tile_pipeline.py` ? **Health** check for `TILE_RENDER_*` upstreams + optional CDN.
+- `services/crep_tile_render_stub/main.py` ? **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `density` (241) for layer allowlists; `scripts/run_crep_tile_stub_8230.sh` / `.ps1`.
+- `scripts/ensure_sandbox_lan_api_urls.py` ? **Merges** `TILE_RENDER_EARTH2_URL`, `TILE_RENDER_DENSITY_URL`, `TILE_RENDER_CDN_FALLBACK`, `NEXT_PUBLIC_TILES_CDN` on Sandbox VM 187.
+- `.github/workflows/nightly-mvt-bake.yml` ? **GHA** template (`workflow_dispatch`; `if: false` until R2 secrets).
 
-## Public transit — API key placement (Apr 17, 2026)
+## Public transit ? API key placement (Apr 17, 2026)
 
-- `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` — **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
+- `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` ? **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
 
 ## MYCA readiness execution plan (Apr 17, 2026)
-- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` — **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
+- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` ? **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
 
 ## MAS full index + unfinished gap audit (Apr 17, 2026)
-- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` — **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
+- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` ? **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
 
-## Proxmox — always-on VMs + daily backups (Apr 17, 2026)
-- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` — **Runbook**: `onboot`, optional 5‑min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
+## Proxmox ? always-on VMs + daily backups (Apr 17, 2026)
+- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` ? **Runbook**: `onboot`, optional 5?min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
 
-## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
-- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
+## Fluid Search ? Full AI interface milestone 1 (Apr 17, 2026)
+- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` ? **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
 
-## Fluid Search — total rebuild (May 03, 2026)
-- `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` — **Website**: MagneticGrid, SSE `/api/search/stream`, blended intent `POST /api/search/route`, `useStreamingSearch`, SuggestionChipsPanel, connector `lib/search/connectors/_framework.ts`, `earthMindexFirstConnector`, FastActionRadial FAB, Playwright `e2e/widgets` + `SEARCH_SUGGESTION_MATRIX`.
+## Fluid Search ? total rebuild (May 03, 2026)
+- `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` ? **Website**: MagneticGrid, SSE `/api/search/stream`, blended intent `POST /api/search/route`, `useStreamingSearch`, SuggestionChipsPanel, connector `lib/search/connectors/_framework.ts`, `earthMindexFirstConnector`, FastActionRadial FAB, Playwright `e2e/widgets` + `SEARCH_SUGGESTION_MATRIX`.
 
-## Eagle Eye — backend integration + Track A review (Apr 17, 2026)
-- `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` — **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
-- `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` — **Review gate** checklist for Track A merges.
-- `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` — **NLM**: batch `scene_index` embedding contract.
+## Eagle Eye ? backend integration + Track A review (Apr 17, 2026)
+- `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` ? **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
+- `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` ? **Review gate** checklist for Track A merges.
+- `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` ? **NLM**: batch `scene_index` embedding contract.
 
-## GPU Legions — NatureOS + FUSARIUM (Apr 17, 2026)
-- `docs/GPU_LEGION_LAYOUT_NATUREOS_FUSARIUM_APR17_2026.md` — **192.168.0.241 Voice / 192.168.0.249 Earth-2**: canonical split, shared GPU pool vs RBAC/data tier, browser tab VRAM note, env + snapshot verification.
+## GPU Legions ? NatureOS + FUSARIUM (Apr 17, 2026)
+- `docs/GPU_LEGION_LAYOUT_NATUREOS_FUSARIUM_APR17_2026.md` ? **192.168.0.241 Voice / 192.168.0.249 Earth-2**: canonical split, shared GPU pool vs RBAC/data tier, browser tab VRAM note, env + snapshot verification.
 
 ## Website VM 187 + MINDEX optimization brief (Apr 18, 2026)
-- `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` — **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.
+- `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` ? **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.
 
-## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
-- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
-- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes (superseded in part by default-on mount + `HARNESS_API_DISABLED`), safety notes.
-- `config/harness.env.example` — **MAS**: example env block for harness + brain.
-- `mycosoft_mas/harness/README.md` — quick use, static answers, MINDEX grounding, turbo-quant, tests.
+## MYCA Harness 2026 ? Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
+- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` ? **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
+- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` ? **MAS**: integration patch notes (superseded in part by default-on mount + `HARNESS_API_DISABLED`), safety notes.
+- `config/harness.env.example` ? **MAS**: example env block for harness + brain.
+- `mycosoft_mas/harness/README.md` ? quick use, static answers, MINDEX grounding, turbo-quant, tests.
 
-## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)
-- `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` — **MAS**: MycoDAO agent cluster under MYCA; orchestrator task contracts; MycoDAOAgent evolution; registry and n8n notes.
-- `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` — **MYCODAO**: full plan — Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse integration phases, security and wave timeline.
+## MycoDAO Pulse ? Supabase ? MINDEX ? MYCA (Apr 14, 2026)
+- `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` ? **MAS**: MycoDAO agent cluster under MYCA; orchestrator task contracts; MycoDAOAgent evolution; registry and n8n notes.
+- `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` ? **MYCODAO**: full plan ? Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse integration phases, security and wave timeline.
 
-## Legion GPU watchdog — no local GPU on dev PC (Apr 14, 2026)
-- `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` — **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
+## Legion GPU watchdog ? no local GPU on dev PC (Apr 14, 2026)
+- `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` ? **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
 
-## WSL2 Legion GPU nodes � Earth2 + Voice (Apr 15, 2026)
-- `docs/WSL_LEGION_GPU_NODES_APR15_2026.md` � **WSL2 runbook**: 4080A Earth2 vs 4080B voice; `Invoke-WSLGPUNodeSetup.ps1` + `wsl-gpu-node-setup.sh`; PyTorch CUDA, earth2studio, Moshi/PersonaPlex deps, Ollama, Hugging Face; no bare-metal NVIDIA drivers inside WSL.
-- `docs/STORAGE_LAYOUT_LEGION_GPU_APR15_2026.md` � **Storage layout**: `Initialize-MycosoftDataLayout.ps1`, `wsl-mycosoft-data-layout.sh`; models/cache/data/memory; HF, Torch, Ollama env vars.
+## WSL2 Legion GPU nodes ? Earth2 + Voice (Apr 15, 2026)
+- `docs/WSL_LEGION_GPU_NODES_APR15_2026.md` ? **WSL2 runbook**: 4080A Earth2 vs 4080B voice; `Invoke-WSLGPUNodeSetup.ps1` + `wsl-gpu-node-setup.sh`; PyTorch CUDA, earth2studio, Moshi/PersonaPlex deps, Ollama, Hugging Face; no bare-metal NVIDIA drivers inside WSL.
+- `docs/STORAGE_LAYOUT_LEGION_GPU_APR15_2026.md` ? **Storage layout**: `Initialize-MycosoftDataLayout.ps1`, `wsl-mycosoft-data-layout.sh`; models/cache/data/memory; HF, Torch, Ollama env vars.
 
 ## Deep Agents v0.5 Integration (Apr 9, 2026)
 - `docs/DEEP_AGENTS_V05_INTEGRATION_PLAN.md` ? **Integration plan**: Multi-phase Deep Agents v0.5 rollout across MAS with async subagents, middleware, filesystem, and protocol strategy.
@@ -927,9 +954,9 @@
 - `.github/workflows/myca-ci.yml` ? MYCA CI pipeline
 - `.github/workflows/myca-security.yml` ? MYCA security audit pipeline
 
-## TAC-O Maritime Integration — Mycosoft LLC 100% Prime (Apr 8, 2026; updated Jun 25, 2026)
+## TAC-O Maritime Integration ? Mycosoft LLC 100% Prime (Apr 8, 2026; updated Jun 25, 2026)
 - `docs/PSATHYRELLA_AUTONOMOUS_OPS_PLAN_JUN25_2026.md` ? **Current TAC-O prime narrative**: Mycosoft LLC 100% prime on NUWC TAC-O CSO (N66604-26-9-A00X). Autonomous ocean sensor platform, field architecture, demo goals.
-- `docs/SUPERSEDED_TACO_PLAN_APR08_2026.md` — **SUPERSEDED (historical only)**: Old subcontractor teaming draft — do not use for proposals or customer-facing content.
+- `docs/SUPERSEDED_TACO_PLAN_APR08_2026.md` ? **SUPERSEDED (historical only)**: Old subcontractor teaming draft ? do not use for proposals or customer-facing content.
 - `docs/TACO_CURSOR_IMPLEMENTATION_PLAN.md` ? **Full Cursor implementation plan**: 7 parallel lanes across 5 repos (NLM, MINDEX, MAS, MycoBrain, Website). 1,195 lines with code skeletons, file paths, execution schedule.
 - `docs/TACO_NIST_800_171_MAPPING_APR08_2026.md` ? **NIST 800-171 control mapping**: All 110 controls mapped to TAC-O system components (MycoBrain, MINDEX, MAS, FUSARIUM Maritime, network, maritime sensor interfaces).
 - `docs/TACO_CUI_HANDLING_APR08_2026.md` ? **CUI handling procedures**: Marking, storage (AES-256-GCM), transmission (TLS 1.3), processing, destruction, incident response for underwater sensor data.
@@ -963,20 +990,24 @@
 - `docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md` - Cross-repo gap-fill plan with full pending-edit inventory and phased closure plan after integration deployment (Apr 10, 2026).
 - `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
 
-- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md � Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
+- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md ? Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
 
 ## Earth Simulator + Worldview data acquisition (June 21, 2026)
-- `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` — Phased backend ingest plan: guild classification, broken connector fixes, 30+ new ETL sources, Worldview/Earth Sim/search exposure.
-- `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) — 55-dataset verified acquisition catalog with keys and endpoints.
-- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — Production audit Jun 21; MAS 188 unreachable.
+- `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` ? Phased backend ingest plan: guild classification, broken connector fixes, 30+ new ETL sources, Worldview/Earth Sim/search exposure.
+- `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) ? 55-dataset verified acquisition catalog with keys and endpoints.
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` ? Production audit Jun 21; MAS 188 unreachable.
 
 ## Psathyrella buoy GCS + backend (Jun 27, 2026)
-- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` — **Bench quick-ref (Jun 28)**: motor/servo `:8787`, optional AI `:18789`, wiring split, curl examples; aligned with MAS architecture doc.
-- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` — **Hardware wiring plan (Jul 01)**: component matrix, Tier A/B wire tables, ESC arming, PCA9685 channel map, power/fusing.
-- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CLAUDE_FRONTEND_HANDOFF_JUN27_2026.md` — Claude GCS lane handoff: feature table, bench prop+servo UI expectations, env checklist.
-- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CURSOR_BACKEND_HANDOFF_JUN27_2026.md` — Cursor backend lane handoff: inventory, Jetson forward slice, phased work, acceptance criteria.
-- `MAS/mycosoft-mas/docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — Backend P0–P6 status (MAS 188 overlay @ `f69fd3ea`; Jun 28 comms cross-links).
-- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md` — GCS P0–P6 integration status (Claude lane).
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` ? **Bench quick-ref (Jun 28)**: motor/servo `:8787`, optional AI `:18789`, wiring split, curl examples; aligned with MAS architecture doc.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` ? **Hardware wiring plan (Jul 01)**: component matrix, Tier A/B wire tables, ESC arming, PCA9685 channel map, power/fusing.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CLAUDE_FRONTEND_HANDOFF_JUN27_2026.md` ? Claude GCS lane handoff: feature table, bench prop+servo UI expectations, env checklist.
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_CURSOR_BACKEND_HANDOFF_JUN27_2026.md` ? Cursor backend lane handoff: inventory, Jetson forward slice, phased work, acceptance criteria.
+- `MAS/mycosoft-mas/docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` ? Backend P0?P6 status (MAS 188 overlay @ `f69fd3ea`; Jun 28 comms cross-links).
+- `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md` ? GCS P0?P6 integration status (Claude lane).
 
-- `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` — Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
-- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — Backend readiness audit, blockers, implementation order, verification commands.
+- `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` ? Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` ? Backend readiness audit, blockers, implementation order, verification commands.
+
+### CMMC L2 (Jul 15 2026)
+- [CMMC L2 Cursor self-assess run status](../../docs/CMMC_L2_SELFASSESS_CURSOR_RUN_STATUS_JUL15_2026.md) ? BEFORE PROV status
+- `docs/DOCUSIGN_CMMC_MYCA_INTEGRATION_JUL15_2026.md` — DocuSign CMMC/MYCA integration (JUL15 2026)

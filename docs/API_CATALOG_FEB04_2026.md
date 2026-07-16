@@ -19,6 +19,25 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ---
 
+## Worldview API Public Gateway (June 17, 2026)
+
+**Public contract:** Customers and external agents call only the Website gateway at `https://mycosoft.com/api/worldview/v1/*` with `Authorization: Bearer mk_...`. The gateway validates the key, meters paid datasets through Supabase, and calls MINDEX/MAS with server-side credentials. Direct MINDEX `X-API-Key` routes are an internal data zone for the gateway and services, not the v1 customer contract.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/worldview/v1/health` | GET | Gateway liveness and upstream reachability for MINDEX/MAS |
+| `/api/worldview/v1/catalog` | GET | Dataset registry with scope, cost, cache, support flags |
+| `/api/worldview/v1/bundles` | GET | List pre-composed Worldview bundles |
+| `/api/worldview/v1/openapi.json` | GET | Gateway-only OpenAPI contract for agent tool use |
+| `/api/worldview/v1/query?type=...` | GET | Metered dataset query through the registry |
+| `/api/worldview/v1/bundle/{bundleId}` | GET | Metered bundle fetch |
+| `/api/worldview/v1/stream/{channel}` | GET | Metered SSE stream |
+| `/api/worldview/v1/tile/{z}/{x}/{y}` | GET | Metered tile proxy |
+| `/api/worldview/v1/usage` | GET | Caller balance and rate-limit state |
+| `/api/worldview/v1/search` | GET | Gateway-authenticated MINDEX Worldview search; raw customer key is not forwarded |
+
+---
+
 ## MAS API Endpoints
 
 ### Agent100 harness (May 3, 2026) — no new MAS HTTP routes
@@ -44,6 +63,15 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/redteam/soc-runs` | GET | Query `limit` — list `soc_ops.redteam_runs` |
 | `/api/redteam/soc-findings` | GET | Query `run_id`, `limit` — list `soc_ops.redteam_findings` |
 | `/api/compliance/*` | GET/POST | Controls, docs, regenerate (when router mounted; requires DB) |
+| `/api/docusign/health` | GET | DocuSign config status (no secrets); JWT ready when RSA path set |
+| `/api/docusign/packs` | GET | CMMC envelope packs (MA maintenance, RJ access, 14-family) |
+| `/api/docusign/envelopes` | POST | Create envelope (document+signers); optional pack_id |
+| `/api/docusign/envelopes/cmmc` | POST | Create CMMC pack envelope (default draft/created) |
+| `/api/docusign/envelopes/{id}` | GET | Envelope status |
+| `/api/docusign/webhooks/connect` | POST | Connect webhook → evidence path hint (no soc_ops flip) |
+
+**Website BFF:** `GET/POST /api/docusign` proxies to MAS (server-side; no NEXT_PUBLIC secrets).
+
 
 **Website (admin BFF):** `GET /api/security/redteam?action=soc-runs|soc-findings`; compliance bundle via `GET /api/security?action=mas-compliance-bundle` and POST regenerate per implementation.
 
@@ -81,6 +109,22 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/openviking/sync/history` | GET | Recent sync cycle history |
 | `/api/openviking/devices/{device_id}/browse` | POST | Browse device filesystem |
 | `/api/openviking/devices/{device_id}/read` | POST | Read device content with tier |
+
+### Psathyrella Buoy API (`/api/psathyrella/*`) – Jun 25, 2026
+
+**Router:** `mycosoft_mas/core/routers/psathyrella_api.py` — control + telemetry + comms bridge endpoints for the autonomous buoy backend (frontend owned separately).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/psathyrella/{device_id}/status` | GET | Aggregate telemetry status (GPS, power/solar, thrusters, comms, sensor health) via device registry proxy |
+| `/api/psathyrella/{device_id}/propulsion` | POST | Submit vector or per-thruster PWM command to Side A command channel |
+| `/api/psathyrella/{device_id}/waypoints` | POST | Waypoint CRUD (`list/replace/append/upsert/delete/clear`) using MAS Redis working memory |
+| `/api/psathyrella/{device_id}/point-camera` | POST | Set camera tower bearing/pitch hold and forward device command |
+| `/api/psathyrella/{device_id}/comms` | GET/POST | Read/update radio mode + bridge state; ingest/flush acoustic-radio frames |
+| `/api/psathyrella/{device_id}/acoustic/stream` | GET | SSE feed of acoustic ingest + classification + persistence events |
+| `/api/psathyrella/{device_id}/vision/{camera\|lidar\|radar\|wifi}` | GET | Stream metadata/URL contract for frontend source switcher |
+| `/api/psathyrella/{device_id}/autonomy` | GET | Current autonomy adapter state and guidance payload |
+| `/api/psathyrella/{device_id}/autonomy/signal-follow` | POST | Set signal-follow mode (`acoustic`, `rf`, `optical`, `hybrid`) |
 
 ### Economy API (`/api/economy/*`) – Mar 19, 2026
 
@@ -185,17 +229,30 @@ REST API for the Meridian adapter; exposes CFO MCP tools over HTTP.
 
 ### Worldstate API (`/api/myca/world/*`) – Mar 14, 2026
 
-Canonical passive awareness surface for WorldState; read-only. CREP and Earth2 command APIs remain specialist.
+Canonical passive awareness surface for WorldState; read-only. CREP collector management is exposed separately for Worldview source freshness.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/myca/world` | GET | Full worldstate snapshot |
 | `/api/myca/world/summary` | GET | Compact summary for context |
-| `/api/myca/world/region` | GET | Region-filtered summary (lat, lon, radius) |
+| `/api/myca/world/region` | GET | Region-filtered summary (`lat`, `lon`, `radius_km`) |
 | `/api/myca/world/sources` | GET | Source freshness and status |
-| `/api/myca/world/diff` | GET | Diff since last turn (when implemented) |
+| `/api/myca/world/diff` | GET | Diff between recent in-process world snapshots |
 
 **Router:** `mycosoft_mas/core/routers/worldstate_api.py`
+
+### CREP Collector Management (`/api/crep/collectors/*`) – Jun 17, 2026
+
+Readiness and control surface for Worldview/CREP ingestion collectors. These routes do not fabricate source data; status reflects the live in-process collector orchestrator.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/crep/collectors/health` | GET | Collector route health, running state, collector count |
+| `/api/crep/collectors/status` | GET | Live collector status and recent audit events |
+| `/api/crep/collectors/start` | POST | Start default CREP collectors if stopped |
+| `/api/crep/collectors/stop` | POST | Stop running CREP collectors |
+
+**Router:** `mycosoft_mas/core/routers/crep_collectors_api.py`
 
 ### RaaS Worldstate Sessions (`/api/raas/worldstate/*`) – Mar 14, 2026
 
@@ -881,3 +938,13 @@ Most endpoints require authentication via:
 | `/api/mas/myca2-psilo/session/[id]/stop` | POST |
 | `/api/mas/myca2-psilo/session/[id]/kill` | POST |
 | `/api/mas/myca2-psilo/session/[id]/edge` | POST |
+
+
+## Reports API (JUL 11 2026)
+| Method | Path | Notes |
+|--------|------|-------|
+| GET | /api/reports/health | ReportsAgent health |
+| GET | /api/reports/compliance/report-context | Live soc_ops posture JSON for website builders |
+| GET | /api/reports/{domain}/report-context | Domain contexts (compliance live; others 501) |
+| POST | /api/reports/generate | Assemble context + call website report engine |
+

@@ -67,6 +67,7 @@ from mycosoft_mas.core.routers.conversation_memory_api import router as conversa
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
+from mycosoft_mas.core.routers.docusign_api import router as docusign_api_router
 from mycosoft_mas.core.routers.reports_api import router as reports_api_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
@@ -873,6 +874,7 @@ app.include_router(device_registry_router, tags=["device-registry"])
 app.include_router(psathyrella_router, tags=["psathyrella"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
+app.include_router(docusign_api_router)
 app.include_router(reports_api_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])

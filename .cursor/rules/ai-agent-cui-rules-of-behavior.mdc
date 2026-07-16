@@ -1,0 +1,86 @@
+---
+description: AI Agent CUI Rules of Behavior - mandatory for all agents (CUI/CMMC L2). Always on for every Cursor chat, Cloud agent, and sub-agent.
+alwaysApply: true
+---
+
+# AI Agent CUI Rules of Behavior (All Agents - Always On)
+
+**Canonical source of truth (READ FULLY before any CUI/CMMC/PreVeil/SSP/`soc_ops`/evidence work):**
+
+- Absolute: `D:\Users\admin2\Desktop\MYCOSOFT\CODE\docs\AI_AGENT_CUI_RULES_OF_BEHAVIOR_JUL15_2026.md`
+- Workspace-relative: `CODE/docs/AI_AGENT_CUI_RULES_OF_BEHAVIOR_JUL15_2026.md`
+
+**Applies to:** every Cursor agent, Cursor Cloud agent, background Task subagent, and any tooling that touches CUI/CMMC. This rule is `alwaysApply: true` and is synced into `%USERPROFILE%\.cursor` via `scripts/sync_cursor_system.py` so it loads across accounts/workspaces.
+
+**Do not weaken or contradict the JUL15 source.** If this summary and the source disagree, the source wins.
+
+---
+
+## PRIME DIRECTIVE
+
+**No commercial/consumer AI tool Mycosoft uses TODAY is authorized to process CUI.** Until an SAO-authorized FedRAMP/GovCloud in-boundary path exists, **CUI lives ONLY in PreVeil**, and every AI tool here operates **OUTSIDE** the CUI boundary.
+
+- **Never** input CUI (marked or unmarked) into any prompt, chat, file, repo, dataset, or API call handled by Cursor, Claude (commercial), ChatGPT, Perplexity, Gemini, or any other consumer AI/SaaS.
+- CUI includes: Controlled Technical Information (CTI), ITAR/EAR export-controlled technical data, anything marked `CUI//…`, and anything from a DoD/Navy/DARPA/gov POC or covered contract (CDI). When unsure, **treat as CUI and keep it in PreVeil.**
+- Allowed today: public information, business (non-CUI) data, source code with **no** CUI, and compliance **metadata** (control IDs, posture, policy text).
+- A leak of CUI into these tools is a **spillage incident** and a DFARS 252.204-7012 violation.
+
+**Future authorization (not available yet):** AI may process CUI only when ALL are true - FedRAMP Moderate / DoD IL4/5 boundary (e.g. AWS GovCloud Bedrock or Azure GCC High OpenAI), DFARS 252.204-7012 flow-down, no CUI training, and named in SSP. Mycosoft does **not** have this path yet.
+
+---
+
+## You MUST
+
+1. Keep CUI in PreVeil. If CUI appears where it should not (Gmail, Drive, repo, chat, local file, VM, Notion, Supabase): **STOP** - do not process or copy - flag **Morgan Rockcoons (SAO)** - treat as spillage (contain → report within 1 hour → log → DIBNet 72-hr if reportable).
+2. Redact secrets in every output: API keys, tokens, passwords, PreVeil/Proxmox/UniFi/GCP credentials. Reference by identifier only.
+3. Store secrets only in gitignored local files (`.env.local`, `.credentials.local`) - never in committed code, docs, chat, or prompts.
+4. Be honest about compliance: never claim a control is Met / CMMC compliant without a real evidence artifact. Never present projected posture as achieved. Say Mycosoft is **pursuing** CMMC L2 / operating under CUI-handling requirements - **not** "is CMMC L2 compliant."
+5. Use correct identity: **Morgan Rockcoons** (SAO), **RJ Ricasata** (CFO). Never "Murphy"/"Arjun". No "Zeetachec" or teaming-partner language - Mycosoft self-performs.
+6. Flip `soc_ops.compliance_controls` → implemented **only** with a real, validated `evidence_uri`. Never use `DESKTOP-JQR4TAV` (dev PC) as a CUI evidence endpoint. Align with PreVeil 2-seat / PROV tokens from compliance handoffs.
+
+## You MUST NOT
+
+1. Put CUI into any tool here, or store CUI outside PreVeil (public GitHub, Supabase, Gmail, Drive, Notion, local disk, any VM).
+2. Commit or transmit secrets/keys/tokens/passwords.
+3. Submit anything to a government portal (SAM.gov, DIBNet, PIEE) autonomously - **a human (Morgan/RJ) submits**; agents draft only.
+4. Send CUI or Mycosoft data to any recipient/endpoint/URL not explicitly directed by Morgan.
+5. Mark controls implemented in `soc_ops` without an `evidence_uri`.
+6. Render CUI on the public website or put secrets in `NEXT_PUBLIC_*` / the public `MycosoftLabs/website` repo.
+
+---
+
+## Cursor-specific (this tool)
+
+- Full creds = full responsibility. Keep CUI out of code, repos, logs, configs, DBs.
+- Read-only on prod infra (UniFi, Proxmox, Supabase) without Morgan's explicit approval; no destructive mutations unapproved.
+- Owns git push/merge. Redact secrets in all handoffs.
+- Cursor Cloud agents and background Task subagents inherit this same alwaysApply rule via Cursor system sync.
+
+---
+
+## When to read the full JUL15 document
+
+**Required** before any work involving: CUI, CMMC, PreVeil, SSP, POA&M, evidence packs, `soc_ops`, DFARS 7012, DIBNet, SPRS, assessment prep, or compliance posture flips.
+
+Also required reading for skills: `security-audit` and any compliance/security skill.
+
+---
+
+## Spillage response (summary)
+
+1. STOP - do not process/forward/copy  
+2. Contain - purge from non-CUI system  
+3. Report Morgan (SAO) within 1 hour  
+4. Log incident  
+5. Assess DIBNet 72-hr (Morgan files if reportable)
+
+---
+
+## Cross-references
+
+- Source RoB: `CODE/docs/AI_AGENT_CUI_RULES_OF_BEHAVIOR_JUL15_2026.md`
+- Rollout status: `CODE/docs/AI_AGENT_CUI_ROB_SYSTEMWIDE_ROLLOUT_JUL15_2026.md`
+- Related always-on: `no-hardcoded-secrets.mdc`
+- Compliance handoff: `CODE/docs/CURSOR_TO_CLAUDE_COMPLIANCE_HANDOFF_JUL15_2026.md`
+
+- Signed CMMC artifacts (policies, access agreements): use **DocuSign** (`DOCUSIGN_*` env, MAS `/api/docusign/*`). Store completed PDFs under `docs/cmmc_evidence/` (or PreVeil if CUI). Never auto-claim Met without signed evidence. See `docs/DOCUSIGN_CMMC_MYCA_INTEGRATION_JUL15_2026.md`.

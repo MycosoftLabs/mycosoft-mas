@@ -11,6 +11,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (June 17, 2026)
+
+- **Worldview API functional readiness** — Public v1 contract is the Website gateway only (`https://mycosoft.com/api/worldview/v1/*`, `Authorization: Bearer mk_...`). The gateway owns customer auth and Supabase metering, then calls MINDEX/MAS with server-side credentials. Paid dataset metering now fails closed when Supabase RPC/service credentials are unavailable outside explicit local fail-open mode. MAS adds CREP collector management endpoints under `/api/crep/collectors/*`, Worldstate region filtering, and in-process snapshot diffs. MINDEX normalizes Worldview maritime paths under `/api/worldview/v1/maritime/*` and returns explicit degraded metadata for Worldview facts query failures. Handoff: `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md`.
+
 ## Recent Updates (May 3, 2026)
 
 - **Security SOC (real `/security` stack)** — Postgres-backed SOC on MINDEX (`soc_ops.*`): incidents router `/api/incidents/*`, Redis stream `security:events`, incident source poller, network discovery → `device_inventory`, red team L1–L3 (`redteam/*`, `GET /api/redteam/soc-runs`, `soc-findings`), compliance control collector + doc engine. Website: `/security/redteam` SOC tab, `/security/compliance` MAS bundle tab, network/incidents pages wired to MAS BFF. Docs: `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md`, `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md`, `docs/REDTEAM_THREE_LAYER_MAY03_2026.md`, `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md`.
@@ -406,6 +410,48 @@ Live streams for agents, devices, memory, tasks, voice, Earth2, scientific telem
 **Redis channels**: `agents:status`, `devices:telemetry`, `memory:updates`, `tasks:progress`, `earth2:predictions`, `experiments:data`, `system:health`  
 **Routers**: `mycosoft_mas/core/routers/agent_status_ws.py`, `device_telemetry_ws.py`, `memory_updates_ws.py`, `task_progress_ws.py`, `voice_stream_ws.py`, `earth2_predictions_ws.py`, `scientific_data_ws.py`, `system_health_ws.py`
 
+### Website SSE BFF (June 15, 2026)
+
+HTTPS-friendly Server-Sent Event proxies on the Next.js website (port 3010 dev / 3000 prod) bridging browser clients to MAS WebSocket/SSE backends.
+
+| Route | Upstream | Description |
+|-------|----------|-------------|
+| `/api/stream/entities` | MAS `/api/entities/stream` | CREP entity stream |
+| `/api/stream/memory` | MAS `/ws/memory/updates` | Memory layer updates |
+| `/api/stream/earth2` | MAS `/ws/earth2/predictions` | Earth2 prediction stream |
+| `/api/stream/crep` | MAS CREP stream | Existing CREP SSE proxy |
+| `/api/stream/agents` | MAS agent status | Topology / agent bus |
+
+**Doc**: `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md`
+**Clients**: `lib/crep/streaming/entity-websocket-client.ts`, `hooks/use-topology-websocket-simple.ts`, `lib/natureos/signalr-client.ts`
+
+### AWS GPU production lane (June 15, 2026)
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| `scripts/aws/` | MAS repo | IAM policies, budget check, GPU provision, watchdog |
+| `platform-infra/aws/` | platform-infra | Runbook + README |
+| `GPU_VOICE_PROVIDER` | website + MAS env | `aws` \| `legion` \| `nvidia-dev` |
+| `resolve-voice-bridge.ts` | website | Provider-specific PersonaPlex bridge URL |
+| `gpu_node_client.py` | MAS | Voice/Earth2 URL resolution |
+
+**Docs**: `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md`, `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md`, `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md`
+
+### NatureOS Defense v2 (June 15, 2026)
+
+Greenfield operator shell at `/natureos/defense/*` — FUSARIUM platform API, compliance, JADC2, full device roster. Public CREP unchanged.
+
+| Route | Description |
+|-------|-------------|
+| `/natureos/defense` | Defense hub |
+| `/natureos/defense/cop` | Tactical COP (FUSARIUM `/api/fusarium/platform/cop`) |
+| `/natureos/defense/compliance` | NIST/CMMC via `/api/security?action=compliance-stats` |
+| `/natureos/defense/jadc2` | JADC2 alert push test |
+| `/natureos/defense/devices` | Catalog + MAS device registry |
+
+**API proxy**: `/api/fusarium/platform/[...path]` → MAS
+**Doc**: `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md`
+
 ### Petri Dish Simulation API (Feb 20, 2026)
 
 | Endpoint | Method | Description |
@@ -735,3 +781,19 @@ Liquid AI-inspired adaptive temporal processing for FCI biosignals, fungal memor
 | Router File | Prefix | Purpose |
 |-------------|--------|---------|
 | `mycosoft_mas/core/routers/liquid_fungal_api.py` | `/api/liquid-fungal` | Liquid fungal integration endpoints |
+
+
+## ReportsAgent (JUL 11 2026)
+- **Class:** ReportsAgent (mycosoft_mas/agents/security/reports_agent.py)
+- **Capabilities:** generate_report, assemble_context, schedule_report
+- **API:** /api/reports/* (health, compliance/report-context, generate)
+- **Data:** soc_ops via /api/compliance/*; website render via /api/security/reports/generate
+
+### DocuSign (JUL15 2026)
+- **Client:** `mycosoft_mas/integrations/docusign_client.py`
+- **Router:** `mycosoft_mas/core/routers/docusign_api.py` -> `/api/docusign/*`
+- **Purpose:** CMMC / compliance / MYCA envelope signing (MA policy, RJ access agreement, 14-family policies)
+- **Auth:** JWT Grant via `DOCUSIGN_RSA_PRIVATE_KEY_PATH` (required for server envelopes); env in `.credentials.local` only
+- **Evidence:** completed PDFs -> `CODE/docs/cmmc_evidence/` (or PreVeil if CUI); never auto-flip `soc_ops`
+- **Doc:** `docs/DOCUSIGN_CMMC_MYCA_INTEGRATION_JUL15_2026.md`
+

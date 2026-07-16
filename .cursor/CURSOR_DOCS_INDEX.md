@@ -6,6 +6,29 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## CMMC L2 / Claude compliance handoff (July 15, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `CODE/docs/AI_AGENT_CUI_RULES_OF_BEHAVIOR_JUL15_2026.md` | **MANDATORY — AI Agent CUI Rules of Behavior** (alwaysApply Cursor rule). No commercial AI may process CUI; PreVeil only. Every agent/Cloud/sub-agent must obey. |
+| `CODE/docs/AI_AGENT_CUI_ROB_SYSTEMWIDE_ROLLOUT_JUL15_2026.md` | System-wide RoB rollout status — how Cursor rules/agents/sync load the RoB. |
+| `CODE/docs/CMMC_L2_DOCUMENT_PRODUCTION_CATALOG_JUL15_2026.md` | **Master doc production catalog** — SSP-style TOC (Have/Partial/Missing), phased timeline, source pack, **42 paste-ready prompts** for Claude/Perplexity/ChatGPT/Cursor. Downloads twin for attach. |
+| `CODE/docs/CMMC_L2_NEXT_ACTIONS_AND_DOC_PROMPTS_JUL15_2026.md` | Flip posture + original 14 prompts (absorbed into production catalog as P-01…P-14). |
+| `CODE/docs/CURSOR_TO_CLAUDE_COMPLIANCE_HANDOFF_JUL15_2026.md` | **Give Claude this** — operational Cursor→Claude compliance handoff (PROV sync tokens, done vs open lanes, evidence index, AT PROV protocol). Attach copy: `C:\Users\Owner1\Downloads\CURSOR_TO_CLAUDE_COMPLIANCE_HANDOFF_JUL15_2026.md`. |
+| `CODE/docs/CMMC_L2_SELFASSESS_CURSOR_RUN_STATUS_JUL15_2026.md` | Cursor self-assess run status (reports, soc_ops 219 notes, Wazuh manager, blockers). |
+| `CODE/docs/CUI_AUDIT_MORGAN_FIX_INSTRUCTIONS_JUL15_2026.md` | Morgan-only CUI audit steps (Maps rotate, GitHub protection/2FA, Supabase apply). |
+| `WEBSITE/website/docs/audits/2026-07-15-cui-security-audit/executive-summary.md` | Lane A CUI audit executive summary. |
+
+## Psathyrella buoy — radios / GCS handoff (July 09–10, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/PSATHYRELLA_HUB_DOWN_GCS_FRONTEND_PROTECT_HANDOFF_CLAUDE_JUL10_2026.md` | **Give Claude this for GCS protect** — hub-down looked like GPS/RF dead; probe `:8790` in edge-health; banner pipeline failures; honest `site` vs `locked`. |
+| `docs/PSATHYRELLA_RADIOS_SIDEAB_GCS_HANDOFF_CLAUDE_JUL09_2026.md` | **Give Claude this for GCS buoy test** — live LoRa/BLE/Wi‑Fi/cellular + GPS + Side A recovery NeoPixel/buzzer; hub/MAS contracts; no BOOT button; do not flash Side A MDP. |
+| `docs/PSATHYRELLA_WIFI_4G_GCS_FIX_JUL09_2026.md` | Wi‑Fi/4G flap root cause: Side B clobbered host probes; hub fix + verified MAS radios. |
+| `docs/PSATHYRELLA_HUB_BOOT_ORDER_FIX_JUL09_2026.md` | Hub `:8790` cold-boot race — USB wait + Side A reconnect + start-limit off + 60s watchdog. |
+| `docs/PSATHYRELLA_DRY_TRANSDUCER_UW_COMMS_HANDOFF_CLAUDE_JUL09_2026.md` | **Give Claude this for UW-comms UI** — dry piezo stand-in, Jetson `:8791` tone/pulse/message API, swap-later contract. |
+| `docs/PSATHYRELLA_PINS27_28_BUS1_INA3221_CLASH_FIX_JUL09_2026.md` | **Pins 27/28 second PCA**: Linux bus is `i2c-1` (not `i2c-2`); `0x40` clashes with onboard `ina3221` — solder A0→`0x41`; ALLCALL beep proven. |
+| `docs/PSATHYRELLA_HARDWARE_JETSON_HANDOFF_CLAUDE_JUL06_2026.md` | Propulsion / PCA / TXS (still valid for motors). |
+
 ## Earth Sim Phase 7 website handoff (June 22, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -243,9 +266,19 @@
 | `docs/MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md` | **Bridge service**: Subscribe `mycobrain/#` → MAS device heartbeats + MINDEX `/telemetry/envelope`; CREP/device network visibility. |
 | `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` | **Meshtastic `msh/#` → MINDEX + Redis** on broker **196**; website NatureOS map activity overlay; systemd/env templates; deploy MAS for `/api/meshtastic` if missing. |
 
+## Defense / License / CI (Jun 25, 2026) — repos stay PUBLIC
+| Doc | Purpose |
+|-----|---------|
+| `docs/DEFENSE_LICENSE_CI_HANDOFF_JUN25_2026.md` | **Completion record**: 25 license PRs merged, CI fixes (MAS poetry.lock, NatureOS WorkflowId, mycobrain mdp_types.h); **no private flip**. |
+| `docs/CURSOR_HANDOFF_DEFENSE_LICENSE_JUN25_2026.md` | **Amended handoff** — Phase 3 skipped; AI tools unchanged on public repos. |
+| `docs/SINE_PSATHYRELLA_SECURITY_AND_INTEGRATION_JUN25_2026.md` | **Integration map**: SINE (MINDEX+NAS `.105`) + Psathyrella/control buoy (MAS 188 → Jetson 123); paths to protect; defer private until Morgan reviews. |
+| `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` | **ITAR/EAR REVIEW list** — paths flagged for Morgan; no confirmed ITAR; private flip only after review. |
+| `docs/REPO_LICENSE_README_SWEEP_COMPLETE_JUN25_2026.md` | README/LICENSE/NOTICE sweep log (local branch `chore/license-notice-readme-sweep-jun25-2026`, not pushed). |
+
 ## UniFi / NAS / Network (Jun 25, 2026) — canonical
 | Doc | Purpose |
 |-----|---------|
+| `docs/DEPLOYMENT_HANDOFF_UNIFI_SECURITY_JUN25_2026.md` | **Agent handoff** — deploy commands, verification matrix, env vars, git SHAs, blockers (API key), copy-for-Claude block. **Use for follow-on deploy agents.** |
 | `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` | **Canonical consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API integration, mount matrix, CISA KEV status, verification commands. **Start here for network infra.** |
 | `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` | **CISA KEV response**: CVE-2026-34908/09/10 + CVE-2025-67038; probe scripts; `/api/network/kev`. |
 
@@ -551,3 +584,5 @@ When in Cursor and the website dev server is down, run **`.\scripts\ensure-dev-s
 - docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md - Phase A runtime stabilization report covering MINDEX live-state route activation, MAS runtime status, and remaining consciousness/token blockers (Apr 10, 2026).
 
 - docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md - Canonical frontend/middleware/backend/full-system architecture reference for Fusarium (Apr 10, 2026).
+
+| `docs/DOCUSIGN_CMMC_MYCA_INTEGRATION_JUL15_2026.md` | DocuSign for CMMC/MYCA - JWT RSA setup, packs, evidence paths |
