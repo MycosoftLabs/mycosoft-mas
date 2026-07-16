@@ -1,0 +1,25 @@
+name: CUI policy gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify-policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install test dependencies
+        run: python -m pip install pytest pytest-asyncio
+      - name: Verify policy bindings and canonical hash
+        run: python scripts/sync_cui_agent_rules.py --check
+      - name: Run CUI and evidence-gate tests
+        run: >-
+          python -m pytest -q
+          tests/security/test_cui_guard.py
+          tests/security/test_compliance_evidence_gate.py
+          tests/scripts/test_sync_cui_agent_rules.py
