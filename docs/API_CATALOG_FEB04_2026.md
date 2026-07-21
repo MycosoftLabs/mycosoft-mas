@@ -44,6 +44,11 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/redteam/soc-runs` | GET | Query `limit` — list `soc_ops.redteam_runs` |
 | `/api/redteam/soc-findings` | GET | Query `run_id`, `limit` — list `soc_ops.redteam_findings` |
 | `/api/compliance/*` | GET/POST | Controls, docs, regenerate (when router mounted; requires DB) |
+| `/api/compliance/background-checks` | GET | Allowlisted Morgan/RJ background-check status metadata (`X-API-Key`) |
+| `/api/compliance/background-checks/order` | POST | Explicit allowlisted invitation/order when prod ordering enabled |
+| `/api/myca/posture` | GET | Read-only MYCA operational posture (BackgroundChecks + PreVeil Drive design; `X-API-Key`) |
+
+**Integration:** `mycosoft_mas/integrations/backgroundchecks_client.py`; doc `docs/BACKGROUNDCHECKS_PREVEIL_MYCA_INTEGRATION_JUL20_2026.md`.
 
 **Website (admin BFF):** `GET /api/security/redteam?action=soc-runs|soc-findings`; compliance bundle via `GET /api/security?action=mas-compliance-bundle` and POST regenerate per implementation.
 
