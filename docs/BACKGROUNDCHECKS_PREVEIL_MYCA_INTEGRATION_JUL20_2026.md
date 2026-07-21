@@ -1,7 +1,7 @@
 # BackgroundChecks.com + PreVeil MYCA Integration
 
 **Date:** July 20, 2026  
-**Status:** Implemented locally; not deployed  
+**Status:** Deployed to MAS VM 192.168.0.188 (Jul 20, 2026) — live on orchestrator systemd service  
 **Scope:** MAS-only compliance automation for Morgan Rockcoons and RJ Ricasata
 
 ## Security boundaries
@@ -67,6 +67,8 @@ MYCA consumes a metadata-only posture block:
 `PREVEIL_DRIVE_PATH` is never returned. The future Drive integration remains read-only and must not ingest or expose PreVeil CUI to MYCA or any commercial AI endpoint.
 
 ## Verification
+
+**MAS VM deploy (Jul 20, 2026):** Integration files applied on `192.168.0.188` from commit `70298dc98` (branch `chore/license-notice-readme-sweep-jun25-2026`); orchestrator env synced to `/home/mycosoft/mycosoft/mas/.env`; `BACKGROUNDCHECKS_PROD_ORDERS_ALLOWED=true` on VM. Post-restart smoke: `/health` 200; `/api/compliance/background-checks` 401 without key / 200 with key; `/api/myca/posture` 401 without key / 200 with key.
 
 Run focused mocked tests:
 
