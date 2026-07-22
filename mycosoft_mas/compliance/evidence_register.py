@@ -22,6 +22,7 @@ _ENVELOPE_UUID_RE = re.compile(
     r"\b([A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12})\b",
     re.IGNORECASE,
 )
+_ENVELOPE_HEX_RE = re.compile(r"\b([A-F0-9]{32})\b", re.IGNORECASE)
 _BACKTICK_PATH_RE = re.compile(r"`([^`]+)`")
 
 
@@ -96,6 +97,9 @@ def extract_docusign_envelope(*texts: str) -> Optional[str]:
             continue
         match = _ENVELOPE_UUID_RE.search(text)
         if match:
+            return match.group(1).upper()
+        match = _ENVELOPE_HEX_RE.search(text)
+        if match and "envelope" in text.lower():
             return match.group(1).upper()
     return None
 
@@ -182,6 +186,25 @@ def _entry_from_row(header: list[str], row: dict[str, str]) -> Optional[dict[str
     }
 
 
+def enrich_envelopes_from_register(content: str, entries: list[dict[str, Any]]) -> None:
+    for entry in entries:
+        if entry.get("docusign_envelope"):
+            continue
+        marker = 0
+        envelope: Optional[str] = None
+        while True:
+            idx = content.find(entry["id"], marker)
+            if idx == -1:
+                break
+            snippet = content[idx : idx + 2500]
+            envelope = extract_docusign_envelope(snippet)
+            if envelope:
+                break
+            marker = idx + len(entry["id"])
+        if envelope:
+            entry["docusign_envelope"] = envelope
+
+
 def parse_register_markdown(content: str) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
@@ -190,6 +213,7 @@ def parse_register_markdown(content: str) -> list[dict[str, Any]]:
         if entry and entry["id"] not in seen_ids:
             seen_ids.add(entry["id"])
             entries.append(entry)
+    enrich_envelopes_from_register(content, entries)
     return entries
 
 
