@@ -550,4 +550,13 @@ When in Cursor and the website dev server is down, run **`.\scripts\ensure-dev-s
 - docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md - Cross-repo pending-edit inventory with phased gap-fill execution plan and deployment stabilization checklist (Apr 10, 2026).
 - docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md - Phase A runtime stabilization report covering MINDEX live-state route activation, MAS runtime status, and remaining consciousness/token blockers (Apr 10, 2026).
 
+## CMMC L2 Wave 1 (Jul 22, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/CMMC_WAVE1_SAO_SIGN_AND_FILE_JUL22_2026.md` | **SAO sign order + paths** — 4 artifacts to sign today; IR tabletop Jul 23–31; 0 flips until signed PDFs |
+| `docs/CMMC_POSTURE_UI_ZERO_FLASH_FIX_JUL22_2026.md` | **Posture integrity guard** — MAS 188 monitor, Redis last-known-good snapshot, degraded API contract, and no-zero-flash UI behavior. |
+| `CODE/docs/cmmc/wave1_jul22/` | Canonical Perplexity Wave 1 markdown copies |
+| `CODE/docs/cmmc_evidence/REGISTER.md` | Evidence register — Wave 1 PENDING rows |
+| `docs/SOC_REDTEAM_24X7_OVERHAUL_PLAN_JUL22_2026.md` | **Draft, approval-gated SOC plan** — MAS VM 188 owns 24/7 posture integrity, network monitoring, incident automation, safe red-team drills, and bounded self-healing; website is UI only. Do not implement until IR tabletop HITL and zero-flash work close and Morgan approves. |
+
 - docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md - Canonical frontend/middleware/backend/full-system architecture reference for Fusarium (Apr 10, 2026).

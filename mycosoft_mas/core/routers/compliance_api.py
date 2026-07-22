@@ -19,6 +19,10 @@ from mycosoft_mas.integrations.backgroundchecks_client import (
     BackgroundChecksError,
 )
 
+from mycosoft_mas.security.posture_integrity_monitor import (
+    posture_integrity_monitor,
+)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/compliance", tags=["soc-compliance"])
@@ -379,7 +383,26 @@ async def list_controls():
                 status_code=503,
                 detail="compliance control state is unexpectedly empty",
             )
-        return {"controls": controls}
+        integrity = await posture_integrity_monitor.validate_controls(controls)
+        if integrity.snapshot is None:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Compliance posture is unavailable and no verified "
+                    "last-known-good snapshot exists"
+                ),
+            )
+        return {
+            "controls": integrity.controls,
+            "degraded": integrity.degraded,
+            "integrity_reason": integrity.reason,
+            "posture_counts": {
+                "met": integrity.snapshot.met,
+                "partial": integrity.snapshot.partial,
+                "non_compliant": integrity.snapshot.non_compliant,
+                "total": integrity.snapshot.total,
+            },
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -416,8 +439,8 @@ async def compliance_score_api():
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
-        score = await soc_repo.compliance_score()
-        if score["total_controls"] == 0:
+        controls = await soc_repo.list_compliance_controls()
+        if not controls:
             logger.critical(
                 "compliance_score_empty_refusing_response; investigate soc_ops state"
             )
@@ -425,7 +448,29 @@ async def compliance_score_api():
                 status_code=503,
                 detail="compliance control state is unexpectedly empty",
             )
-        return score
+        integrity = await posture_integrity_monitor.validate_controls(controls)
+        if integrity.snapshot is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Compliance score is unavailable without a verified posture snapshot",
+            )
+        score = await soc_repo.compliance_score()
+        return {
+            **score,
+            "degraded": integrity.degraded,
+            "integrity_reason": integrity.reason,
+            "verified_practice_counts": {
+                "met": integrity.snapshot.met,
+                "partial": integrity.snapshot.partial,
+                "non_compliant": integrity.snapshot.non_compliant,
+                "total": integrity.snapshot.total,
+                "met_percent": round(
+                    integrity.snapshot.met / integrity.snapshot.total * 100, 1
+                )
+                if integrity.snapshot.total
+                else 0.0,
+            },
+        }
     except HTTPException:
         raise
     except Exception as e:
