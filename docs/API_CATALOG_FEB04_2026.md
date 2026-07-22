@@ -245,6 +245,13 @@ Metered live worldstate connection for external agents. All endpoints require `X
 | `/api/security/audit/query` | GET | Query audit log |
 | `/api/security/audit/stats` | GET | Audit statistics |
 | `/api/security/health` | GET | Security service health |
+| `/api/security/ps/screening-events` | GET | Personnel screening metadata (X-API-Key; Patch v2 Jul 21 2026) |
+| `/api/security/ps/adjudicate` | POST | PS.L2-3.9.1 Met flip via evidence emitter (X-API-Key) |
+| `/api/security/evidence/emit` | POST | Canonical SSP evidence emitter for control Met flips |
+| `/api/security/at/training-record` | POST | AT.L2 training certificate evidence |
+| `/api/security/ir/tabletop-record` | POST | IR.L2 tabletop exercise evidence |
+
+**Router (evidence spine):** `mycosoft_mas/core/routers/security_evidence_api.py` — registered in `myca_main.py` Jul 21 2026.
 
 ### Ethics API (`/api/ethics/*`) – Mar 3, 2026
 

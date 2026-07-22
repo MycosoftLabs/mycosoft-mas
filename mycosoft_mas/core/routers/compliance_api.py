@@ -82,7 +82,18 @@ def _allowed_background_check_emails() -> set[str]:
     return _split_env_values("BACKGROUNDCHECKS_ALLOWED_EMPLOYEE_EMAILS")
 
 
+def _bgc_automation_enabled() -> bool:
+    return os.getenv("BGC_AUTOMATION_ENABLED", "false").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def _production_orders_allowed() -> bool:
+    if not _bgc_automation_enabled():
+        return False
     return os.getenv("BACKGROUNDCHECKS_PROD_ORDERS_ALLOWED", "false").strip().lower() in {
         "1",
         "true",
@@ -292,18 +303,35 @@ async def myca_posture(
     drive_path_configured = bool(os.getenv("PREVEIL_DRIVE_PATH", "").strip())
     background_checks: dict[str, Any] = {
         "vendor": "backgroundchecks.com",
+        "fulfillment_provider": "HireRight",
         "vendor_relationship": "hireright_sister_no_long_term_commitment",
+        "automation_enabled": _bgc_automation_enabled(),
         "status_polling_configured": BackgroundChecksClient().is_configured,
         "allowlist_configured": bool(_allowed_background_check_emails()),
         "production_orders_allowed": _production_orders_allowed(),
-        "prod_orders_gate_note": "Keep false until Nick Faso confirms CMMC fitness and six-check package in writing.",
+        "prod_orders_gate_note": (
+            "BGC_AUTOMATION_ENABLED=false (patch v2). Manual HireRight path complete Jul 21; "
+            "do not provision BC.com production orders until automation re-enabled."
+        ),
         "nick_faso_confirmation": {
-            "status": "pending",
-            "morgan_reply_sent_at": "2026-07-20T16:51:00-07:00",
-            "note": "Morgan sent CMMC-confirmation reply Jul 20 ~4:51 PM PT; awaiting Nick response.",
+            "status": "bypassed",
+            "note": "Patch v2: Morgan ordered HireRight six-check directly; Nick/BC.com path no longer critical-path.",
+        },
+        "personnel_screening_jul21": {
+            "provider": "HireRight",
+            "package": "6-check standard",
+            "subjects_complete": ["Rockcoons, Morgan", "Ricasata, Raljoseph"],
+            "adjudication_memo_ids": [
+                "MYC-ADJ-ROCKCOONS-2026-07-21",
+                "MYC-ADJ-RICASATA-2026-07-21",
+            ],
+            "hr_drive_folder_id": "1JzHq6t3ceMp4s3OKA93BS7DtQMJCJau2",
+            "evidence_api": "/api/security/ps/screening-events",
+            "adjudicate_api": "/api/security/ps/adjudicate",
+            "ps_l2_3_9_1_met_via_emitter_only": True,
         },
         "sandbox_in_vendor_docs": True,
-        "day_one_path": "production_console_integrations_api_tokens",
+        "day_one_path": "deferred_until_BGC_AUTOMATION_ENABLED",
     }
     if background_checks["status_polling_configured"] and background_checks["allowlist_configured"]:
         try:
@@ -342,7 +370,18 @@ async def list_controls():
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
-        return {"controls": await soc_repo.list_compliance_controls()}
+        controls = await soc_repo.list_compliance_controls()
+        if not controls:
+            logger.critical(
+                "compliance_controls_empty_refusing_response; investigate soc_ops state"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="compliance control state is unexpectedly empty",
+            )
+        return {"controls": controls}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("list_controls: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e
@@ -377,7 +416,18 @@ async def compliance_score_api():
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
-        return await soc_repo.compliance_score()
+        score = await soc_repo.compliance_score()
+        if score["total_controls"] == 0:
+            logger.critical(
+                "compliance_score_empty_refusing_response; investigate soc_ops state"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="compliance control state is unexpectedly empty",
+            )
+        return score
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("compliance_score: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e
