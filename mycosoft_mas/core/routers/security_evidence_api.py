@@ -15,6 +15,7 @@ from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.compliance.evidence_emitter import EVIDENCE_TYPES, emit_evidence
+from mycosoft_mas.compliance.evidence_register import load_evidence_register
 from mycosoft_mas.core.routers.compliance_api import _require_posture_api_key
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,21 @@ class IrTabletopRequest(BaseModel):
     findings_md: str = Field(min_length=1)
     recording_preveil_path: str
     control_ids: List[str] = Field(default_factory=lambda: ["IR.L2-3.6.3", "3.6.3"])
+
+
+@router.get("/evidence-register")
+async def get_evidence_register(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+):
+    """Metadata-only CMMC evidence register for Security tab proxy (no file bodies)."""
+    _require_posture_api_key(x_api_key)
+    try:
+        return load_evidence_register()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("get_evidence_register: %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/ps/screening-events")
