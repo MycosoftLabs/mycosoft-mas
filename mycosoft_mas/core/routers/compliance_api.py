@@ -466,7 +466,9 @@ async def compliance_score_api():
                 "total": integrity.snapshot.total,
                 "met_percent": round(
                     integrity.snapshot.met / integrity.snapshot.total * 100, 1
-                ),
+                )
+                if integrity.snapshot.total
+                else 0.0,
             },
         }
     except HTTPException:

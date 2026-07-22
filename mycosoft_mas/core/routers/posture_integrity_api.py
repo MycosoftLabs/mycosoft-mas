@@ -19,8 +19,7 @@ async def posture_integrity_health() -> dict[str, object]:
         raise HTTPException(
             status_code=503,
             detail={
-                **health,
-                "error": "No verified CMMC posture snapshot is available",
+                "error": "snapshot_unavailable",
             },
         )
     return health
