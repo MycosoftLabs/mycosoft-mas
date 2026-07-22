@@ -11,6 +11,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.security.posture_integrity_monitor import (
+    posture_integrity_monitor,
+)
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/compliance", tags=["soc-compliance"])
@@ -50,7 +54,27 @@ async def list_controls():
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
-        return {"controls": await soc_repo.list_compliance_controls()}
+        controls = await soc_repo.list_compliance_controls()
+        integrity = await posture_integrity_monitor.validate_controls(controls)
+        if integrity.snapshot is None:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Compliance posture is unavailable and no verified "
+                    "last-known-good snapshot exists"
+                ),
+            )
+        return {
+            "controls": integrity.controls,
+            "degraded": integrity.degraded,
+            "integrity_reason": integrity.reason,
+            "posture_counts": {
+                "met": integrity.snapshot.met,
+                "partial": integrity.snapshot.partial,
+                "non_compliant": integrity.snapshot.non_compliant,
+                "total": integrity.snapshot.total,
+            },
+        }
     except Exception as e:
         logger.exception("list_controls: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e
@@ -85,7 +109,28 @@ async def compliance_score_api():
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
-        return await soc_repo.compliance_score()
+        controls = await soc_repo.list_compliance_controls()
+        integrity = await posture_integrity_monitor.validate_controls(controls)
+        if integrity.snapshot is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Compliance score is unavailable without a verified posture snapshot",
+            )
+        score = await soc_repo.compliance_score()
+        return {
+            **score,
+            "degraded": integrity.degraded,
+            "integrity_reason": integrity.reason,
+            "verified_practice_counts": {
+                "met": integrity.snapshot.met,
+                "partial": integrity.snapshot.partial,
+                "non_compliant": integrity.snapshot.non_compliant,
+                "total": integrity.snapshot.total,
+                "met_percent": round(
+                    integrity.snapshot.met / integrity.snapshot.total * 100, 1
+                ),
+            },
+        }
     except Exception as e:
         logger.exception("compliance_score: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e

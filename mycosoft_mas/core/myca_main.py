@@ -70,6 +70,9 @@ from mycosoft_mas.core.routers.compliance_api import router as compliance_api_ro
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
+from mycosoft_mas.core.routers.posture_integrity_api import (
+    router as posture_integrity_router,
+)
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
@@ -872,6 +875,7 @@ app.include_router(device_registry_router, tags=["device-registry"])
 app.include_router(psathyrella_router, tags=["psathyrella"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
+app.include_router(posture_integrity_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
 # CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
@@ -1951,6 +1955,12 @@ async def startup_event():
     import logging
 
     logger = logging.getLogger("MAS_Startup")
+    from mycosoft_mas.security.posture_integrity_monitor import (
+        posture_integrity_monitor,
+    )
+
+    await posture_integrity_monitor.start()
+    logger.info("CMMC posture integrity monitor scheduled")
     if os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "0") == "1":
         logger.warning(
             "MAS_SKIP_BACKGROUND_STARTUP=1 set; skipping background startup tasks for API recovery mode"
@@ -1973,6 +1983,15 @@ async def shutdown_event():
     import logging
 
     logger = logging.getLogger("MAS_Shutdown")
+    try:
+        from mycosoft_mas.security.posture_integrity_monitor import (
+            posture_integrity_monitor,
+        )
+
+        await posture_integrity_monitor.stop()
+        logger.info("CMMC posture integrity monitor stopped")
+    except Exception as exc:
+        logger.warning("CMMC posture integrity monitor stop error: %s", exc)
     startup_task = getattr(app.state, "mas_startup_task", None)
     if startup_task is not None and not startup_task.done():
         startup_task.cancel()
