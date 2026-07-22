@@ -168,8 +168,20 @@ AGENT_LOG_LEVEL=INFO
 AGENT_HEARTBEAT_INTERVAL=30
 """
     
-    run_ssh_command(ssh, f'echo "{env_content}" > ~/mycosoft/mas/.env', timeout=10, show_output=False)
-    log("Environment file created", "OK")
+    success, _, error = run_ssh_command(
+        ssh,
+        "test -s ~/mycosoft/mas/.env && "
+        "grep -qE '^(DATABASE_URL|MINDEX_DATABASE_URL)=' ~/mycosoft/mas/.env",
+        timeout=10,
+        show_output=False,
+    )
+    if success:
+        log("Existing environment configuration preserved", "OK")
+    else:
+        log(
+            f"Refusing to replace MAS .env without database settings: {error[:100]}",
+            "WARN",
+        )
     
     # Step 10: Pull Docker images (in background)
     log("Pulling base Docker images (this runs in background)...", "RUN")

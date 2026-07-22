@@ -66,7 +66,9 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.compliance_api import posture_router as myca_posture_router
 from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
+from mycosoft_mas.core.routers.security_evidence_api import router as security_evidence_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
@@ -876,6 +878,8 @@ app.include_router(psathyrella_router, tags=["psathyrella"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
 app.include_router(posture_integrity_router)
+app.include_router(myca_posture_router)
+app.include_router(security_evidence_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
 # CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)

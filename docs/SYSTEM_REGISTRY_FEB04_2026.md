@@ -11,6 +11,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Jul 20, 2026)
+
+- **BackgroundChecks.com + MYCA posture (MAS compliance)** — `mycosoft_mas/integrations/backgroundchecks_client.py`; compliance router extensions in `mycosoft_mas/core/routers/compliance_api.py` (`GET /api/compliance/background-checks`, `POST /api/compliance/background-checks/order`, `GET /api/myca/posture`). Credentials via env only (`BACKGROUNDCHECKS_*`, `MYCA_POSTURE_API_KEY`, optional `PREVEIL_DRIVE_PATH`). Doc: `docs/BACKGROUNDCHECKS_PREVEIL_MYCA_INTEGRATION_JUL20_2026.md`. Deployed MAS VM 188 Jul 20, 2026.
+
 ## Recent Updates (May 3, 2026)
 
 - **Security SOC (real `/security` stack)** — Postgres-backed SOC on MINDEX (`soc_ops.*`): incidents router `/api/incidents/*`, Redis stream `security:events`, incident source poller, network discovery → `device_inventory`, red team L1–L3 (`redteam/*`, `GET /api/redteam/soc-runs`, `soc-findings`), compliance control collector + doc engine. Website: `/security/redteam` SOC tab, `/security/compliance` MAS bundle tab, network/incidents pages wired to MAS BFF. Docs: `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md`, `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md`, `docs/REDTEAM_THREE_LAYER_MAY03_2026.md`, `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md`.

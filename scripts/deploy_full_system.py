@@ -215,10 +215,12 @@ NEXT_PUBLIC_API_URL=https://api-sandbox.mycosoft.com
 NODE_ENV=production
 '''
     
-    # Write .env files via SSH
+    # Preserve MAS secrets and database connectivity. Bootstrap scripts must never
+    # replace a populated production environment file with a static fragment.
     run_ssh_command(
-        f"cat > {VM_MAS}/.env << 'ENVEOF'\n{mas_env}\nENVEOF",
-        "Creating MAS .env file"
+        f"test -s {VM_MAS}/.env && "
+        f"grep -qE '^(DATABASE_URL|MINDEX_DATABASE_URL)=' {VM_MAS}/.env",
+        "Verifying existing MAS .env before deployment",
     )
     
     run_ssh_command(
