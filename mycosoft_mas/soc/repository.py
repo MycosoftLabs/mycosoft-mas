@@ -756,3 +756,127 @@ async def compliance_score() -> Dict[str, Any]:
         "partial": row["partial"] or 0,
         "implementation_percent": pct,
     }
+
+
+def _ps_screening_row(row: Any) -> Dict[str, Any]:
+    return {
+        "event_id": str(row["event_id"]),
+        "subject_id": str(row["subject_id"]),
+        "legal_name": row["legal_name"],
+        "role": row["role"],
+        "provider": row["provider"],
+        "package": row["package"],
+        "ordered_at": row["ordered_at"].isoformat() if row["ordered_at"] else None,
+        "completed_at": row["completed_at"].isoformat() if row["completed_at"] else None,
+        "report_preveil_path": row["report_preveil_path"],
+        "adjudicator_subject_id": str(row["adjudicator_subject_id"])
+        if row["adjudicator_subject_id"]
+        else None,
+        "adjudicator_name": row["adjudicator_name"],
+        "adjudication_memo_preveil_path": row["adjudication_memo_preveil_path"],
+        "adjudication_memo_id": row["adjudication_memo_id"],
+        "disposition": row["disposition"],
+        "next_review_due_at": row["next_review_due_at"].isoformat()
+        if row["next_review_due_at"]
+        else None,
+    }
+
+
+async def list_ps_screening_events(limit: int = 100) -> List[Dict[str, Any]]:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT e.event_id, e.subject_id, s.legal_name, s.role, e.provider, e.package,
+                   e.ordered_at, e.completed_at, e.report_preveil_path,
+                   e.adjudicator_subject_id, adj.legal_name AS adjudicator_name,
+                   e.adjudication_memo_preveil_path, e.adjudication_memo_id,
+                   e.disposition, e.next_review_due_at
+            FROM soc_ops.ps_screening_event e
+            JOIN soc_ops.ps_subject s ON s.subject_id = e.subject_id
+            LEFT JOIN soc_ops.ps_subject adj ON adj.subject_id = e.adjudicator_subject_id
+            ORDER BY e.completed_at DESC NULLS LAST, e.created_at DESC
+            LIMIT $1
+            """,
+            limit,
+        )
+    return [_ps_screening_row(r) for r in rows]
+
+
+async def get_ps_screening_event(event_id: UUID) -> Optional[Dict[str, Any]]:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT e.event_id, e.subject_id, s.legal_name, s.role, e.provider, e.package,
+                   e.ordered_at, e.completed_at, e.report_preveil_path, e.report_drive_file_id,
+                   e.adjudicator_subject_id, adj.legal_name AS adjudicator_name,
+                   e.adjudication_memo_preveil_path, e.adjudication_memo_drive_file_id,
+                   e.adjudication_memo_id, e.disposition, e.next_review_due_at
+            FROM soc_ops.ps_screening_event e
+            JOIN soc_ops.ps_subject s ON s.subject_id = e.subject_id
+            LEFT JOIN soc_ops.ps_subject adj ON adj.subject_id = e.adjudicator_subject_id
+            WHERE e.event_id = $1
+            """,
+            event_id,
+        )
+    if not row:
+        return None
+    out = _ps_screening_row(row)
+    out["report_drive_file_id"] = row["report_drive_file_id"]
+    out["adjudication_memo_drive_file_id"] = row["adjudication_memo_drive_file_id"]
+    return out
+
+
+async def insert_ssp_evidence(
+    *,
+    control_ids: List[str],
+    evidence_type: str,
+    artifact_refs: List[Dict[str, Any]],
+    actor_subject_id: Optional[UUID],
+    verified_at: datetime,
+    notes: Optional[str],
+) -> UUID:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.ssp_evidence
+                (control_ids, evidence_type, artifact_refs, actor_subject_id, verified_at, notes)
+            VALUES ($1, $2, $3::jsonb, $4, $5, $6)
+            RETURNING evidence_id
+            """,
+            control_ids,
+            evidence_type,
+            json.dumps(artifact_refs),
+            actor_subject_id,
+            verified_at,
+            notes,
+        )
+    return row["evidence_id"]
+
+
+async def insert_compliance_audit_log(
+    *,
+    operator: str,
+    endpoint: str,
+    purpose: str,
+    evidence_id: UUID,
+    payload: Dict[str, Any],
+) -> int:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.compliance_audit_log
+                (operator, endpoint, purpose, evidence_id, payload)
+            VALUES ($1, $2, $3, $4, $5::jsonb)
+            RETURNING id
+            """,
+            operator,
+            endpoint,
+            purpose,
+            evidence_id,
+            json.dumps(payload),
+        )
+    return int(row["id"])
