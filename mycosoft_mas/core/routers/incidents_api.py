@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -32,12 +33,16 @@ class IncidentCreate(BaseModel):
     details: Dict[str, Any] = Field(default_factory=dict)
     tags: List[str] = Field(default_factory=list)
     timeline: List[Dict[str, Any]] = Field(default_factory=list)
+    reporter_id: Optional[str] = None
+    reporter_name: Optional[str] = None
 
 
 class IncidentPatch(BaseModel):
     status: Optional[str] = None
     assigned_to: Optional[str] = None
     timeline_append: Optional[Dict[str, Any]] = None
+    actor: Optional[str] = None
+    actor_id: Optional[str] = None
 
 
 @router.get("/health")
@@ -73,6 +78,21 @@ async def create_incident_api(body: IncidentCreate):
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
+        details = dict(body.details)
+        if body.reporter_id or body.reporter_name:
+            details["reported_by"] = {
+                "id": body.reporter_id,
+                "name": body.reporter_name,
+            }
+        timeline = list(body.timeline)
+        if body.reporter_id or body.reporter_name:
+            timeline.append(
+                {
+                    "event": "reported",
+                    "actor": body.reporter_name,
+                    "actor_id": body.reporter_id,
+                }
+            )
         row = await soc_repo.create_incident(
             title=body.title,
             description=body.description,
@@ -82,9 +102,9 @@ async def create_incident_api(body: IncidentCreate):
             kind=body.kind,
             source_ip=body.source_ip,
             host=body.host,
-            details=body.details,
+            details=details,
             tags=body.tags,
-            timeline=body.timeline,
+            timeline=timeline,
         )
         return row
     except Exception as e:
@@ -123,11 +143,15 @@ async def patch_incident_api(incident_id: str, body: IncidentPatch):
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
+        timeline_append = dict(body.timeline_append or {})
+        if body.actor or body.actor_id:
+            timeline_append["actor"] = body.actor
+            timeline_append["actor_id"] = body.actor_id
         row = await soc_repo.update_incident(
             incident_id,
             status=body.status,
             assigned_to=body.assigned_to,
-            timeline_append=body.timeline_append,
+            timeline_append=timeline_append or None,
         )
         if not row:
             raise HTTPException(status_code=404, detail="incident not found")
@@ -150,4 +174,20 @@ async def incident_chain_api(incident_id: str, limit: int = Query(200, ge=1, le=
         return {"incident_id": incident_id, "chain": chain}
     except Exception as e:
         logger.exception("incident_chain failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+@router.get("/chain/verify")
+async def verify_global_incident_chain_api():
+    """Return a factual global integrity result for persisted incident chains."""
+    if not _pg_ready():
+        raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    try:
+        from mycosoft_mas.soc import repository as soc_repo
+
+        result = await soc_repo.verify_global_incident_chain()
+        result["verified_at"] = datetime.now(timezone.utc).isoformat()
+        return result
+    except Exception as e:
+        logger.exception("verify_global_incident_chain failed: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e

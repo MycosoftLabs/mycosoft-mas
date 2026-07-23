@@ -357,6 +357,92 @@ async def list_chain_for_incident(incident_id: str, limit: int = 100) -> List[Di
     return out
 
 
+def _chain_hash(
+    previous_hash: str, sequence_number: int, event_type: str, payload: Dict[str, Any]
+) -> str:
+    body = json.dumps(payload, sort_keys=True, default=str)
+    return hashlib.sha256(
+        f"{previous_hash}|{sequence_number}|{event_type}|{body}".encode()
+    ).hexdigest()
+
+
+def _merkle_root(hashes: List[str]) -> str | None:
+    if not hashes:
+        return None
+    level = hashes
+    while len(level) > 1:
+        if len(level) % 2:
+            level = [*level, level[-1]]
+        level = [
+            hashlib.sha256(f"{left}{right}".encode()).hexdigest()
+            for left, right in zip(level[::2], level[1::2])
+        ]
+    return level[0]
+
+
+async def verify_global_incident_chain() -> Dict[str, Any]:
+    """Verify every persisted incident hash chain without inventing empty integrity."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT incident_id, sequence_number, prev_hash, event_hash, event_type, payload
+            FROM soc_ops.incident_chain
+            ORDER BY incident_id ASC, sequence_number ASC
+            """
+        )
+
+    previous_by_incident: Dict[str, str] = {}
+    next_sequence_by_incident: Dict[str, int] = {}
+    terminal_hashes: Dict[str, str] = {}
+    invalid_entries: List[Dict[str, Any]] = []
+
+    for row in rows:
+        incident_id = str(row["incident_id"])
+        payload = (
+            row["payload"]
+            if isinstance(row["payload"], dict)
+            else json.loads(row["payload"] or "{}")
+        )
+        expected_previous = previous_by_incident.get(incident_id, "0" * 64)
+        expected_sequence = next_sequence_by_incident.get(incident_id, 1)
+        expected_hash = _chain_hash(
+            expected_previous, row["sequence_number"], row["event_type"], payload
+        )
+        if (
+            row["sequence_number"] != expected_sequence
+            or row["prev_hash"] != expected_previous
+            or row["event_hash"] != expected_hash
+        ):
+            invalid_entries.append(
+                {
+                    "incident_id": incident_id,
+                    "sequence_number": row["sequence_number"],
+                }
+            )
+        previous_by_incident[incident_id] = row["event_hash"]
+        next_sequence_by_incident[incident_id] = row["sequence_number"] + 1
+        terminal_hashes[incident_id] = row["event_hash"]
+
+    entries = len(rows)
+    return {
+        "verified": entries > 0 and not invalid_entries,
+        "merkle_root": _merkle_root(
+            [terminal_hashes[incident_id] for incident_id in sorted(terminal_hashes)]
+        ),
+        "entries": entries,
+        "incidents": len(terminal_hashes),
+        "reason": (
+            "no incident-chain entries are available"
+            if entries == 0
+            else "hash-chain validation failed"
+            if invalid_entries
+            else None
+        ),
+        "invalid_entries": invalid_entries,
+    }
+
+
 async def upsert_device_inventory(
     *,
     mac: Optional[str],

@@ -1,0 +1,11 @@
+# Morgan — Sole GitHub Code Approver
+
+**Effective date:** July 22, 2026
+
+Morgan is the sole GitHub code approver for Mycosoft repositories. Do not wait
+for, request, or require RJ approval before merging a pull request.
+
+When Morgan explicitly authorizes a merge, an administrator may merge the pull
+request only after every required GitHub check is successful. Never override a
+failed or in-progress required check. Use the repository administrator merge
+path when it is needed to complete Morgan's authorized merge.

@@ -28,62 +28,6 @@
       "mfa_enabled": true
     },
     {
-      "id": "chris-002",
-      "name": "Chris",
-      "role": "admin",
-      "email": "chris@mycosoft.com",
-      "locations": [
-        {
-          "name": "Portland",
-          "city": "Portland",
-          "state": "OR",
-          "country": "US",
-          "timezone": "America/Los_Angeles",
-          "coordinates": { "lat": 45.5152, "lng": -122.6784 },
-          "radius_km": 30,
-          "primary": true
-        }
-      ],
-      "devices": [],
-      "access_level": "full",
-      "mobile_access": true,
-      "vpn_allowed": true,
-      "mfa_enabled": true
-    },
-    {
-      "id": "garrett-003",
-      "name": "Garrett",
-      "role": "admin",
-      "email": "garrett@mycosoft.com",
-      "locations": [
-        {
-          "name": "Pasadena",
-          "city": "Pasadena",
-          "state": "CA",
-          "country": "US",
-          "timezone": "America/Los_Angeles",
-          "coordinates": { "lat": 34.1478, "lng": -118.1445 },
-          "radius_km": 30,
-          "primary": true
-        },
-        {
-          "name": "Chula Vista (Visiting)",
-          "city": "Chula Vista",
-          "state": "CA",
-          "country": "US",
-          "timezone": "America/Los_Angeles",
-          "coordinates": { "lat": 32.6401, "lng": -117.0842 },
-          "radius_km": 15,
-          "primary": false
-        }
-      ],
-      "devices": [],
-      "access_level": "full",
-      "mobile_access": true,
-      "vpn_allowed": true,
-      "mfa_enabled": true
-    },
-    {
       "id": "rj-004",
       "name": "RJ",
       "role": "admin",
@@ -108,29 +52,6 @@
           "coordinates": { "lat": 32.7226, "lng": -117.1698 },
           "radius_km": 10,
           "primary": false
-        }
-      ],
-      "devices": [],
-      "access_level": "full",
-      "mobile_access": true,
-      "vpn_allowed": true,
-      "mfa_enabled": true
-    },
-    {
-      "id": "beto-005",
-      "name": "Beto",
-      "role": "admin",
-      "email": "beto@mycosoft.com",
-      "locations": [
-        {
-          "name": "Chula Vista",
-          "city": "Chula Vista",
-          "state": "CA",
-          "country": "US",
-          "timezone": "America/Los_Angeles",
-          "coordinates": { "lat": 32.6401, "lng": -117.0842 },
-          "radius_km": 15,
-          "primary": true
         }
       ],
       "devices": [],
