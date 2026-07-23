@@ -109,6 +109,26 @@ class EmergencyHaltRequest(BaseModel):
     reason: str
 
 
+class GuardianCommandRequest(BaseModel):
+    """A request-only SOC action; it never executes an operation directly."""
+
+    actor: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    target: Dict[str, Any] = Field(default_factory=dict)
+    action: str = Field(min_length=1)
+    policy_class: str = Field(min_length=1)
+    correlation_id: str = Field(min_length=1)
+
+
+class GuardianCommandDecision(BaseModel):
+    decision: str
+    correlation_id: str
+    run_id: Optional[str] = None
+    reason: str
+    durable_recorded: bool
+    executable: bool
+
+
 # --- Endpoints ---
 
 
@@ -190,6 +210,36 @@ async def check_authority(request: AuthorityCheckRequest):
         "warnings": result.warnings,
         "pipeline_stages": result.pipeline_stages,
     }
+
+
+@router.post("/commands/request", response_model=GuardianCommandDecision)
+async def request_guardian_command(
+    request: GuardianCommandRequest,
+    _auth: dict = require_api_key_scoped("guardian:admin"),
+):
+    """
+    Accept the SOC command envelope without directly mutating the target.
+
+    A durable command ledger and approval workflow are not yet deployed.  The
+    endpoint therefore returns a non-executable approval-required decision
+    rather than presenting a browser request as a completed operation.
+    """
+    logger.warning(
+        "Guardian command request held: action=%s policy_class=%s correlation_id=%s",
+        request.action,
+        request.policy_class,
+        request.correlation_id,
+    )
+    return GuardianCommandDecision(
+        decision="requires_approval",
+        correlation_id=request.correlation_id,
+        reason=(
+            "The durable Guardian command ledger and approval workflow are "
+            "unavailable; no command was executed."
+        ),
+        durable_recorded=False,
+        executable=False,
+    )
 
 
 @router.get("/moral-precedence")
