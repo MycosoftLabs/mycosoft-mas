@@ -33,7 +33,7 @@ MARKING_TOKENS = (
     "CUI",
 )
 SCANNED_SCOPE = (
-    "Google Drive metadata (names, owners, identifiers, and modification timestamps only)"
+    "Google Drive metadata (names, owners, identifiers, and modification timestamps only)",
 )
 DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files"
 

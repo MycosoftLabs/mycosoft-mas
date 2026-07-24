@@ -36,6 +36,9 @@ async def test_persisted_status_falls_back_to_pending_without_database(
     assert status["configured"] is False
     assert status["status"] == "not-configured"
     assert status["hits"] == []
+    assert status["scanned_scope"] == [
+        "Google Drive metadata (names, owners, identifiers, and modification timestamps only)"
+    ]
 
 
 @pytest.mark.asyncio
