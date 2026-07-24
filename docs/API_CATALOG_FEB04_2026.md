@@ -33,6 +33,15 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 **Routers:** `mycosoft_mas/core/routers/incidents_api.py`, `mycosoft_mas/core/routers/redteam_api.py`, compliance router (see `myca_main.py` includes). **Persistence:** MINDEX Postgres schema `soc_ops` (migrations in MINDEX repo). **Stream:** `mycosoft_mas/soc/security_events_stream.py` → Redis `security:events` (env `SOC_SECURITY_EVENTS_STREAM`). **Pollers:** `mycosoft_mas/soc/incident_source_poller.py`; **L2/L3:** `mycosoft_mas/redteam/layer2_scoped.py`, `layer3_ai.py`.
 
+### Google Workspace CUI-boundary scan (July 24, 2026)
+
+**Router:** `mycosoft_mas/core/routers/gws_boundary_api.py`. **Worker:** `mycosoft_mas/soc/gws_boundary_scan.py` and independent `mycosoft-gws-boundary-scan.timer`. **Persistence:** `soc_ops.gws_boundary_scan_runs` and `soc_ops.gws_boundary_scan_hits`. Results contain location metadata only; no Workspace content, filename, subject, or snippet is returned.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/security/gws-boundary/health` | GET | Configuration and safe worker status |
+| `/api/security/gws-boundary/status` | GET | `{ configured, last_run, status, scanned_scope, hit_count, hits[] }`; hits are location metadata only |
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/incidents/health` | GET | `{ ok, postgres_configured }` |
