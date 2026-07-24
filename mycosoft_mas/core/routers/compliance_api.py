@@ -54,6 +54,10 @@ class DocRegenerateRequest(BaseModel):
     title: str = "Regenerated document"
 
 
+def _has_evidence_uri(evidence_uri: Optional[str]) -> bool:
+    return bool(evidence_uri and evidence_uri.strip())
+
+
 class BackgroundCheckOrderRequest(BaseModel):
     applicant_email: str = Field(min_length=3, max_length=254)
     report_sku: Literal["HIRE1", "HIRE2", "HIRE3"]
@@ -414,6 +418,13 @@ async def list_controls():
 async def upsert_control(body: ControlUpsert):
     if not _pg_ready():
         raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    if body.implementation_state == "implemented" and not _has_evidence_uri(
+        body.evidence_uri
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="implemented controls require a non-empty evidence_uri",
+        )
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
