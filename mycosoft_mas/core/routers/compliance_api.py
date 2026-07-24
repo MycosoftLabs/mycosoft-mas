@@ -42,6 +42,10 @@ class DocRegenerateRequest(BaseModel):
     title: str = "Regenerated document"
 
 
+def _has_evidence_uri(evidence_uri: Optional[str]) -> bool:
+    return bool(evidence_uri and evidence_uri.strip())
+
+
 @router.get("/health")
 async def compliance_health():
     return {"ok": True, "postgres_configured": _pg_ready()}
@@ -84,6 +88,13 @@ async def list_controls():
 async def upsert_control(body: ControlUpsert):
     if not _pg_ready():
         raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    if body.implementation_state == "implemented" and not _has_evidence_uri(
+        body.evidence_uri
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="implemented controls require a non-empty evidence_uri",
+        )
     try:
         from mycosoft_mas.soc import repository as soc_repo
 

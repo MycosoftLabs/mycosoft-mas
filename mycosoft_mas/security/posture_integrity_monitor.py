@@ -53,6 +53,10 @@ def _status_rank(row: dict[str, Any]) -> int:
     return {"implemented": 3, "compliant": 3, "partial": 2}.get(status, 1)
 
 
+def _has_evidence_uri(row: dict[str, Any]) -> bool:
+    return bool(str(row.get("evidence_uri") or "").strip())
+
+
 def _snapshot_from_controls(
     controls: Iterable[dict[str, Any]],
 ) -> tuple[PostureSnapshot | None, str | None]:
@@ -66,6 +70,17 @@ def _snapshot_from_controls(
 
     if not unique:
         return None, "no compliance controls were returned"
+
+    missing_evidence = [
+        practice_id
+        for practice_id, row in unique.items()
+        if _status_rank(row) == 3 and not _has_evidence_uri(row)
+    ]
+    if missing_evidence:
+        return None, (
+            "implemented controls are missing evidence_uri: "
+            + ", ".join(sorted(missing_evidence))
+        )
 
     met = sum(_status_rank(row) == 3 for row in unique.values())
     partial = sum(_status_rank(row) == 2 for row in unique.values())
