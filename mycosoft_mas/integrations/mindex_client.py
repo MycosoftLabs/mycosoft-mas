@@ -108,38 +108,13 @@ class MINDEXClient:
             Pool is created on first access and reused for subsequent queries.
         """
         if self._db_pool is None:
-            # Parse connection string
-            conn_str = self.database_url.replace("postgresql://", "").replace("postgres://", "")
-            if "@" in conn_str:
-                auth, host_part = conn_str.split("@", 1)
-                user, password = auth.split(":", 1) if ":" in auth else (auth, "")
-                if "/" in host_part:
-                    host_port, database = host_part.rsplit("/", 1)
-                    host, port = host_port.split(":") if ":" in host_port else (host_port, "5432")
-                else:
-                    host, port = host_part.split(":") if ":" in host_part else (host_part, "5432")
-                    database = "mindex"
-            else:
-                # Fallback defaults
-                user, password, host, port, database = (
-                    "mindex",
-                    "mindex",
-                    "localhost",
-                    "5432",
-                    "mindex",
-                )
-
             self._db_pool = await asyncpg.create_pool(
-                host=host,
-                port=int(port),
-                user=user,
-                password=password,
-                database=database,
+                dsn=self.database_url,
                 min_size=2,
                 max_size=10,
                 command_timeout=self.timeout,
             )
-            self.logger.info(f"Created database connection pool to {host}:{port}/{database}")
+            self.logger.info("Created MINDEX database connection pool")
 
         return self._db_pool
 
