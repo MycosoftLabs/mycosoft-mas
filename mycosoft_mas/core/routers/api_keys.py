@@ -1,12 +1,14 @@
 """API key management for MYCA services."""
 
 import hashlib
+import logging
 import secrets
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
@@ -14,6 +16,7 @@ from mycosoft_mas.core.security import get_current_user
 from mycosoft_mas.integrations.mindex_client import MINDEXClient
 
 router = APIRouter(prefix="/api/keys", tags=["api-keys"])
+logger = logging.getLogger(__name__)
 _mindex_client = MINDEXClient()
 _rate_windows: dict[str, list[float]] = {}
 _rate_window_seconds = 60
@@ -98,18 +101,34 @@ async def require_api_key(request: Request) -> Dict[str, Any]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="X-API-Key header missing",
         )
-    await _ensure_api_keys_table()
-    key_hash = _hash_key(raw_key)
-    pool = await _mindex_client._get_db_pool()
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            """
-            SELECT id, user_id, scopes, rate_limit, created_at, expires_at
-            FROM api_keys
-            WHERE key_hash = $1
-            """,
-            key_hash,
+    try:
+        await _ensure_api_keys_table()
+        key_hash = _hash_key(raw_key)
+        pool = await _mindex_client._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT id, user_id, scopes, rate_limit, created_at, expires_at
+                FROM api_keys
+                WHERE key_hash = $1
+                """,
+                key_hash,
+            )
+    except (
+        asyncpg.PostgresError,
+        ConnectionError,
+        OSError,
+        TimeoutError,
+        ValueError,
+    ) as error:
+        logger.warning(
+            "API key credential store unavailable: %s",
+            type(error).__name__,
         )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="API key authentication is temporarily unavailable",
+        ) from error
     if not row:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
