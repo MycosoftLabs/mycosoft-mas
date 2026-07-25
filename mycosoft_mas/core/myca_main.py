@@ -90,6 +90,7 @@ from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
 from mycosoft_mas.core.routers.fusarium_platform_api import router as fusarium_platform_router
 from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
+from mycosoft_mas.core.routers.gws_boundary_api import router as gws_boundary_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
 from mycosoft_mas.core.routers.meshtastic_api import router as meshtastic_api_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
@@ -832,6 +833,7 @@ app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
+app.include_router(gws_boundary_router)
 app.include_router(guardian_router, tags=["guardian"])
 app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(event_ledger_router, tags=["event-ledger"])

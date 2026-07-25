@@ -1,0 +1,16 @@
+[Unit]
+Description=Mycosoft Google Workspace CUI boundary scan
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mycosoft
+WorkingDirectory=/home/mycosoft/mycosoft/mas
+EnvironmentFile=-/home/mycosoft/mycosoft/mas/.env
+ExecStart=/home/mycosoft/.local/bin/poetry run python -m mycosoft_mas.soc.gws_boundary_worker
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/home/mycosoft/mycosoft/mas

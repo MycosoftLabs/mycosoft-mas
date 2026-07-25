@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Mycosoft Google Workspace CUI boundary scan
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=15m
+Persistent=true
+Unit=mycosoft-gws-boundary-scan.service
+
+[Install]
+WantedBy=timers.target

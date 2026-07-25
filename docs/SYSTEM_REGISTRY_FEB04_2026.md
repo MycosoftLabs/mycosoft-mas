@@ -15,6 +15,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 
 - **BackgroundChecks.com + MYCA posture (MAS compliance)** — `mycosoft_mas/integrations/backgroundchecks_client.py`; compliance router extensions in `mycosoft_mas/core/routers/compliance_api.py` (`GET /api/compliance/background-checks`, `POST /api/compliance/background-checks/order`, `GET /api/myca/posture`). Credentials via env only (`BACKGROUNDCHECKS_*`, `MYCA_POSTURE_API_KEY`, optional `PREVEIL_DRIVE_PATH`). Doc: `docs/BACKGROUNDCHECKS_PREVEIL_MYCA_INTEGRATION_JUL20_2026.md`. Deployed MAS VM 188 Jul 20, 2026.
 
+## Recent Updates (July 24, 2026)
+
+- **Google Workspace CUI-boundary scan** — MAS-only, least-privilege Drive metadata scanner at `mycosoft_mas/soc/gws_boundary_scan.py`, with independent daily systemd timer (`deploy/systemd/mycosoft-gws-boundary-scan.timer`) so recovery-mode `MAS_SKIP_BACKGROUND_STARTUP=1` remains unchanged. API: `GET /api/security/gws-boundary/status`. It persists only location metadata in `soc_ops.gws_boundary_scan_*`, opens a suspected-spillage incident, and requests critical SAO notification on a marking hit. No Drive/Gmail content, filename, subject, or snippet is retained or exposed. Requires Morgan's Google Admin provisioning before scans can run.
+
 ## Recent Updates (May 3, 2026)
 
 - **Security SOC (real `/security` stack)** — Postgres-backed SOC on MINDEX (`soc_ops.*`): incidents router `/api/incidents/*`, Redis stream `security:events`, incident source poller, network discovery → `device_inventory`, red team L1–L3 (`redteam/*`, `GET /api/redteam/soc-runs`, `soc-findings`), compliance control collector + doc engine. Website: `/security/redteam` SOC tab, `/security/compliance` MAS bundle tab, network/incidents pages wired to MAS BFF. Docs: `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md`, `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md`, `docs/REDTEAM_THREE_LAYER_MAY03_2026.md`, `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md`.

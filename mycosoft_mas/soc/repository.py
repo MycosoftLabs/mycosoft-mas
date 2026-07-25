@@ -828,7 +828,10 @@ async def compliance_score() -> Dict[str, Any]:
             """
             SELECT
               COUNT(*)::int AS total,
-              COUNT(*) FILTER (WHERE implementation_state = 'implemented')::int AS implemented,
+              COUNT(*) FILTER (
+                WHERE implementation_state = 'implemented'
+                  AND NULLIF(BTRIM(evidence_uri), '') IS NOT NULL
+              )::int AS implemented,
               COUNT(*) FILTER (WHERE implementation_state = 'partial')::int AS partial
             FROM soc_ops.compliance_controls
             """
@@ -966,3 +969,95 @@ async def insert_compliance_audit_log(
             json.dumps(payload),
         )
     return int(row["id"])
+
+
+async def create_gws_boundary_scan_run(
+    *,
+    status: str,
+    started_at: str,
+    completed_at: str,
+    scanned_scope: List[str],
+    hits: List[Dict[str, str]],
+    error_code: Optional[str],
+    notification_status: str,
+) -> Dict[str, Any]:
+    """Persist an approved-metadata-only Google Workspace boundary scan."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.gws_boundary_scan_runs
+                (status, started_at, completed_at, scanned_scope, hit_count, error_code, notification_status)
+            VALUES ($1, $2::timestamptz, $3::timestamptz, $4::jsonb, $5, $6, $7)
+            RETURNING id
+            """,
+            status,
+            started_at,
+            completed_at,
+            json.dumps(scanned_scope),
+            len(hits),
+            error_code,
+            notification_status,
+        )
+        run_id = row["id"]
+        for hit in hits:
+            await conn.execute(
+                """
+                INSERT INTO soc_ops.gws_boundary_scan_hits
+                    (run_id, source, container, item_id, owner, marking_token, detected_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+                """,
+                run_id,
+                hit["source"],
+                hit["container"],
+                hit["itemId"],
+                hit["owner"],
+                hit["markingToken"],
+                hit["detectedAt"],
+            )
+    return await get_latest_gws_boundary_scan_run() or {}
+
+
+async def get_latest_gws_boundary_scan_run() -> Optional[Dict[str, Any]]:
+    """Return the most recent boundary scan with location-only hit metadata."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        run = await conn.fetchrow(
+            """
+            SELECT id, status, completed_at, scanned_scope, hit_count, error_code, notification_status
+            FROM soc_ops.gws_boundary_scan_runs
+            ORDER BY completed_at DESC
+            LIMIT 1
+            """
+        )
+        if not run:
+            return None
+        rows = await conn.fetch(
+            """
+            SELECT source, container, item_id, owner, marking_token, detected_at
+            FROM soc_ops.gws_boundary_scan_hits
+            WHERE run_id = $1
+            ORDER BY detected_at DESC
+            """,
+            run["id"],
+        )
+    scope = run["scanned_scope"]
+    return {
+        "last_run": run["completed_at"].isoformat() if run["completed_at"] else None,
+        "status": run["status"],
+        "scanned_scope": scope if isinstance(scope, list) else json.loads(scope or "[]"),
+        "hit_count": int(run["hit_count"] or 0),
+        "hits": [
+            {
+                "source": row["source"],
+                "container": row["container"],
+                "itemId": row["item_id"],
+                "owner": row["owner"],
+                "markingToken": row["marking_token"],
+                "detectedAt": row["detected_at"].isoformat() if row["detected_at"] else None,
+            }
+            for row in rows
+        ],
+        "error_code": run["error_code"],
+        "notification_status": run["notification_status"],
+    }
