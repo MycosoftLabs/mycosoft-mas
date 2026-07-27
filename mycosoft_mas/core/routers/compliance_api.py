@@ -42,6 +42,41 @@ class DocRegenerateRequest(BaseModel):
     title: str = "Regenerated document"
 
 
+def _has_evidence_uri(evidence_uri: Optional[str]) -> bool:
+    return bool(evidence_uri and evidence_uri.strip())
+
+
+def _validate_implemented_current_state(state_snapshot: Dict[str, Any]) -> None:
+    """Reject split-brain Met promotions before they can reach ``soc_ops``."""
+    current_state = state_snapshot.get("current_state")
+    if not isinstance(current_state, dict):
+        raise HTTPException(
+            status_code=422,
+            detail="implemented controls require state_snapshot.current_state",
+        )
+
+    if current_state.get("implementation_state") != "implemented":
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "implemented controls require "
+                "state_snapshot.current_state.implementation_state=implemented"
+            ),
+        )
+
+    notes = (
+        state_snapshot.get("note", ""),
+        state_snapshot.get("notes", ""),
+        current_state.get("note", ""),
+        current_state.get("notes", ""),
+    )
+    if any("not met" in str(note).lower() for note in notes):
+        raise HTTPException(
+            status_code=422,
+            detail="implemented control state_snapshot cannot contain contradictory 'Not Met' notes",
+        )
+
+
 @router.get("/health")
 async def compliance_health():
     return {"ok": True, "postgres_configured": _pg_ready()}
@@ -84,6 +119,15 @@ async def list_controls():
 async def upsert_control(body: ControlUpsert):
     if not _pg_ready():
         raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    if body.implementation_state == "implemented" and not _has_evidence_uri(
+        body.evidence_uri
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="implemented controls require a non-empty evidence_uri",
+        )
+    if body.implementation_state == "implemented":
+        _validate_implemented_current_state(body.state_snapshot)
     try:
         from mycosoft_mas.soc import repository as soc_repo
 
