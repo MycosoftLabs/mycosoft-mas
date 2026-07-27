@@ -357,6 +357,92 @@ async def list_chain_for_incident(incident_id: str, limit: int = 100) -> List[Di
     return out
 
 
+def _chain_hash(
+    previous_hash: str, sequence_number: int, event_type: str, payload: Dict[str, Any]
+) -> str:
+    body = json.dumps(payload, sort_keys=True, default=str)
+    return hashlib.sha256(
+        f"{previous_hash}|{sequence_number}|{event_type}|{body}".encode()
+    ).hexdigest()
+
+
+def _merkle_root(hashes: List[str]) -> str | None:
+    if not hashes:
+        return None
+    level = hashes
+    while len(level) > 1:
+        if len(level) % 2:
+            level = [*level, level[-1]]
+        level = [
+            hashlib.sha256(f"{left}{right}".encode()).hexdigest()
+            for left, right in zip(level[::2], level[1::2])
+        ]
+    return level[0]
+
+
+async def verify_global_incident_chain() -> Dict[str, Any]:
+    """Verify every persisted incident hash chain without inventing empty integrity."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT incident_id, sequence_number, prev_hash, event_hash, event_type, payload
+            FROM soc_ops.incident_chain
+            ORDER BY incident_id ASC, sequence_number ASC
+            """
+        )
+
+    previous_by_incident: Dict[str, str] = {}
+    next_sequence_by_incident: Dict[str, int] = {}
+    terminal_hashes: Dict[str, str] = {}
+    invalid_entries: List[Dict[str, Any]] = []
+
+    for row in rows:
+        incident_id = str(row["incident_id"])
+        payload = (
+            row["payload"]
+            if isinstance(row["payload"], dict)
+            else json.loads(row["payload"] or "{}")
+        )
+        expected_previous = previous_by_incident.get(incident_id, "0" * 64)
+        expected_sequence = next_sequence_by_incident.get(incident_id, 1)
+        expected_hash = _chain_hash(
+            expected_previous, row["sequence_number"], row["event_type"], payload
+        )
+        if (
+            row["sequence_number"] != expected_sequence
+            or row["prev_hash"] != expected_previous
+            or row["event_hash"] != expected_hash
+        ):
+            invalid_entries.append(
+                {
+                    "incident_id": incident_id,
+                    "sequence_number": row["sequence_number"],
+                }
+            )
+        previous_by_incident[incident_id] = row["event_hash"]
+        next_sequence_by_incident[incident_id] = row["sequence_number"] + 1
+        terminal_hashes[incident_id] = row["event_hash"]
+
+    entries = len(rows)
+    return {
+        "verified": entries > 0 and not invalid_entries,
+        "merkle_root": _merkle_root(
+            [terminal_hashes[incident_id] for incident_id in sorted(terminal_hashes)]
+        ),
+        "entries": entries,
+        "incidents": len(terminal_hashes),
+        "reason": (
+            "no incident-chain entries are available"
+            if entries == 0
+            else "hash-chain validation failed"
+            if invalid_entries
+            else None
+        ),
+        "invalid_entries": invalid_entries,
+    }
+
+
 async def upsert_device_inventory(
     *,
     mac: Optional[str],
@@ -742,7 +828,10 @@ async def compliance_score() -> Dict[str, Any]:
             """
             SELECT
               COUNT(*)::int AS total,
-              COUNT(*) FILTER (WHERE implementation_state = 'implemented')::int AS implemented,
+              COUNT(*) FILTER (
+                WHERE implementation_state = 'implemented'
+                  AND NULLIF(BTRIM(evidence_uri), '') IS NOT NULL
+              )::int AS implemented,
               COUNT(*) FILTER (WHERE implementation_state = 'partial')::int AS partial
             FROM soc_ops.compliance_controls
             """
@@ -755,4 +844,220 @@ async def compliance_score() -> Dict[str, Any]:
         "implemented": impl,
         "partial": row["partial"] or 0,
         "implementation_percent": pct,
+    }
+
+
+def _ps_screening_row(row: Any) -> Dict[str, Any]:
+    return {
+        "event_id": str(row["event_id"]),
+        "subject_id": str(row["subject_id"]),
+        "legal_name": row["legal_name"],
+        "role": row["role"],
+        "provider": row["provider"],
+        "package": row["package"],
+        "ordered_at": row["ordered_at"].isoformat() if row["ordered_at"] else None,
+        "completed_at": row["completed_at"].isoformat() if row["completed_at"] else None,
+        "report_preveil_path": row["report_preveil_path"],
+        "adjudicator_subject_id": str(row["adjudicator_subject_id"])
+        if row["adjudicator_subject_id"]
+        else None,
+        "adjudicator_name": row["adjudicator_name"],
+        "adjudication_memo_preveil_path": row["adjudication_memo_preveil_path"],
+        "adjudication_memo_id": row["adjudication_memo_id"],
+        "disposition": row["disposition"],
+        "next_review_due_at": row["next_review_due_at"].isoformat()
+        if row["next_review_due_at"]
+        else None,
+    }
+
+
+async def list_ps_screening_events(limit: int = 100) -> List[Dict[str, Any]]:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT e.event_id, e.subject_id, s.legal_name, s.role, e.provider, e.package,
+                   e.ordered_at, e.completed_at, e.report_preveil_path,
+                   e.adjudicator_subject_id, adj.legal_name AS adjudicator_name,
+                   e.adjudication_memo_preveil_path, e.adjudication_memo_id,
+                   e.disposition, e.next_review_due_at
+            FROM soc_ops.ps_screening_event e
+            JOIN soc_ops.ps_subject s ON s.subject_id = e.subject_id
+            LEFT JOIN soc_ops.ps_subject adj ON adj.subject_id = e.adjudicator_subject_id
+            ORDER BY e.completed_at DESC NULLS LAST, e.created_at DESC
+            LIMIT $1
+            """,
+            limit,
+        )
+    return [_ps_screening_row(r) for r in rows]
+
+
+async def get_ps_screening_event(event_id: UUID) -> Optional[Dict[str, Any]]:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT e.event_id, e.subject_id, s.legal_name, s.role, e.provider, e.package,
+                   e.ordered_at, e.completed_at, e.report_preveil_path, e.report_drive_file_id,
+                   e.adjudicator_subject_id, adj.legal_name AS adjudicator_name,
+                   e.adjudication_memo_preveil_path, e.adjudication_memo_drive_file_id,
+                   e.adjudication_memo_id, e.disposition, e.next_review_due_at
+            FROM soc_ops.ps_screening_event e
+            JOIN soc_ops.ps_subject s ON s.subject_id = e.subject_id
+            LEFT JOIN soc_ops.ps_subject adj ON adj.subject_id = e.adjudicator_subject_id
+            WHERE e.event_id = $1
+            """,
+            event_id,
+        )
+    if not row:
+        return None
+    out = _ps_screening_row(row)
+    out["report_drive_file_id"] = row["report_drive_file_id"]
+    out["adjudication_memo_drive_file_id"] = row["adjudication_memo_drive_file_id"]
+    return out
+
+
+async def insert_ssp_evidence(
+    *,
+    control_ids: List[str],
+    evidence_type: str,
+    artifact_refs: List[Dict[str, Any]],
+    actor_subject_id: Optional[UUID],
+    verified_at: datetime,
+    notes: Optional[str],
+) -> UUID:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.ssp_evidence
+                (control_ids, evidence_type, artifact_refs, actor_subject_id, verified_at, notes)
+            VALUES ($1, $2, $3::jsonb, $4, $5, $6)
+            RETURNING evidence_id
+            """,
+            control_ids,
+            evidence_type,
+            json.dumps(artifact_refs),
+            actor_subject_id,
+            verified_at,
+            notes,
+        )
+    return row["evidence_id"]
+
+
+async def insert_compliance_audit_log(
+    *,
+    operator: str,
+    endpoint: str,
+    purpose: str,
+    evidence_id: UUID,
+    payload: Dict[str, Any],
+) -> int:
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.compliance_audit_log
+                (operator, endpoint, purpose, evidence_id, payload)
+            VALUES ($1, $2, $3, $4, $5::jsonb)
+            RETURNING id
+            """,
+            operator,
+            endpoint,
+            purpose,
+            evidence_id,
+            json.dumps(payload),
+        )
+    return int(row["id"])
+
+
+async def create_gws_boundary_scan_run(
+    *,
+    status: str,
+    started_at: str,
+    completed_at: str,
+    scanned_scope: List[str],
+    hits: List[Dict[str, str]],
+    error_code: Optional[str],
+    notification_status: str,
+) -> Dict[str, Any]:
+    """Persist an approved-metadata-only Google Workspace boundary scan."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO soc_ops.gws_boundary_scan_runs
+                (status, started_at, completed_at, scanned_scope, hit_count, error_code, notification_status)
+            VALUES ($1, $2::timestamptz, $3::timestamptz, $4::jsonb, $5, $6, $7)
+            RETURNING id
+            """,
+            status,
+            started_at,
+            completed_at,
+            json.dumps(scanned_scope),
+            len(hits),
+            error_code,
+            notification_status,
+        )
+        run_id = row["id"]
+        for hit in hits:
+            await conn.execute(
+                """
+                INSERT INTO soc_ops.gws_boundary_scan_hits
+                    (run_id, source, container, item_id, owner, marking_token, detected_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)
+                """,
+                run_id,
+                hit["source"],
+                hit["container"],
+                hit["itemId"],
+                hit["owner"],
+                hit["markingToken"],
+                hit["detectedAt"],
+            )
+    return await get_latest_gws_boundary_scan_run() or {}
+
+
+async def get_latest_gws_boundary_scan_run() -> Optional[Dict[str, Any]]:
+    """Return the most recent boundary scan with location-only hit metadata."""
+    pool = await _pool()
+    async with pool.acquire() as conn:
+        run = await conn.fetchrow(
+            """
+            SELECT id, status, completed_at, scanned_scope, hit_count, error_code, notification_status
+            FROM soc_ops.gws_boundary_scan_runs
+            ORDER BY completed_at DESC
+            LIMIT 1
+            """
+        )
+        if not run:
+            return None
+        rows = await conn.fetch(
+            """
+            SELECT source, container, item_id, owner, marking_token, detected_at
+            FROM soc_ops.gws_boundary_scan_hits
+            WHERE run_id = $1
+            ORDER BY detected_at DESC
+            """,
+            run["id"],
+        )
+    scope = run["scanned_scope"]
+    return {
+        "last_run": run["completed_at"].isoformat() if run["completed_at"] else None,
+        "status": run["status"],
+        "scanned_scope": scope if isinstance(scope, list) else json.loads(scope or "[]"),
+        "hit_count": int(run["hit_count"] or 0),
+        "hits": [
+            {
+                "source": row["source"],
+                "container": row["container"],
+                "itemId": row["item_id"],
+                "owner": row["owner"],
+                "markingToken": row["marking_token"],
+                "detectedAt": row["detected_at"].isoformat() if row["detected_at"] else None,
+            }
+            for row in rows
+        ],
+        "error_code": run["error_code"],
+        "notification_status": run["notification_status"],
     }

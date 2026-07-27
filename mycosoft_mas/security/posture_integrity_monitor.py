@@ -53,11 +53,16 @@ def _status_rank(row: dict[str, Any]) -> int:
     return {"implemented": 3, "compliant": 3, "partial": 2}.get(status, 1)
 
 
+def _has_evidence_uri(row: dict[str, Any]) -> bool:
+    return bool(str(row.get("evidence_uri") or "").strip())
+
+
 def _snapshot_from_controls(
     controls: Iterable[dict[str, Any]],
 ) -> tuple[PostureSnapshot | None, str | None]:
+    controls_list = list(controls)
     unique: dict[str, dict[str, Any]] = {}
-    for row in controls:
+    for row in controls_list:
         practice_id = _practice_id(row)
         if not practice_id:
             continue
@@ -65,21 +70,29 @@ def _snapshot_from_controls(
             unique[practice_id] = row
 
     if not unique:
-        return None, "no compliance controls were returned"
+        return None, "controls_empty"
+
+    missing_evidence = [
+        practice_id
+        for practice_id, row in unique.items()
+        if _status_rank(row) == 3 and not _has_evidence_uri(row)
+    ]
+    if missing_evidence:
+        return None, (
+            "implemented controls are missing evidence_uri: "
+            + ", ".join(sorted(missing_evidence))
+        )
 
     met = sum(_status_rank(row) == 3 for row in unique.values())
     partial = sum(_status_rank(row) == 2 for row in unique.values())
     non_compliant = sum(_status_rank(row) == 1 for row in unique.values())
     total = met + partial + non_compliant
     if total != EXPECTED_CMMC_L2_PRACTICES:
-        return None, (
-            f"unique CMMC practice count {total} does not match expected "
-            f"{EXPECTED_CMMC_L2_PRACTICES}"
-        )
+        return None, "expected_practice_count_mismatch"
 
     return (
         PostureSnapshot(
-            controls=list(controls),
+            controls=controls_list,
             met=met,
             partial=partial,
             non_compliant=non_compliant,
@@ -103,7 +116,7 @@ class PostureIntegrityMonitor:
     ) -> IntegrityResult:
         snapshot, reason = _snapshot_from_controls(controls)
         if snapshot is not None and self._last_good is not None and snapshot.met == 0 and self._last_good.met > 0:
-            reason = "Met count unexpectedly dropped to zero from a verified non-zero posture"
+            reason = "met_count_zero_regression"
             snapshot = None
 
         if snapshot is not None:
@@ -161,7 +174,7 @@ class PostureIntegrityMonitor:
                 controls = await soc_repo.list_compliance_controls()
                 await self.validate_controls(controls)
             except Exception as exc:
-                self._last_reason = f"monitor poll failed: {exc}"
+                self._last_reason = "monitor_poll_failed"
                 logger.critical("CMMC posture integrity monitor poll failed: %s", exc)
             await asyncio.sleep(interval_seconds)
 

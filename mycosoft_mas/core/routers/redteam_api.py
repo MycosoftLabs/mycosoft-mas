@@ -125,12 +125,46 @@ class SimulationResult(BaseModel):
     soc_incident_id: Optional[str] = None
 
 
+class ScenarioRunRequest(BaseModel):
+    scenario_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class ScenarioRegistryEntry(BaseModel):
+    id: str
+    name: str
+    risk_class: str
+    allowed_scope: str
+    isolation_target: str
+    data_classification: str
+    cadence: Optional[str] = None
+    approval_class: str
+    kill_switch: str
+    required_evidence: List[str]
+
+
 # ═══════════════════════════════════════════════════════════════
 # STORAGE: redteam_store (Supabase when configured, else in-memory)
 # ═══════════════════════════════════════════════════════════════
 
 # Authorization tokens (production would validate against SSO/RBAC)
 valid_auth_tokens: set = set()
+
+
+def _legacy_simulations_enabled() -> bool:
+    """Legacy synthetic simulation endpoints are disabled unless explicitly isolated."""
+    return os.getenv("REDTEAM_LEGACY_SIMULATIONS_ENABLED", "0") == "1"
+
+
+def _require_isolated_legacy_simulations() -> None:
+    if not _legacy_simulations_enabled():
+        raise HTTPException(
+            status_code=410,
+            detail=(
+                "Legacy synthetic red-team simulations are disabled. Use the "
+                "approved scenario registry and Guardian request contract."
+            ),
+        )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -622,6 +656,41 @@ async def list_soc_redteam_findings(
         raise HTTPException(status_code=503, detail=str(e)) from e
 
 
+@router.get("/scenarios", response_model=List[ScenarioRegistryEntry])
+async def list_approved_scenarios():
+    """
+    List durable, approved scenarios only.
+
+    No authoritative scenario registry is deployed yet, so this contract is
+    intentionally unavailable rather than returning browser-era sample data.
+    """
+    raise HTTPException(
+        status_code=503,
+        detail=(
+            "Approved red-team scenario registry is not configured; no "
+            "scenario data is available."
+        ),
+    )
+
+
+@router.post("/runs")
+async def request_scenario_run(request: ScenarioRunRequest):
+    """
+    Request an approved scenario without accepting arbitrary scope or targets.
+
+    No durable scenario/run ledger is available, so no run is created and no
+    simulator is invoked.
+    """
+    logger.warning("Red-team scenario request held: scenario_id=%s", request.scenario_id)
+    raise HTTPException(
+        status_code=503,
+        detail=(
+            "Approved scenario-run ledger is not configured; no run was "
+            "created or executed."
+        ),
+    )
+
+
 @router.post("/authorize")
 async def request_authorization(description: str = "Red team simulation"):
     """
@@ -632,6 +701,7 @@ async def request_authorization(description: str = "Red team simulation"):
     - Approval workflow for sensitive tests
     - SSO for identity verification
     """
+    _require_isolated_legacy_simulations()
     token = generate_auth_token()
     logger.info(f"[RedTeam] Authorization token generated for: {description}")
 
@@ -655,6 +725,7 @@ async def start_simulation(
     Requires valid authorization code for execution.
     All simulations are logged to SOC.
     """
+    _require_isolated_legacy_simulations()
     # Validate authorization
     if not validate_authorization(request.authorization_code):
         raise HTTPException(
@@ -716,6 +787,7 @@ async def run_credential_test_endpoint(
     background_tasks: BackgroundTasks,
 ):
     """Run credential testing simulation."""
+    _require_isolated_legacy_simulations()
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
     approved_by = await _require_guardian_approval_if_needed(
@@ -750,6 +822,7 @@ async def run_phishing_sim_endpoint(
     background_tasks: BackgroundTasks,
 ):
     """Run phishing awareness simulation."""
+    _require_isolated_legacy_simulations()
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
     approved_by = await _require_guardian_approval_if_needed("phishing_sim", request.target_group)
@@ -786,6 +859,7 @@ async def run_pivot_test_endpoint(
     background_tasks: BackgroundTasks,
 ):
     """Run network pivot/segmentation test."""
+    _require_isolated_legacy_simulations()
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
     approved_by = await _require_guardian_approval_if_needed(
@@ -820,6 +894,7 @@ async def run_exfil_test_endpoint(
     background_tasks: BackgroundTasks,
 ):
     """Run data exfiltration detection test."""
+    _require_isolated_legacy_simulations()
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
     approved_by = await _require_guardian_approval_if_needed(

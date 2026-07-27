@@ -1,5 +1,18 @@
 # Master Document Index
 
+## Google Workspace boundary scan (July 24, 2026)
+
+- `docs/GWS_BOUNDARY_SCAN_BACKEND_COMPLETE_JUL24_2026.md` — MAS metadata-only Drive boundary scanner, independent daily timer, SOC incident/SAO-notification wiring, API contract, and remaining Google Admin prerequisites.
+
+## CMMC Wave 1 + IR status (July 22, 2026)
+
+- `CODE/docs/CMMC_IR_L2_3_6_3_MET_JUL22_2026.md` — **IR evidence completion**: dual-signed DocuSign AAR, EV-IR-001 registration, evidence URI, and live-promotion verification.
+- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_TABLETOP_COMPLETION_STATUS_JUL22_2026.md` — **Authoritative IR status**: signed + registered + Met; canonical AAR and Certificate of Completion references.
+- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_RAPID_HITL_SCRIPT_JUL22_2026.md` — Morgan + RJ 10–15 min tabletop facilitation script.
+- `CODE/docs/CMMC_IR_TABLETOP_HITL_NEXT_JUL22_2026.md` — HITL → capture → merge → DocuSign next steps.
+- `CODE/docs/cmmc_evidence/ir/ev_ir_3_6_3_aar_FILLED_UNSIGNED_JUL22_2026.pdf` — Filled unsigned AAR (repo copy).
+- `CODE/docs/CURSOR_TO_PERPLEXITY_IR_AAR_HANDBACK_JUL22_2026.md` — **Superseded** for Part B (wait-on-Perplexity PDF); Wave 1 Part A still valid.
+
 ## Psathyrella backend architecture (June 25, 2026)
 
 - `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — **P0–P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.

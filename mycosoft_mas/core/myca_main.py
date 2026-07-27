@@ -66,7 +66,9 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.compliance_api import posture_router as myca_posture_router
 from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
+from mycosoft_mas.core.routers.security_evidence_api import router as security_evidence_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
@@ -88,6 +90,7 @@ from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
 from mycosoft_mas.core.routers.fusarium_platform_api import router as fusarium_platform_router
 from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
+from mycosoft_mas.core.routers.gws_boundary_api import router as gws_boundary_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
 from mycosoft_mas.core.routers.meshtastic_api import router as meshtastic_api_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
@@ -830,6 +833,7 @@ app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
+app.include_router(gws_boundary_router)
 app.include_router(guardian_router, tags=["guardian"])
 app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(event_ledger_router, tags=["event-ledger"])
@@ -876,6 +880,8 @@ app.include_router(psathyrella_router, tags=["psathyrella"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
 app.include_router(posture_integrity_router)
+app.include_router(myca_posture_router)
+app.include_router(security_evidence_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
 # CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
@@ -1959,13 +1965,13 @@ async def startup_event():
         posture_integrity_monitor,
     )
 
-    await posture_integrity_monitor.start()
-    logger.info("CMMC posture integrity monitor scheduled")
     if os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "0") == "1":
         logger.warning(
             "MAS_SKIP_BACKGROUND_STARTUP=1 set; skipping background startup tasks for API recovery mode"
         )
         return
+    await posture_integrity_monitor.start()
+    logger.info("CMMC posture integrity monitor scheduled")
     logger.info("MAS Orchestrator HTTP stack ready — scheduling background initialization")
     app.state.mas_startup_task = asyncio.create_task(_mas_background_startup())
 

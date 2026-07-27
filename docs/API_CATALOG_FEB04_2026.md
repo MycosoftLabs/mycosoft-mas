@@ -33,6 +33,15 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 **Routers:** `mycosoft_mas/core/routers/incidents_api.py`, `mycosoft_mas/core/routers/redteam_api.py`, compliance router (see `myca_main.py` includes). **Persistence:** MINDEX Postgres schema `soc_ops` (migrations in MINDEX repo). **Stream:** `mycosoft_mas/soc/security_events_stream.py` → Redis `security:events` (env `SOC_SECURITY_EVENTS_STREAM`). **Pollers:** `mycosoft_mas/soc/incident_source_poller.py`; **L2/L3:** `mycosoft_mas/redteam/layer2_scoped.py`, `layer3_ai.py`.
 
+### Google Workspace CUI-boundary scan (July 24, 2026)
+
+**Router:** `mycosoft_mas/core/routers/gws_boundary_api.py`. **Worker:** `mycosoft_mas/soc/gws_boundary_scan.py` and independent `mycosoft-gws-boundary-scan.timer`. **Persistence:** `soc_ops.gws_boundary_scan_runs` and `soc_ops.gws_boundary_scan_hits`. Results contain location metadata only; no Workspace content, filename, subject, or snippet is returned.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/security/gws-boundary/health` | GET | Configuration and safe worker status |
+| `/api/security/gws-boundary/status` | GET | `{ configured, last_run, status, scanned_scope, hit_count, hits[] }`; hits are location metadata only |
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/incidents/health` | GET | `{ ok, postgres_configured }` |
@@ -44,6 +53,11 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/redteam/soc-runs` | GET | Query `limit` — list `soc_ops.redteam_runs` |
 | `/api/redteam/soc-findings` | GET | Query `run_id`, `limit` — list `soc_ops.redteam_findings` |
 | `/api/compliance/*` | GET/POST | Controls, docs, regenerate (when router mounted; requires DB) |
+| `/api/compliance/background-checks` | GET | Allowlisted Morgan/RJ background-check status metadata (`X-API-Key`) |
+| `/api/compliance/background-checks/order` | POST | Explicit allowlisted invitation/order when prod ordering enabled |
+| `/api/myca/posture` | GET | Read-only MYCA operational posture (BackgroundChecks + PreVeil Drive design; `X-API-Key`) |
+
+**Integration:** `mycosoft_mas/integrations/backgroundchecks_client.py`; doc `docs/BACKGROUNDCHECKS_PREVEIL_MYCA_INTEGRATION_JUL20_2026.md`.
 
 **Website (admin BFF):** `GET /api/security/redteam?action=soc-runs|soc-findings`; compliance bundle via `GET /api/security?action=mas-compliance-bundle` and POST regenerate per implementation.
 
@@ -240,6 +254,13 @@ Metered live worldstate connection for external agents. All endpoints require `X
 | `/api/security/audit/query` | GET | Query audit log |
 | `/api/security/audit/stats` | GET | Audit statistics |
 | `/api/security/health` | GET | Security service health |
+| `/api/security/ps/screening-events` | GET | Personnel screening metadata (X-API-Key; Patch v2 Jul 21 2026) |
+| `/api/security/ps/adjudicate` | POST | PS.L2-3.9.1 Met flip via evidence emitter (X-API-Key) |
+| `/api/security/evidence/emit` | POST | Canonical SSP evidence emitter for control Met flips |
+| `/api/security/at/training-record` | POST | AT.L2 training certificate evidence |
+| `/api/security/ir/tabletop-record` | POST | IR.L2 tabletop exercise evidence |
+
+**Router (evidence spine):** `mycosoft_mas/core/routers/security_evidence_api.py` — registered in `myca_main.py` Jul 21 2026.
 
 ### Ethics API (`/api/ethics/*`) – Mar 3, 2026
 
