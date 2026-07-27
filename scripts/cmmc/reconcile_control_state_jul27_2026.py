@@ -55,7 +55,7 @@ def _is_stale_implemented_row(row: Dict[str, Any]) -> bool:
             current_state.get("notes", ""),
         )
     ).lower()
-    return current_implementation in {"planned", "not_met"} or "not met" in notes
+    return current_implementation != "implemented" or "not met" in notes
 
 
 def _reconciled_body(row: Dict[str, Any]) -> Dict[str, Any]:
