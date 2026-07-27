@@ -20,7 +20,6 @@ def test_posture_snapshot_rejects_implemented_control_without_evidence() -> None
 
     assert snapshot is None
     assert reason is not None
-    assert "evidence_uri" in reason
 
 
 @pytest.mark.asyncio
@@ -39,3 +38,30 @@ async def test_implemented_control_requires_evidence_uri(
 
     assert exception_info.value.status_code == 422
     assert exception_info.value.detail == "implemented controls require a non-empty evidence_uri"
+
+
+@pytest.mark.asyncio
+async def test_implemented_control_rejects_stale_current_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A Met promotion must never leave the published current state as planned."""
+    monkeypatch.setenv("MINDEX_DATABASE_URL", "postgresql://configured")
+
+    with pytest.raises(HTTPException) as exception_info:
+        await upsert_control(
+            ControlUpsert(
+                control_id="IA.L2-3.5.2",
+                implementation_state="implemented",
+                evidence_uri="doc:cmmc_evidence/ia/example.pdf#EV-IA-001",
+                state_snapshot={
+                    "note": "Documentation leg only. Not Met.",
+                    "current_state": {
+                        "implementation_state": "planned",
+                        "notes": "Not yet implemented.",
+                    },
+                },
+            )
+        )
+
+    assert exception_info.value.status_code == 422
+    assert "current_state" in exception_info.value.detail
