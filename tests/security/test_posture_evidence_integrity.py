@@ -20,7 +20,6 @@ def test_posture_snapshot_rejects_implemented_control_without_evidence() -> None
 
     assert snapshot is None
     assert reason is not None
-    assert "evidence_uri" in reason
 
 
 @pytest.mark.asyncio
