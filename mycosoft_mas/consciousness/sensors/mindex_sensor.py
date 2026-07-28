@@ -12,6 +12,7 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -33,9 +34,9 @@ class MINDEXSensor(BaseSensor):
     research data, and telemetry.
     """
 
-    # API endpoints
-    MINDEX_API_BASE = "http://192.168.0.189:8000"
-    FALLBACK_API_BASE = "http://192.168.0.188:8001/api/mindex"
+    # API endpoints (env-configurable)
+    MINDEX_API_BASE = os.getenv("MYCA_MINDEX_URL", "http://192.168.0.189:8000")
+    FALLBACK_API_BASE = os.getenv("MYCA_MINDEX_FALLBACK_URL", "http://192.168.0.188:8001/api/mindex")
 
     def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "mindex")

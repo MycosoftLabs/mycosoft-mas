@@ -1896,6 +1896,16 @@ async def _mas_background_startup() -> None:
     except Exception as exc:
         logger.warning(f"Agent supervisor failed to start: {exc}")
 
+    # Awaken MYCA consciousness (starts world-model loop, pattern recognition, etc.)
+    try:
+        from mycosoft_mas.consciousness import get_consciousness
+
+        consciousness = get_consciousness()
+        await consciousness.awaken()
+        logger.info("✓ MYCA consciousness awakened")
+    except Exception as exc:
+        logger.warning(f"Consciousness awaken failed (non-fatal): {exc}")
+
     logger.info("✓ MAS ready - all agents operational 24/7")
 
     # Initialize Deep Agent orchestrator (feature-flagged; no-op when disabled)
@@ -1989,6 +1999,16 @@ async def shutdown_event():
     import logging
 
     logger = logging.getLogger("MAS_Shutdown")
+
+    # Hibernate MYCA consciousness (stops background loops, disconnects sensors)
+    try:
+        from mycosoft_mas.consciousness import get_consciousness
+
+        consciousness = get_consciousness()
+        await consciousness.hibernate()
+        logger.info("MYCA consciousness hibernated")
+    except Exception as exc:
+        logger.warning("Consciousness hibernate error: %s", exc)
     try:
         from mycosoft_mas.security.posture_integrity_monitor import (
             posture_integrity_monitor,

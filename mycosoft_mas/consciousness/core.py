@@ -251,6 +251,7 @@ class MYCAConsciousness:
         self._intuition = IntuitionEngine(self)
         self._dream_state = DreamState(self)
         self._world_model = WorldModel(self)
+        await self._world_model.initialize_sensors()
         self._world_model.start_write_queue()
         self._voice_interface = VoiceInterface(self)
 

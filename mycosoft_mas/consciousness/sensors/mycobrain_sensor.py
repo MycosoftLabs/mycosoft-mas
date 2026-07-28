@@ -12,6 +12,7 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -33,9 +34,9 @@ class MycoBrainSensor(BaseSensor):
     data, sensor readings, and presence detection.
     """
 
-    # API endpoints
-    MYCOBRAIN_API_BASE = "http://192.168.0.188:8001/api/mycobrain"
-    LOCAL_SERVICE = "http://localhost:8003"  # Local MycoBrain service
+    # API endpoints (env-configurable)
+    MYCOBRAIN_API_BASE = os.getenv("MYCA_MYCOBRAIN_URL", "http://192.168.0.188:8001/api/mycobrain")
+    LOCAL_SERVICE = os.getenv("MYCA_MYCOBRAIN_LOCAL_URL", "http://localhost:8003")
 
     def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "mycobrain")
