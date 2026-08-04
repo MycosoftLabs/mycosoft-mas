@@ -1,8 +1,11 @@
 # TAC-O CUI Handling Procedures
 ## Controlled Unclassified Information Management
-**Date:** April 8, 2026
-**Status:** Active
-**Applicable To:** All TAC-O sensor data, classifications, and assessments
+**Date:** April 8, 2026  
+**Updated:** August 3, 2026  
+**Status:** Design intent / required procedures — **NOT verified operational posture**  
+**Evidence rule:** Do **not** cite this document alone as proof that a control is Met, that encryption/MFA/RBAC/monitoring are live in production, or as a CMMC / SPRS evidence artifact. Present-tense wording below describes *required* handling, not independently verified implementation.  
+**Note (Aug 03 SAO):** This file is a handling **procedure** (marking examples are format illustrations). It is **not** CUI content. Keep for AI and operators.  
+**Applicable To:** All TAC-O sensor data, classifications, and assessments  
 **Authority:** NIST SP 800-171 Rev. 2, 32 CFR Part 2002
 
 ---
