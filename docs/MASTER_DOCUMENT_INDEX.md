@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Internal program documentation (not public)
+- Maritime pursuit implementation plans, NIST mapping drafts, and superseded teaming drafts are kept **internal only** (local `docs/private/` / Google Drive). They are not published in this public repository index.
+- CUI **handling procedure** (marking examples / process): `docs/TACO_CUI_HANDLING_APR08_2026.md` (procedure document — not CUI content).
+
 ## Google Workspace boundary scan (July 24, 2026)
 
 - `docs/GWS_BOUNDARY_SCAN_BACKEND_COMPLETE_JUL24_2026.md` — MAS metadata-only Drive boundary scanner, independent daily timer, SOC incident/SAO-notification wiring, API contract, and remaining Google Admin prerequisites.
@@ -18,7 +22,7 @@
 - `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — **P0–P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.
 - `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` — **P0 completion record** (superseded by P0–P6 status for full picture).
 - `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` — MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
-- `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` — **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
+- *(Program-specific maritime pursuit plans and inventories are maintained internally — not listed on the public index.)*
 
 ## Earth Simulator — full capabilities audit (June 25, 2026)
 
@@ -923,13 +927,6 @@
 - `scripts/myca_skill_lint.py` ? Skill permission linter
 - `.github/workflows/myca-ci.yml` ? MYCA CI pipeline
 - `.github/workflows/myca-security.yml` ? MYCA security audit pipeline
-
-## TAC-O Maritime Integration — Mycosoft LLC 100% Prime (Apr 8, 2026; updated Jun 25, 2026)
-- `docs/PSATHYRELLA_AUTONOMOUS_OPS_PLAN_JUN25_2026.md` ? **Current TAC-O prime narrative**: Mycosoft LLC 100% prime on NUWC TAC-O CSO (N66604-26-9-A00X). Autonomous ocean sensor platform, field architecture, demo goals.
-- `docs/SUPERSEDED_TACO_PLAN_APR08_2026.md` — **SUPERSEDED (historical only)**: Old subcontractor teaming draft — do not use for proposals or customer-facing content.
-- `docs/TACO_CURSOR_IMPLEMENTATION_PLAN.md` ? **Full Cursor implementation plan**: 7 parallel lanes across 5 repos (NLM, MINDEX, MAS, MycoBrain, Website). 1,195 lines with code skeletons, file paths, execution schedule.
-- `docs/TACO_NIST_800_171_MAPPING_APR08_2026.md` ? **NIST 800-171 control mapping**: All 110 controls mapped to TAC-O system components (MycoBrain, MINDEX, MAS, FUSARIUM Maritime, network, maritime sensor interfaces).
-- `docs/TACO_CUI_HANDLING_APR08_2026.md` ? **CUI handling procedures**: Marking, storage (AES-256-GCM), transmission (TLS 1.3), processing, destruction, incident response for underwater sensor data.
 
 ## Security Hardening (Feb 9, 2026)
 - `docs/SECRET_MANAGEMENT_POLICY_FEB09_2026.md` ? **Secret management policy**: No secrets in code, .env.example pattern for all repos, quarterly rotation schedule, CI/CD secrets via GitHub Actions, audit procedures, git-filter-repo for history remediation, current findings (30+ hardcoded secrets in scripts/, 12 credential-containing defaults in library code), remediation priority and pre-commit hook setup.
