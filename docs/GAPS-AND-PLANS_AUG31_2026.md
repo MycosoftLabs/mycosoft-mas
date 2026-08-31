@@ -215,9 +215,60 @@ then do a `git filter-repo` purge of the old secrets from history and force-push
 | Impact | The Compose command no longer uses `wait-for-it` (it was removed from the command), and the Dockerfile `COPY` will fail at build time if the file is missing. However, the `CMD` doesn't use it either — it goes straight to uvicorn. The `COPY` is dead code. |
 | Recommendation | Either add `docker/wait-for-it.sh` to the repo or remove the `COPY` line from the Dockerfile. Low priority since the current build may work if Docker ignores the missing file during the runtime stage (the COPY is in the runtime stage, after the build stage). |
 
+### 5.4 Empty/dead files
+
+| Field | Value |
+|-------|-------|
+| Status | **Fixed in this PR** |
+| Problem | Four files existed as empty stubs with no content: `PORT_CONFLICT_RESOLUTION.md` (0 bytes, linked from README), `PREPARE_FOR_TEST.ps1` (0 bytes), `TEST_EXECUTION_PLAN.md` (0 bytes), `docker-compose.essential.yml` (2 bytes). |
+| Fix | Populated `PORT_CONFLICT_RESOLUTION.md` with real port-map and conflict-resolution content (README links to it). Deleted the other three — no code references them. |
+
 ---
 
-## 6. Larger Incomplete Systems (context only)
+## 6. DAO Agent — JSON→MINDEX Migration
+
+| Field | Value |
+|-------|-------|
+| Status | **Planned** (do not rewrite the agent in this PR) |
+| File | `mycosoft_mas/agents/myco_dao_agent.py` |
+| Problem | `_execute_proposal_action` is a self-documented placeholder. All persistence (members, proposals, treasury, governance) writes to local JSON files under `data/myco_dao/`. MINDEX already has a `mycodao_zone` schema that should be the real backend. |
+
+**Plan:**
+
+1. **Audit the MINDEX `mycodao_zone` schema** — determine which tables/columns
+   exist and what the DAO agent currently writes to JSON that has no MINDEX
+   equivalent.
+2. **Create a `MINDEXDAOClient`** (or extend `mindex_client.py`) that wraps
+   the DAO-specific CRUD operations:
+   - `upsert_member(member_data)` → MINDEX `mycodao_zone.members`
+   - `upsert_proposal(proposal_data)` → MINDEX `mycodao_zone.proposals`
+   - `update_treasury(amount)` → MINDEX `mycodao_zone.treasury`
+   - `log_vote(vote_data)` → MINDEX `mycodao_zone.votes`
+3. **Swap JSON persistence calls** in `myco_dao_agent.py` with MINDEX client
+   calls. Keep JSON writes as a **local fallback** behind a feature flag
+   (`DAO_PERSIST_MODE=mindex|json`, default `mindex`) for offline development.
+4. **Implement `_execute_proposal_action`** properly — the funding branch
+   already works but the parameter branch is a no-op; wire it to a real
+   config update or agent-config patch via the MAS orchestrator API.
+5. **Add tests** — at minimum, test that proposals round-trip through MINDEX
+   and that the JSON fallback still works.
+
+**Risk:** Low — the DAO agent is not on a critical path. The migration can
+happen incrementally.
+
+---
+
+## 7. Embodiment Package
+
+| Field | Value |
+|-------|-------|
+| Status | **Tracked elsewhere** — `mycosoft-embodiment` extracted to its own repo (PR [#2](https://github.com/MycosoftLabs/mycosoft-embodiment/pull/2)) |
+| In this repo | `mycosoft-embodiment/` directory remains as a copy. This is intentional — the MAS repo keeps its copy for now. |
+| Action | None in this PR. When the embodiment repo stabilizes, consider replacing this directory with a git submodule or a pyproject dependency. |
+
+---
+
+## 8. Larger Incomplete Systems (context only)
 
 These are tracked elsewhere but listed here for completeness:
 
@@ -239,4 +290,6 @@ These are tracked elsewhere but listed here for completeness:
 | Enable `asyncio_mode = auto` in pytest config | `pytest.ini`, `tests/pytest.ini` | #103 |
 | Fix misleading README Compose note | `README.md` | — |
 | Clarify README dashboard mount note | `README.md` | — |
+| Populate `PORT_CONFLICT_RESOLUTION.md` | `PORT_CONFLICT_RESOLUTION.md` | — |
+| Delete empty dead files | `PREPARE_FOR_TEST.ps1`, `TEST_EXECUTION_PLAN.md`, `docker-compose.essential.yml` | — |
 | Create this gaps/plans document | `docs/GAPS-AND-PLANS_AUG31_2026.md` | — |
