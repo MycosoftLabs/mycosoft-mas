@@ -4,7 +4,7 @@
 **Classification:** Commercial UNCLASSIFIED  
 **Lane:** Cursor backend only  
 **MAS branch:** `cursor/field-operator-live-observations-sep01`  
-**MAS commit:** see git after commit on that branch (this file is included in the same commit when present)
+**MAS commit:** `45bd586bd38d0f518747fcf3a64ffcd6d3efc650` (`45bd586bd`)
 
 ## Verdict
 
