@@ -18,6 +18,14 @@ from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
+from mycosoft_mas.devices.field_operator_observations import (
+    catalog_identity_record,
+    collect_field_operator_observation,
+    collect_field_operator_observations,
+    list_field_operator_catalog,
+    resolve_field_operator,
+    to_device_telemetry_payload,
+)
 
 logger = logging.getLogger("DeviceRegistry")
 
@@ -791,12 +799,40 @@ async def device_agent_task(device_id: str, body: AgentTaskRequest = Body(...)):
     )
 
 
+@router.get("/field-operators")
+async def list_field_operators():
+    """Catalog identities for Mushroom 1 and Hyphae 1. No sensor values."""
+    return list_field_operator_catalog()
+
+
+@router.get("/field-operators/observations")
+async def get_field_operator_observations(
+    device_id: Optional[str] = Query(
+        None,
+        description="registry_id or catalog_id. Shared board MDP is rejected as ambiguous.",
+    ),
+):
+    """Read-only GET of documented operator /api/status and /api/sensor paths."""
+    return await collect_field_operator_observations(device_id=device_id)
+
+
 @router.get("/{device_id}")
 async def get_device(device_id: str):
     """Get information about a specific device."""
     _cleanup_expired_devices()
 
     if device_id not in _device_registry:
+        resolved = resolve_field_operator(device_id)
+        if resolved["kind"] == "ambiguous_mdp":
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Shared board MDP identifier does not select a unique field deployment. "
+                    f"Use one of: {resolved.get('registry_ids')}"
+                ),
+            )
+        if resolved["kind"] == "found" and resolved["deployment"]:
+            return catalog_identity_record(resolved["deployment"])
         raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
 
     device = _device_registry[device_id]
@@ -1105,9 +1141,34 @@ async def get_device_telemetry(device_id: str):
     """
     Get telemetry from a remote device.
 
-    Proxies the telemetry request to the device's MycoBrain service.
+    Field-operator registry/catalog IDs probe documented :8787 GET paths.
+    Shared board MDP identifiers are rejected. Heartbeat devices keep the
+    existing MycoBrain-service proxy.
     """
     _cleanup_expired_devices()
+
+    resolved = resolve_field_operator(device_id)
+    if resolved["kind"] == "ambiguous_mdp":
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Shared board MDP identifier does not select a unique field deployment. "
+                f"Use one of: {resolved.get('registry_ids')}"
+            ),
+        )
+    if resolved["kind"] == "found" and resolved["deployment"]:
+        observation = await collect_field_operator_observation(resolved["deployment"])
+        if observation["state"] == "unreachable":
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "state": "unreachable",
+                    "device_id": observation["registry_id"],
+                    "message": observation["message"],
+                    "provenance": observation["provenance"],
+                },
+            )
+        return to_device_telemetry_payload(observation)
 
     if device_id not in _device_registry:
         raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
