@@ -1,4 +1,4 @@
-﻿# Cursor Docs Index â€“ Internal Reference (Vital & Current Only)
+# Cursor Docs Index â€“ Internal Reference (Vital & Current Only)
 
 **Policy:** This file is the canonical list of **vital and current** docs for Cursor agents. It is updated continuously: **new docs replace old ones** in the list. Do not add deprecated or superseded docs; when a new doc replaces an old one, remove the old entry.
 
@@ -12,6 +12,23 @@
 
 ## Stripe / Launchpad billing (Aug 13, 2026)
 - `docs/STRIPE_MARKETPLACE_APPS_MYCA_MINDEX_FUSARIUM_AUG13_2026.md` — Marketplace apps vs Dashboard products (Tax, Portal, Smart Retries, Sigma, Data Pipeline, Atlas, Climate); P0 Slack + Mercury; commercial Launchpad only
+
+## Fusarium Earth Sim / iPad (Sep 03, 2026)
+- `docs/CURSOR_FUSARIUM_EARTHSIM_IPAD_FIX_SEP03_2026.md` — Live Earth Sim/Aerosol did not load; site Header overlay on tablet; NatureOS-only globe path checks; 8212 not the public fix
+
+## Fusarium owner auth (Sep 02, 2026)
+- `docs/CURSOR_FUSARIUM_OWNER_AUTH_LIVE_SEP02_2026.md` — `morgan@mycosoft.org` owner password live; operator Google/magic/recovery/TOTP MFA; no password in the doc
+
+## Fusarium Explore login + P0 (Sep 02, 2026)
+- `docs/CURSOR_FUSARIUM_EXPLORE_PLATFORM_LOGIN_SEP02_2026.md` — Loopback green 8212/8211: CTA → login, Morgan owner only, Claude P0 API 401 + GCS stale; rollback 8112/8111; public path also live via PR #291
+
+## Fusarium AWS credits (Sep 02, 2026)
+- `docs/FUSARIUM_AWS_10K_60DAY_SPEND_PLAN_SEP02_2026.md` — $200/day cap; ~$10k in ≤60 days; no spend until “start AWS spend”
+- `docs/PERPLEXITY_HANDOFF_AWS_CREDIT_EMAILS_SEP02_2026.md` — Perplexity drafts AWS credit emails (do not send)
+
+## Fusarium staging infra (Sep 01, 2026)
+- `docs/CURSOR_TO_CODEX_FUSARIUM_INFRA_DISCOVERY_SEP01_2026.md` — Phase A read-only; recommend new `fusarium-staging` on pve; do not deploy until Morgan approves
+- `docs/CURSOR_TO_CODEX_FUSARIUM_INFRA_PACKAGE_RECONCILE_SEP01_2026.md` — Addendum: Phase A still holds; Codex package accepted; no Phase B
 
 ## FUSARIUM Launchpad (Aug 31, 2026)
 - WEBSITE `docs/launchpad/LAUNCHPAD_PAID_SERVICES_AUDIT_AUG31_2026.md` — Paid SKUs must work or stay gated; AI metered 4×/5×; Partner Mesh invite; LLC card blocked on unused mailbox
