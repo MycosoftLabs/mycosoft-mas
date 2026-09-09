@@ -99,6 +99,13 @@ def test_nlm_stub_confidence_never_usable():
     assert nlm_text_is_stub("placeholder response") is True
 
 
+def test_intention_service_module_imports():
+    from mycosoft_mas.engines.intention import IntentionService
+    from mycosoft_mas.engines.intention.intention_service import IntentionService as Direct
+
+    assert IntentionService is Direct
+
+
 def test_qualify_seven_roles_not_bound_when_handoff_unbound():
     from mycosoft_mas.agents.itdx_task8_agent import qualify_seven_roles
 

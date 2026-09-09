@@ -1211,7 +1211,9 @@ try:
     app.include_router(avani_task8_router, tags=["itdx"])
     app.include_router(myca_task8_router, tags=["itdx"])
 except ImportError:
-    pass
+    import logging as _itdx_log
+
+    _itdx_log.getLogger(__name__).exception("ITDX routers not mounted")
 
 
 

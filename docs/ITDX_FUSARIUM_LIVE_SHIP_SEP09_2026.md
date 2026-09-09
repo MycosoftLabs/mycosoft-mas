@@ -37,11 +37,11 @@ Local env password-key names did not match Supabase (`grant_type=password` last 
 | Channel | Status | Notes |
 |---|---|---|
 | weather | **SUPPLIED** | Open-Meteo at **31.8697,-81.6072**. Earth-2 **249 down** — not required. |
-| biology | **SUPPLIED** | Live GBIF + iNaturalist. MINDEX 189 `/health` 200. Public Fusarium species now hits `/api/mindex/taxa` (see below). |
+| biology | **SUPPLIED** | Live GBIF + iNaturalist. MINDEX 189 `/health` 200. Cheap `/api/mindex/taxa` + `/observations` (8 Fusarium rows each, internal token). |
 | information / equipment_weapons_assets | **SUPPLIED** | Public names / roads only. Exercise tracks `live=false`. |
-| NLM | **BOUND** `model_loaded=true` | Not stub-only. Stub **0.85 is never Fusarium p**. |
-| chemistry / physics | **UNQUALIFIED** | Loaded NLM is not a labeled chemistry/physics p. `p=null`. No `SCORED` until a labeled checkpoint is ops-loaded. PhysicsNeMo unset. |
-| traffic / pathways / navigation | **NOT_SUPPLIED** | Google Directions / Distance Matrix **REQUEST_DENIED**. Key present. Do not invent traffic. |
+| NLM | **UNQUALIFIED** `model_loaded=false` | In-process health after 188 restart. `/api/nlm/predict` still emits stub **0.85** — rejected. No channel is `SCORED`. |
+| chemistry / physics | **UNQUALIFIED** | No labeled chemistry/physics p. `p=null`. PhysicsNeMo unset. |
+| traffic / pathways / navigation | **NOT_SUPPLIED** | Google Directions / Distance Matrix **REQUEST_DENIED** (key present, API not authorized). `gcloud` is not installed on this workstation — cannot enable Directions/Distance Matrix from here. |
 | official injects / FOUO PDFs | **NOT_SUPPLIED** / refused | STOP_INGEST outside CUI boundary. |
 | fusion p_truth / p_deception | **NOT_SUPPLIED** | Website geometry owns demo P(truth). |
 
@@ -105,6 +105,7 @@ Keep Fusarium pointing at **live MAS 188 + MINDEX 189**. Do **not** bake NLM wei
 |---|---|---|---|
 | `MycosoftLabs/website` | [#300](https://github.com/MycosoftLabs/website/pull/300) | `045eaa29637135c932829df36e862c832f3eb7d0` | Fusarium Intel Feed, Weka walkthrough, owner-gated APIs |
 | `MycosoftLabs/mycosoft-mas` | [#133](https://github.com/MycosoftLabs/mycosoft-mas/pull/133) | `ee094c75741fcf4f6295fc189d8ba7108e362a07` | situation-assessment + this doc |
+| `MycosoftLabs/mycosoft-mas` | [#135](https://github.com/MycosoftLabs/mycosoft-mas/pull/135) | `a34b66a039baf8c9b1e3812bb21bda753ef0167b` | Public Fusarium MINDEX path so 188 pull cannot revert 200s |
 
 ---
 
@@ -128,7 +129,35 @@ Keep Fusarium pointing at **live MAS 188 + MINDEX 189**. Do **not** bake NLM wei
 | Unauth `/api/fusarium/itdx/situation` and `/weka-receipt` | **401** |
 | MAS 188 ITDX / NLM + MINDEX 189 | **200** (hot data; no 188 restart) |
 
-Login as `morgan@mycosoft.org` on `https://mycosoft.com/fusarium/login`, then open `/fusarium/itdx` and `/fusarium/earth-simulator`. Overlay stays **`live: false`**.
+Login as `morgan@mycosoft.org` on `https://mycosoft.com/fusarium/login` (**Continue with owner Google**). Env passwords fail vs Supabase — do not reset. Owner Earth Sim still needs that Google session. Overlay stays **`live: false`**.
+
+---
+
+## Closed 09 Sep 2026 continue (188 git + Task 8 + MINDEX slice)
+
+188 was still on `fix/cmmc-state-reconciliation-jul27` @ `3388505f` with hot-patched ITDX files. Checkout to **`origin/main` `a34b66a03`** succeeded. Skip-startup **left ON**.
+
+`/api/itdx` then **404**: `itdx_api` imports `NLM_STUB_CONFIDENCE` / `is_usable_nlm_confidence`, which were **not on main**. `except ImportError: pass` swallowed the mount. Task 8 COA proposer also failed: `engines/intention/__init__.py` imported `intention_service.py`, which was **not on main**.
+
+**This commit persists those modules** so the next 188 `git pull` keeps ITDX mounted.
+
+| Check | Result |
+|---|---|
+| 188 `git rev-parse HEAD` after checkout | `a34b66a03` (then this PR) |
+| `GET /health` | **200** `degraded` (skip-startup ON on purpose) |
+| `GET /api/itdx/health` | **200** after stub helpers landed |
+| `GET /api/itdx/situation-assessment` Fort Stewart | **200** `in_process=true` `self_http=false` |
+| weather / biology / information / equipment | **SUPPLIED** |
+| MINDEX cheap slice | `/api/mindex/taxa` + `/observations` **200**, 8 Fusarium rows each (internal token). No GBIF full sync (188 disk **94%**). |
+| NLM channels | **UNQUALIFIED** / `p=null`. Predict stub 0.85 unused. |
+| traffic / pathways / navigation | **NOT_SUPPLIED** `REQUEST_DENIED`. Key present. `gcloud` missing — APIs not enabled from here. |
+| Task 8 | **200** `qualification=DEGRADED` `role_count=6`. Intention **bound**. Human handoff stays unbound (`secretary_not_invoked`). Not BOUND. |
+| Public `mycosoft.com` threats / dispersal / risk-zones / species | **200** |
+| `https://mycosoft.com/fusarium/login` | **200** button **Continue with owner Google** |
+| 187 blue-green | **not touched** |
+| FOUO / CUI ingest | **not done** |
+
+**RJ Ricasata is CFO.** Mycosoft is **pursuing** CMMC L2 — not compliant.
 
 ---
 

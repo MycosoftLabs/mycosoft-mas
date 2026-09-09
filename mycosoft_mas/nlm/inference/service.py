@@ -19,6 +19,43 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# Stub predict used to emit this number. Never treat it as Fusarium p.
+NLM_STUB_CONFIDENCE = 0.85
+
+
+def nlm_text_is_stub(text: str) -> bool:
+    lowered = (text or "").lower()
+    markers = (
+        "placeholder",
+        "would come from model",
+        "nlm stub",
+        "model is not loaded",
+        "error generating response",
+    )
+    return any(marker in lowered for marker in markers)
+
+
+def is_usable_nlm_confidence(
+    confidence: Any,
+    text: str = "",
+    metadata: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """False for None, stub 0.85, or metadata.confidence_usable=False."""
+    meta = metadata or {}
+    if meta.get("stub") or meta.get("confidence_usable") is False:
+        return False
+    if nlm_text_is_stub(text):
+        return False
+    if confidence is None:
+        return False
+    try:
+        value = float(confidence)
+    except (TypeError, ValueError):
+        return False
+    if abs(value - NLM_STUB_CONFIDENCE) < 1e-9:
+        return False
+    return 0.0 <= value <= 1.0
+
 
 class QueryType(str, Enum):
     """Types of queries the NLM can handle."""

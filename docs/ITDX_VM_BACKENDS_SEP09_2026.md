@@ -81,13 +81,16 @@ No `full_fungi_sync` / alphabetical GBIF. `/taxa` and `/observations` still **40
 | Channel | Status |
 |---|---|
 | weather | SUPPLIED (Open-Meteo) |
-| biology | SUPPLIED (GBIF / iNat) |
+| biology | SUPPLIED (GBIF / iNat + cheap MINDEX `/api/mindex/taxa` + `/observations`) |
 | information / equipment_weapons_assets (public roads only) | SUPPLIED |
-| chemistry / physics / decision_authority | UNQUALIFIED (no invented p; NLM BOUND) |
-| traffic / pathways / navigation | NOT_SUPPLIED (`REQUEST_DENIED` on Maps Directions/Matrix) |
+| chemistry / physics / decision_authority | UNQUALIFIED (no invented p) |
+| NLM | UNQUALIFIED (`model_loaded=false` after restart; stub 0.85 rejected) |
+| traffic / pathways / navigation | NOT_SUPPLIED (`REQUEST_DENIED` on Maps Directions/Matrix; gcloud not available to enable APIs) |
 | Earth-2 | `available=false` |
 
-NLM `model_loaded=true` so Fusarium probability is **not** the old stub 0.85. If NLM later unloads, keep **UNQUALIFIED** (`p=null`).
+NLM stub **0.85 is never Fusarium p**. If a labeled checkpoint is later ops-loaded and predict is usable, situation-assessment may emit `SCORED`. Until then keep **UNQUALIFIED** (`p=null`).
+
+188 git is on **main**. Task 8 stays **DEGRADED** until all seven `process_task` rows succeed (secretary handoff is not invoked).
 
 ---
 
