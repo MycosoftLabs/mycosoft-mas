@@ -175,6 +175,27 @@ PR 136 already persisted `intention_service` + NLM stub helpers so 188 `git pull
 | Live UI | No website cutover. Public site was **200**. `/fusarium/login` **200** + owner Google button. Owner-gated ITDX APIs stay **401** unauth. Local :3010 not killed. |
 | RJ | **RJ Ricasata is CFO.** |
 
+### Live prove after PR 137 on 188 (`dd64cda3`)
+
+Orchestrator restarted (more than already-hot files). Skip-startup left ON. `fusarium_api.py` not reverted. No 187 cutover. No password reset. No secrets printed.
+
+| Check | Result |
+|---|---|
+| `GET /health` | **200** `degraded` |
+| `GET /api/itdx/health` | **200** |
+| `GET /api/nlm/health` | **200** `model_loaded=false` (honest after restart) |
+| Task 8 | **200** `qualification=DEGRADED` `role_count=6`. COA proposer **bound**. Human handoff `secretary_not_invoked`. Not fake BOUND. |
+| NLM ecology | **UNQUALIFIED** / `p=null` / `ecology_predict_status=NOT_SUPPLIED` (no auto-load stub) |
+| chemistry | **SUPPLIED** `p=null` (PubChem fusaric acid identity) |
+| physics | **UNQUALIFIED** `PHYSICSNEMO_API_URL unset` |
+| biology / information / equipment | **SUPPLIED** |
+| weather | **NOT_SUPPLIED** `empty` on first probe (Open-Meteo cancelled by extra first-wave jobs) — follow-on weather-first-wave PR |
+| traffic / pathways / navigation | **NOT_SUPPLIED** `REQUEST_DENIED`. `gcloud` missing on 188 and this workstation. |
+| `https://mycosoft.com/fusarium/login` | **200** + owner Google button |
+| Unauth `/api/fusarium/itdx/situation` + `/weka-receipt` | **401** |
+| Origin `http://192.168.0.187:3000/api/health` | **200** — no blue-green |
+| Local :3010 | not killed |
+
 ---
 
 ## Related
