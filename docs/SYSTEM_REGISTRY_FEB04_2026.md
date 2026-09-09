@@ -11,6 +11,14 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (September 9, 2026)
+
+- **ITDX Task 8 + situation assessment (live MAS 188)** — Agent `ITDXTask8Agent` (`itdx-task8`) maps the kit seven roles to existing agents (Grounding, Intention, Planner, Reflection, AvaniGovernor). Router `mycosoft_mas/core/routers/itdx_api.py`:
+  - `GET/POST /api/itdx/task8`
+  - `GET/POST /api/itdx/situation-assessment` (`schema_version=itdx.situation_assessment/v1`)
+  - aliases `GET/POST /api/avani/task8`, `/api/myca/task8`, `/api/itdx/authority`
+  Missing channels return `NOT_SUPPLIED`. NLM untrained stub is `UNQUALIFIED`. No fabricated PASS.
+
 ## Recent Updates (July 24, 2026)
 
 - **Google Workspace CUI-boundary scan** — MAS-only, least-privilege Drive metadata scanner at `mycosoft_mas/soc/gws_boundary_scan.py`, with independent daily systemd timer (`deploy/systemd/mycosoft-gws-boundary-scan.timer`) so recovery-mode `MAS_SKIP_BACKGROUND_STARTUP=1` remains unchanged. API: `GET /api/security/gws-boundary/status`. It persists only location metadata in `soc_ops.gws_boundary_scan_*`, opens a suspected-spillage incident, and requests critical SAO notification on a marking hit. No Drive/Gmail content, filename, subject, or snippet is retained or exposed. Requires Morgan's Google Admin provisioning before scans can run.

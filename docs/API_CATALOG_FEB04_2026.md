@@ -21,6 +21,19 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ## MAS API Endpoints
 
+### ITDX Task 8 + situation assessment (September 9, 2026)
+
+**Router:** `mycosoft_mas/core/routers/itdx_api.py` on MAS `192.168.0.188:8001`. **Agent:** `ITDXTask8Agent` (`itdx-task8`).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/itdx/health` | GET | Schema names and seven kit role labels |
+| `/api/itdx/task8` | GET/POST | Seven-role COA review. Empty POST uses Fort Stewart demo slice. `schema_version=itdx-task8/v1` |
+| `/api/itdx/situation-assessment` | GET/POST | Per-channel scores or `NOT_SUPPLIED`. `schema_version=itdx.situation_assessment/v1` |
+| `/api/itdx/authority` | GET/POST | Alias of Task 8 |
+| `/api/avani/task8` | GET/POST | Alias of Task 8 (website probe path) |
+| `/api/myca/task8` | GET/POST | Alias of Task 8 (website probe path) |
+
 ### Agent100 harness (May 3, 2026) — no new MAS HTTP routes
 
 | Surface | Type | Description |
@@ -890,3 +903,10 @@ Most endpoints require authentication via:
 | `/api/mas/myca2-psilo/session/[id]/stop` | POST |
 | `/api/mas/myca2-psilo/session/[id]/kill` | POST |
 | `/api/mas/myca2-psilo/session/[id]/edge` | POST |
+
+## Psathyrella (Aug 02 2026)
+| Method | Path | Notes |
+|--------|------|-------|
+| POST | /api/psathyrella/droid-log | GCS oversight relay; Redis + memory |
+| GET | /api/psathyrella/droid-log/recent | Debug peek |
+

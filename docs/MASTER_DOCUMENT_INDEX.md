@@ -1,762 +1,303 @@
 # Master Document Index
 
-## Fusarium Earth Sim / iPad (SEP03 2026)
-- [CURSOR_FUSARIUM_EARTHSIM_IPAD_FIX_SEP03_2026.md](CURSOR_FUSARIUM_EARTHSIM_IPAD_FIX_SEP03_2026.md) — Public `/fusarium` Earth Sim/Aerosol load + iPad nav overlay; website chrome/path helpers only; 8212 not the fix
+## FormSpace NLM (SEP09 2026)
+- [FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md](FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md) — Scientific NLM on NAS `models/nlm` vs MYCA Ollama `models/myca`
+- [FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md](FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md) — Stage B forecast ledger; no stub 0.85 p
+- [NLM_WEIGHTS_ON_188_SEP09_2026.md](NLM_WEIGHTS_ON_188_SEP09_2026.md) — Ollama NLM adapter reverted; wait for Morgan `incoming/weights.pt`
 
-## Fusarium twins-host public mount (SEP02 2026)
-- [CURSOR_FUSARIUM_TWINS_HOST_PUBLIC_MOUNT_SEP02_2026.md](CURSOR_FUSARIUM_TWINS_HOST_PUBLIC_MOUNT_SEP02_2026.md) — Full operator chrome at `https://mycosoft.com/fusarium` after owner login; PR 293/294; blue-green, site never down; loopback 8212 not proxied
+## ITDX Google traffic wall (SEP09 2026)
+- [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
 
-## Fusarium owner auth (SEP02 2026)
-- [CURSOR_FUSARIUM_OWNER_AUTH_LIVE_SEP02_2026.md](CURSOR_FUSARIUM_OWNER_AUTH_LIVE_SEP02_2026.md) — Owner `morgan@mycosoft.org` password live; Google / magic link / recovery / real TOTP MFA; no password in the doc
+## ITDX26 Fusarium live ship (SEP09 2026)
+- [ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md](ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md) — Local proofs + 188/189 hot data/math; Weka PASS / trial NOT_MET; add data without website rebuild; blue-green 187
 
-## Fusarium Explore login + P0 (SEP02 2026)
-- [CURSOR_FUSARIUM_EXPLORE_PLATFORM_LOGIN_SEP02_2026.md](CURSOR_FUSARIUM_EXPLORE_PLATFORM_LOGIN_SEP02_2026.md) — Second-batch loopback green 8212/8211: Explore CTA → Fusarium login, Morgan Supabase owner only, Claude P0 API deny + GCS stale labels; pin 8112/8111 is rollback; public path also live via PR #291
+## ITDX26 VM backends (SEP09 2026)
+- [ITDX_VM_BACKENDS_SEP09_2026.md](ITDX_VM_BACKENDS_SEP09_2026.md) — 188/189 live prove; NLM BOUND; skip-startup on
 
-## Fusarium AWS credits (SEP02 2026)
-- [FUSARIUM_AWS_10K_60DAY_SPEND_PLAN_SEP02_2026.md](FUSARIUM_AWS_10K_60DAY_SPEND_PLAN_SEP02_2026.md) — $200/UTC-day cap; ~$10k in ≤60 days; no spend until Morgan says start AWS spend
-- [PERPLEXITY_HANDOFF_AWS_CREDIT_EMAILS_SEP02_2026.md](PERPLEXITY_HANDOFF_AWS_CREDIT_EMAILS_SEP02_2026.md) — Perplexity draft-only AWS Activate/Support credit emails; CFO cc RJ Ricasata
-
-## Fusarium infra discovery (SEP01 2026)
-- [CURSOR_TO_CODEX_FUSARIUM_INFRA_DISCOVERY_SEP01_2026.md](CURSOR_TO_CODEX_FUSARIUM_INFRA_DISCOVERY_SEP01_2026.md) — Phase A read-only topology; recommended `fusarium-staging` on pve; no deploy
-- [CURSOR_TO_CODEX_FUSARIUM_INFRA_PACKAGE_RECONCILE_SEP01_2026.md](CURSOR_TO_CODEX_FUSARIUM_INFRA_PACKAGE_RECONCILE_SEP01_2026.md) — Phase A still holds; Codex package accepted; 8012 HTTP timing only; Phase B still gated
-
-## FUSARIUM Launchpad pay-to-access (AUG31 2026)
-- WEBSITE `docs/launchpad/CURSOR_TO_CLAUDE_LAUNCHPAD_UI_HANDOFF_AUG31_2026.md` — Cursor → Claude UI handoff: one Stripe door, post-pay login, operator APIs, seeded Partner Mesh Pro, honest gaps
-- WEBSITE `docs/launchpad/LAUNCHPAD_PAY_ACCESS_COMPLETE_AUG31_2026.md` — Completion: flags, checkout unify, admin, MYCA fallback, seed
-
-## Website sandbox resilience (AUG31 2026)
-- [WEBSITE_SANDBOX_RESILIENCE_ARMED_AUG31_2026.md](WEBSITE_SANDBOX_RESILIENCE_ARMED_AUG31_2026.md) — One app slot: nginx → `mycosoft-website-green`; restore + Docker tunnel stopped; systemd `cloudflared` owns public; Proxmox agent token in gitignored creds; no secrets
-
-## Buoy live demo (AUG17 2026)
-- [BUOY_ESC_ARMING_1600_AUG17_2026.md](BUOY_ESC_ARMING_1600_AUG17_2026.md) — CH8–11 parked 1600; on-disk `ESC_ARMING_US=1600`; propulsion agent **not** restarted
-- [BUOY_LIVE_DEMO_READINESS_AUG17_2026.md](BUOY_LIVE_DEMO_READINESS_AUG17_2026.md) — Pass 3: **DEMO NO-GO**; FDT already `imx519A-imx477C` (not the 519-on-477 bug); CSI slaves NACK; Side B hub port 2 power/no-connect
-
-## Stripe / Launchpad billing (AUG13 2026)
-- [STRIPE_MARKETPLACE_APPS_MYCA_MINDEX_FUSARIUM_AUG13_2026.md](STRIPE_MARKETPLACE_APPS_MYCA_MINDEX_FUSARIUM_AUG13_2026.md) — Marketplace vs Dashboard products for Launchpad + MYCA + MINDEX + NatureOS; P0 Slack Workflows + Mercury; no CUI in Stripe; research only
-
-## Psathyrella detection TRT (AUG13 2026)
-- [private/PSATHYRELLA_DETECTION_NVIDIA_TRT_AUG13_2026.md](private/PSATHYRELLA_DETECTION_NVIDIA_TRT_AUG13_2026.md) — NVIDIA PeopleNet + RF-DETR TensorRT on Jetson `:8792`; `front` in sources; AGPL YOLO11 not default; DeepStream deferred
-
-## Website production cutover (AUG13 2026)
-- [LAUNCHPAD_PR260_MERGE_AFTER_GCS_AUG13_2026.md](LAUNCHPAD_PR260_MERGE_AFTER_GCS_AUG13_2026.md) — After GCS live on blue: nginx/DNS point at healthy `aaf77624`; compose ps still maps zombie; D-state deploy guard `5eb7381e`; PR #260 auto-merge on but blocked on required review
-- [BLUE_GREEN_CUTOVER_UNWEDGE_AUG13_2026.md](BLUE_GREEN_CUTOVER_UNWEDGE_AUG13_2026.md) — PR #261 / SHA `55084453` was not live because idle `website-blue` was D-state; isolated zombie, started new blue from `production-latest`, nginx cutover after candidate HTTP 200, Cloudflare purged; origin+public 200, GCS CSS live
-
-## Psathyrella sensors (AUG05 2026)
-- [private/PSATHYRELLA_JETSON_COMMS_OUTAGE_AUG05_2026.md](private/PSATHYRELLA_JETSON_COMMS_OUTAGE_AUG05_2026.md) — **Private outage note** (gitignored): Jetson/OpenClaw up; MQTT target `192.168.0.196:1883` Not Authorized; broker owned by docs as VM 196 / `mycobrain-mqtt` Mosquitto; SIM7600 reset loop; Side B absent; Windows `:8003` empty expected — no credentials, no network probe
-
-## Psathyrella sensors (AUG04 2026)
-- [private/PSATHYRELLA_FULL_SENSOR_ACTUATOR_PORT_MATRIX_AUG04_2026.md](private/PSATHYRELLA_FULL_SENSOR_ACTUATOR_PORT_MATRIX_AUG04_2026.md) — **Authoritative full port matrix** (gitignored, local only): host roles, 20 TAKEN + 19 ALLOCATED rows, propulsion PCA9685 `0x60`/`i2c-7` with ESC CH8-11 + servo CH4-7, acoustic PCA `0x70`/`i2c-1`, power rails A/A'/B/C, 10 conflicts, shopping list, Claude paste block
-- [private/CLAUDE_HANDOFF_CORVON_CV50_WIRING_AUG04_2026.md](private/CLAUDE_HANDOFF_CORVON_CV50_WIRING_AUG04_2026.md) - Claude handoff: CV50 white 4-pin harness colors, UART-not-I2C, USB-TTL to Jetson (not MycoBrain Side B)
-- [private/PSATHYRELLA_CORVON_CV50_RANGEFINDER_AUG04_2026.md](private/PSATHYRELLA_CORVON_CV50_RANGEFINDER_AUG04_2026.md) — CORVON CV50 under-camera dToF rangefinder; Jetson `:8794/rangefinder` live, `protocolVerified:false`, hardware unwired; website fusion hooks landed; see CLAUDE_HANDOFF_CORVON_CV50_WIRING_AUG04_2026.md for physical attach
-
-## Psathyrella sensors (AUG03 2026)
-- WEBSITE `docs/private/PSATHYRELLA_REINTEGRATION_AND_ACOUSTICS_HANDOFF_AUG03_2026.md` — Claude reintegration + acoustics (**gitignored** — local only; do not publish)
-- [PSATHYRELLA_REINTEGRATION_ACOUSTICS_CURSOR_ACCEPT_AUG03_2026.md](PSATHYRELLA_REINTEGRATION_ACOUSTICS_CURSOR_ACCEPT_AUG03_2026.md) — Cursor accept + queue; Side B `FB:14` USB live; hub full
-- WEBSITE `docs/PSATHYRELLA_MASTER_HANDOFF_CURSOR_AUG03_2026.md` — Master Cursor handoff; **Aug03 sensors landed** section
-- WEBSITE `docs/PSATHYRELLA_GCS_SENSOR_APIS_HANDOFF_AUG03_2026.md` — Claude GCS live `:8794` API bind + curl proofs
-- WEBSITE `docs/PSATHYRELLA_WIFISENSE_BEACON_RX_PATH_AUG03_2026.md` — WiFi-sense beacon+CSI RX architecture
-- [PSATHYRELLA_SIDEA_LD2450_SAFE_FLASH_PLAN_AUG02_2026.md](PSATHYRELLA_SIDEA_LD2450_SAFE_FLASH_PLAN_AUG02_2026.md) — **Flash Complete** — fw `v0.9-j18-bmm150`; GPIO 9/8; BMM150 @0x13; backup `sidea-FB08-20260803-053422/`
-- WEBSITE `docs/PSATHYRELLA_SIDEA_LD2450_SAFE_FLASH_PLAN_POINTER_AUG02_2026.md` — Claude pointer (see Complete status in flash plan)
-- [PSATHYRELLA_LD2450_SIDEA_AND_DROID_LOG_COMPLETE_AUG02_2026.md](PSATHYRELLA_LD2450_SIDEA_AND_DROID_LOG_COMPLETE_AUG02_2026.md) — Side A LD2450 mmWave + MAS droid-log
-
-## Psathyrella fusion sensors (AUG02 2026)
-- [PSATHYRELLA_WIFISENSE_TFLUNA_LIDAR_COMPLETE_AUG02_2026.md](PSATHYRELLA_WIFISENSE_TFLUNA_LIDAR_COMPLETE_AUG02_2026.md) � Real WiFi-sense Phase-0 + TF-Luna points stub + RPLIDAR C1 API
-- WEBSITE `docs/PSATHYRELLA_WIFISENSE_TFLUNA_LIDAR_CURSOR_HANDOFF_AUG02_2026.md` � Claude handoff: WiFi URL/shape, TF-Luna plug map, LiDAR C1 plan
-- [PSATHYRELLA_FUSION_SENSORS_DATA_PLANE_COMPLETE_AUG02_2026.md](PSATHYRELLA_FUSION_SENSORS_DATA_PLANE_COMPLETE_AUG02_2026.md) � Jetson :8794 proximity/mic/lidar/wifisense data plane
-- WEBSITE `docs/PSATHYRELLA_FUSION_SENSORS_CURSOR_HANDOFF_FOR_CLAUDE_AUG02_2026.md` � Claude FE bind URLs + JSON shapes
-
-## IA.L2-3.5.3 MFA evidence bank (July 29, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CURSOR_TO_CLAUDE_IA_3.5.3_BANKED_JUL29_2026.md` � Hash-registered Workspace and GitHub MFA evidence; reconciles the July 27 stale user-security export, records the Morgan-sole-custodian `apps@` disposition, and verifies the live CMMC/NIST twin transition.
-- `CODE/docs/cmmc_evidence/ia/EV-IA-3.5.3_WORKSPACE_2SV_MANIFEST_JUL29_2026.md` � Artifact manifest with source roles and SHA-256 values for Workspace policy/user/audit exports and GitHub organization 2FA captures.
-
-## Morgan Wave 3/4 operator playbook (July 30, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/MORGAN_WAVE3_ENDPOINT_WINDOW_AND_IA353_BACKUP_JUL30_2026.md` � Morgan-facing, live-MAS-verified claim review; combined two-laptop endpoint-window procedure; PreVeil-first MP.L2-3.8.9 backup determination; and Google Workspace/`apps@` IA.L2-3.5.3 export and accountability guidance.
-
-- `docs/PSATHYRELLA_MARITIME_DETECTOR_SWAP_AUG02_2026.md` � Jetson GPU + maritime filter detect swap (Aug 02 2026)
-
-## Remote-access monitoring recapture (July 29, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CURSOR_TO_CLAUDE_OFFLAN_GATES_JUL29_2026.md` � Current remote-access closure handoff: seven-day SSH/Cloudflare/auditd and Wazuh monitoring recapture, verified live 88/20/2/0 count, and no unsupported transition.
-- `CODE/docs/cmmc_evidence/ac/EV-AC-REMOTE-ACCESS-MONITORING_JUL29_20260730T003940Z.md` � Hash-registered, raw-log-free monitoring packet; records source availability and exact remaining authorization/review fields.
-- `CODE/docs/cmmc_evidence/determinations/EV-SAO-REMOTE-ACCESS-DUAL-ACP-CLOSURE_DETERMINATION_JUL29_2026.md` � Unsigned SAO decision packet for the UDM/Cloudflare dual-ACP map; explicitly non-transition.
-
-## PS/FIPS v2 pre-DocuSign fill instructions (July 29, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/PERPLEXITY_FILL_PS_FIPS_V2_BEFORE_DOCUSIGN_JUL29_2026.md` � AcroForm extraction and Perplexity-ready permanent defaults for PS screening and FIPS Branch C v2; preserves all DocuSign signing fields and authorizes no control transition.
-
-## Console closure (July 29, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CURSOR_TO_CLAUDE_CONSOLE_CLOSURE_JUL29_2026.md` � Live MAS closure: 80 Met / 28 Partial, Wazuh reporting-capability transition, ClamAV and Wave 5 verification, and evidence-gated Morgan/endpoint/off-LAN blockers.
-- `CODE/docs/SAO_TO_CLAUDE_PS_FIPS_V2_AND_SOC_YEAR_DONE_JUL29_2026.md` � Current PS v2 Met correction, FIPS Branch C/P1 Partial lock, and retained-history disposition for Wave 5.
-
-## CMMC drive to Conditional + 110 (July 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CURSOR_TO_CLAUDE_STATUS_ALL_110_NEXT_ACTIONS_JUL28_2026.md` � **Current definitive handoff**: live MAS-derived 110-row state matrix, 40/69/1 scoreboard, signed SSP/evidence reconciliation, exact lane actions, elapsed-time limits, and Claude JSONL payload.
-- `CODE/docs/CURSOR_TO_CLAUDE_SSH_AND_SOC_PIPELINE_COMPLETE_JUL28_2026.md` � **SSH + SOC pipeline handoff**: key-only after-state, active n8n HTTP schedule, registered SOC baseline run, and explicit Partial-only boundaries for Claude.
-- `CODE/docs/CURSOR_HANDOFF_VM_SSH_KEY_ONLY_AUTOMATION_CONTINUITY_JUL28_2026.md` � **SSH continuity handoff**: per-host effective SSH facts, approved key-only automation pattern, and no-control-transition guardrails.
-- `CODE/docs/DOCUSIGN_MCP_SETUP_JUL27_2026.md` � User-level DocuSign demo MCP configuration, redacted credential/key status, OAuth reload steps, and MAS JWT RSA prerequisite; no envelopes sent.
-- `CODE/docs/CMMC_BATCH0_STATUS_AND_NA_DETERMINATION_DRAFTS_JUL27_2026.md` � Batch 0 execution status, evidence-gated account/Wazuh linkage, and unsigned Morgan SAO N/A determination drafts for AC.L2-3.1.12�.14 and .16�.18.
-- `CODE/docs/CMMC_SSP_ROSTER_AND_ENTITY_CANONICAL_JUL27_2026.md` � **Locked SSP roster + entity**: Morgan=Owner/CEO/CTO/COO/SAO, RJ=CFO, inactive personnel excluded, Mycosoft LLC CAGE/UEI, Claude owns draft-pack relaunch; Cursor doc sync only.
-- `CODE/docs/CURSOR_GUARD_MORGAN_IS_COO_JUL27_2026.md` � **Permanent guard**: Morgan holds COO; RJ=CFO only; stale agent roster reverses VOID.
-- `CODE/docs/CURSOR_GUARD_RJ_IS_CFO_DO_NOT_FLIP_JUL27_2026.md` � **Permanent guard**: RJ=CFO forever; do not flip from drafts or stale handoffs.
-- `CODE/docs/STOP_DO_NOT_CORRECT_RJ_TITLE_JUL27_2026.md` � **Active freeze**: REGISTER + signed PDFs showing RJ=CFO are correct; no COO flip.
-- `CODE/docs/CURSOR_TO_CLAUDE_CONSOLIDATED_HANDOFF_EOD_DRIVE_JUL27_2026.md` � **Consolidated Claude handoff**: canonical LLC/role facts, current 40/69/1 live posture, AU evidence, applied UniFi firewall versus offline enclave state, account-capture gaps, and strict Claude/Cursor/Morgan ownership.
-- `CODE/docs/CMMC_EOD_110_CONTROLS_DRIVE_PLAN_JUL27_2026.md` � **EOD execution plan**: ruthless, evidence-gated Wave A�D work, Pacific schedule, Conditional truth check, and dated Partial/POA&M paths where midnight closure is impossible.
-- `CODE/docs/DOD_ECA_DIBNET_ENROLLMENT_PLAYBOOK_JUL27_2026.md` � **DoD ECA / DIBNet enrollment playbook**: Medium Token $247 decision, WidePoint wizard path, portal bugs (POST-only, second-search), org-search exhaustion, helpdesk email sent, **BLOCKED waiting WidePoint**; cross-links **IR.L2-3.6.1/.2/.3** DIBNet readiness (3.6.3 Met; 3.6.1/.2 Partial; ECA prerequisite).
-- `CODE/docs/CMMC_DRIVE_TO_CONDITIONAL_AND_110_JUL27_2026.md` � **Master execution plan**: corrected live Met/Partial baseline, ranked 5-pt/3-pt Partial backlog, Wave 1�2 ownership, UniFi enclave?188:1514-1515 approval text, and current-state/evidence/SAO transition gates.
-- `CODE/docs/UNIFI_API_AUTH_AND_ENCLAVE_WAZUH_RULE_JUL27_2026.md` � **UniFi/Wazuh boundary change**: authenticated controller action, destination-pinned enclave Wazuh allow plus ordered internal deny, registered metadata-only evidence, and endpoint re-capture/enrollment blocker.
-- `CODE/docs/CURSOR_TO_CLAUDE_NEXT_WAVE_JUL27_2026.md` � **Claude FE/docs handoff**: console truthfulness, SSP/policy drafts, USB/endpoint/PreVeil/GWS capture checklists; Cursor owns MAS/Wazuh/register/flips after repair.
-- `CODE/docs/cmmc_evidence/wazuh_agent/EV-WAZUH-006_SECOND_AUDIT_REVIEW_JUL27_2026.md` � Second Wazuh manager/agent review record; no control-state change.
-- `CODE/docs/cmmc_evidence/wazuh_agent/EV-WAZUH-007_AGENT_STOP_ALERT_TEST_JUL27_2026.md` � Controlled Sandbox Wazuh agent-stop test: rule 506 stop and rule 503 restoration alerts; no control-state change.
-- `CODE/docs/cmmc_evidence/au/EV-AU-002_AUDIT_RETRIEVAL_PROOF_JUL28_2026.md` � Three-host keyed auditd event creation, `ausearch` retrieval, and attributable `aureport` proof; same-probe Wazuh ingest not observed.
-- `CODE/docs/CMMC_SPRS_LIVE_STATUS_JUL27_2026.md` � Live SPRS/score verification snapshot (supersedes stale Claude 44-Met brief).
-- `CODE/docs/CMMC_MET_OVERSTATEMENT_VERIFY_JUL27_2026.md` � Independent overstatement verification; nine recommended demotions pending SAO (no demotions performed in verify).
-- `CODE/docs/cmmc_evidence/ca/EV-CA-3.12.4-H_UPDATE_LOG_MYCOSOFT_CORRECTION_JUL28_2026.md` � **Filed [h] update-cycle evidence**: SAO-directed correction of the `mycosoft` identity to Morgan-only operations plus MAS/AI NPE; signed SSP unchanged; CA.L2-3.12.4 remains Partial pending formal SAO initial.
-
-## Wazuh CMMC closeout (July 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/WAZUH_CMMC_CLOSEOUT_JUL27_2026.md` � Wazuh 4.9.2 live evidence: three active VM records, EV-WAZUH-001 through EV-WAZUH-004, no premature Met flips, first weekly review record, and enclave firewall deferral.
-
-## CMMC enclave BitLocker evidence status (July 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CMMC_ENCLAVE_BITLOCKER_STATUS_JUL27_2026.md` � Identity reconciliation, hash-registered MYCO-ENCL-02 completion evidence, used-space-only qualification, and the remaining MYCO-ENCL-01 capture required before SC.L2-3.13.16 can be eligible.
-
-## CMMC enclave SAO promotion (July 26, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/CMMC_ENCLAVE_SAO_MET_FLIP_JUL26_2026.md` � **SAO-validated enclave promotion**: hash-backed evidence mapping, 31?44 practice Met change, BitLocker qualification, verification, and remaining Wazuh/VLAN work.
+## Internal program documentation (not public)
+- Maritime pursuit implementation plans, NIST mapping drafts, and superseded teaming drafts are kept **internal only** (local `docs/private/` / Google Drive). They are not published in this public repository index.
+- CUI **handling procedure** (marking examples / process): `docs/TACO_CUI_HANDLING_APR08_2026.md` (procedure document — not CUI content).
 
 ## Google Workspace boundary scan (July 24, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/GWS_BOUNDARY_SCAN_BACKEND_COMPLETE_JUL24_2026.md` � MAS metadata-only Drive boundary scanner, independent daily timer, SOC incident/SAO-notification wiring, API contract, and remaining Google Admin prerequisites.
+- `docs/GWS_BOUNDARY_SCAN_BACKEND_COMPLETE_JUL24_2026.md` — MAS metadata-only Drive boundary scanner, independent daily timer, SOC incident/SAO-notification wiring, API contract, and remaining Google Admin prerequisites.
 
 ## CMMC Wave 1 + IR status (July 22, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `CODE/docs/DOD_ECA_DIBNET_ENROLLMENT_PLAYBOOK_JUL27_2026.md` � **DIBNet filing prerequisite (Jul 27)**: ECA Medium Token enrollment blocked on WidePoint org add; **IR.L2-3.6.2** external reporting path not ready until cert issued; see playbook � IR readiness table.
-- `CODE/docs/CMMC_IR_L2_3_6_3_MET_JUL22_2026.md` � **IR evidence completion**: dual-signed DocuSign AAR, EV-IR-001 registration, evidence URI, and live-promotion verification.
-- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_TABLETOP_COMPLETION_STATUS_JUL22_2026.md` � **Authoritative IR status**: signed + registered + Met; canonical AAR and Certificate of Completion references.
-- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_RAPID_HITL_SCRIPT_JUL22_2026.md` � Morgan + RJ 10�15 min tabletop facilitation script.
-- `CODE/docs/CMMC_IR_TABLETOP_HITL_NEXT_JUL22_2026.md` � HITL ? capture ? merge ? DocuSign next steps.
-- `CODE/docs/cmmc_evidence/ir/ev_ir_3_6_3_aar_FILLED_UNSIGNED_JUL22_2026.pdf` � Filled unsigned AAR (repo copy).
-- `CODE/docs/CURSOR_TO_PERPLEXITY_IR_AAR_HANDBACK_JUL22_2026.md` � **Superseded** for Part B (wait-on-Perplexity PDF); Wave 1 Part A still valid.
-
-## Psathyrella buoy � hub + camera handoff (August 1, 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/PSATHYRELLA_CAMARRAY_UC512_IMX519_HANDOFF_AUG01_2026.md` � **CamArray UC-512 / IMX519 durable camera handoff**: root cause (snapshot-only server.js after IMX519 cutover ? `/preview/*` 404 on reboot); restored JUL12 `/preview/a|b` MJPEG aliases; user unit enabled + linger; ExecStartPre `i2cset` four-in-one; Windows E2E **GCS-ready Y**; cold service restart proven; Argus `sensor-id=1` empty so B shares id0; dual `/dev/video0|1`; repo mirror `tools/jetson/psathyrella-camera/`.
-- `docs/PSATHYRELLA_BUOY_STATUS_CAMERA_HUB_AUDIT_HANDOFF_CLAUDE_AUG01_2026.md` � **Claude/CLAWD hub handoff**: hub `:8790` restored (Side-A-only boot gate), live u-blox GPS + Side A BME + Wi?Fi; MAS still site-fallback; OpenClaw up; credential env map (names only). Camera node status superseded by CamArray IMX519 handoff above.
+- `CODE/docs/CMMC_IR_L2_3_6_3_MET_JUL22_2026.md` — **IR evidence completion**: dual-signed DocuSign AAR, EV-IR-001 registration, evidence URI, and live-promotion verification.
+- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_TABLETOP_COMPLETION_STATUS_JUL22_2026.md` — **Authoritative IR status**: signed + registered + Met; canonical AAR and Certificate of Completion references.
+- `CODE/docs/cmmc_evidence/ir/EV-IR-3.6.3_RAPID_HITL_SCRIPT_JUL22_2026.md` — Morgan + RJ 10–15 min tabletop facilitation script.
+- `CODE/docs/CMMC_IR_TABLETOP_HITL_NEXT_JUL22_2026.md` — HITL → capture → merge → DocuSign next steps.
+- `CODE/docs/cmmc_evidence/ir/ev_ir_3_6_3_aar_FILLED_UNSIGNED_JUL22_2026.pdf` — Filled unsigned AAR (repo copy).
+- `CODE/docs/CURSOR_TO_PERPLEXITY_IR_AAR_HANDBACK_JUL22_2026.md` — **Superseded** for Part B (wait-on-Perplexity PDF); Wave 1 Part A still valid.
 
 ## Psathyrella backend architecture (June 25, 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — **P0–P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.
+- `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` — **P0 completion record** (superseded by P0–P6 status for full picture).
+- `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` — MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
+- *(Program-specific maritime pursuit plans and inventories are maintained internally — not listed on the public index.)*
 
+## Earth Simulator — full capabilities audit (June 25, 2026)
 
-- `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` � **P0�P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.
-- `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` � **P0 completion record** (superseded by P0�P6 status for full picture).
-- `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` � MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
-- `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` � **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
+- `WEBSITE/website/docs/EARTH_SIMULATOR_FULL_CAPABILITIES_AUDIT_JUN25_2026.md` — **Master audit**: V2/V3/V4 model, all layers/filters/UI, MYCA analysis & control, MINDEX pipeline, MycoBrain/MDP, Arraylake fields, BFF APIs, assets, plans & gaps. Indexed from `EARTH_SIMULATOR_DOCS_INDEX.md`.
+- `WEBSITE/website/docs/EARTH_SIMULATOR_ARRAYLAKE_FIELDS_COMPLETE_JUN27_2026.md` — **Complete**: all 16 Arraylake field layers baked (ERA5, HRRR, MRMS, Helios, ALIVE, biomass, canopy, Sentinel NDVI/truecolor, GEO wind); UI/BFF/baker fixes; verification steps.
 
-## Earth Simulator � full capabilities audit (June 25, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## Nature Learning Model (NLM) — status & narrative (June 25, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `WEBSITE/website/docs/EARTH_SIMULATOR_FULL_CAPABILITIES_AUDIT_JUN25_2026.md` � **Master audit**: V2/V3/V4 model, all layers/filters/UI, MYCA analysis & control, MINDEX pipeline, MycoBrain/MDP, Arraylake fields, BFF APIs, assets, plans & gaps. Indexed from `EARTH_SIMULATOR_DOCS_INDEX.md`.
-- `WEBSITE/website/docs/EARTH_SIMULATOR_ARRAYLAKE_FIELDS_COMPLETE_JUN27_2026.md` � **Complete**: all 16 Arraylake field layers baked (ERA5, HRRR, MRMS, Helios, ALIVE, biomass, canopy, Sentinel NDVI/truecolor, GEO wind); UI/BFF/baker fixes; verification steps.
-
-## Nature Learning Model (NLM) � status & narrative (June 25, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/NLM_FULL_STATUS_AND_INDEX_JUN25_2026.md` � **Full inventory**: code, docs, URLs, capabilities, gaps.
-- `docs/NLM_UNIFIED_PUBLIC_NARRATIVE_JUN25_2026.md` � **Public story** for Perplexity merge, press, website alignment.
-- `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` � **Execution plan**: owners, repos, P0�P3 priorities.
-- `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` � **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
-- `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` � **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
+- `docs/NLM_FULL_STATUS_AND_INDEX_JUN25_2026.md` — **Full inventory**: code, docs, URLs, capabilities, gaps.
+- `docs/NLM_UNIFIED_PUBLIC_NARRATIVE_JUN25_2026.md` — **Public story** for Perplexity merge, press, website alignment.
+- `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` — **Execution plan**: owners, repos, P0–P3 priorities.
+- `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` — **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
+- `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` — **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
 
 ## UniFi / NAS / CISA KEV (June 25, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` � **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
-- `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` � **CISA KEV remediation**: CVE-2026-34908/09/10 (UniFi PATCHED), CVE-2025-67038 (Lantronix not in inventory); `/api/network/kev` + probe scripts.
+- `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` — **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
+- `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` — **CISA KEV remediation**: CVE-2026-34908/09/10 (UniFi PATCHED), CVE-2025-67038 (Lantronix not in inventory); `/api/network/kev` + probe scripts.
 
 ## Platform recovery (June 23, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/PLATFORM_RECOVERY_COMPLETE_JUN23_2026.md` � **Partial recovery**: investor v6 live, 187 untouched (HTTP-only), Legion retired, local dev env + MAS `/network` route (188 deploy blocked on SSH), MYCA 191/MQTT pending credentials.
+- `docs/PLATFORM_RECOVERY_COMPLETE_JUN23_2026.md` — **Partial recovery**: investor v6 live, 187 untouched (HTTP-only), Legion retired, local dev env + MAS `/network` route (188 deploy blocked on SSH), MYCA 191/MQTT pending credentials.
 
 ## Earth Sim Phase 7 website handoff (June 22, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` � **Claude website handoff**: Phases 0�7 MINDEX backend complete on VM 189, biology lock, API contracts, registry/BFF tasks for Earth Simulator, known bugs (weather SELECT, guild ETL 0 rows), MAS 188 down, credentials/SSH patterns, verification matrix.
+- `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` — **Claude website handoff**: Phases 0–7 MINDEX backend complete on VM 189, biology lock, API contracts, registry/BFF tasks for Earth Simulator, known bugs (weather SELECT, guild ETL 0 rows), MAS 188 down, credentials/SSH patterns, verification matrix.
 
 ## Live audit & Claude handoff (June 21, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — **Live prod audit + Claude Code handoff**: page/API matrix, MAS 188 down (P0), MINDEX up, Earth Sim/device video status post PR #228, prioritized Claude tasks.
 
+## Earth Simulator P0–P2 (June 20, 2026)
 
-- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` � **Live prod audit + Claude Code handoff**: page/API matrix, MAS 188 down (P0), MINDEX up, Earth Sim/device video status post PR #228, prioritized Claude tasks.
+- `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` — **Capabilities reference**: provenance table, P0–P2 fix summary, experiment briefs, verification commands.
+- `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` — **Science agent packet**: endpoints, sample bboxes, hypothesis templates for autonomous research agents.
 
-## Earth Simulator P0�P2 (June 20, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## Worldview API readiness (June 17–19, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/INGESTION_PIPELINE_CURSOR_HANDOFF_JUN19_2026.md` — **Cursor → Claude handoff (Jun 19)**: full MAS 188 / MINDEX 189 ingestion work — root causes, commits, VM deploy, `MINDEX_INTERNAL_TOKEN` 401 fix, ops scripts, env state, verification, Claude next steps (OpenSky OAuth2, AIS on 187).
+- `docs/WEBSITE_BLUEGREEN_DEPLOY_ABORT_ENV_JUN19_2026.md` — **Earth Sim deploy abort (Jun 19)**: prod VM `.env` line 167 malformed bare token; blue-green keep-blue OK; live site 200; Claude fixing cutover script + `.env`.
+- `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` — **Claude Code website handoff (Jun 18)**: live sandbox/MAS/MINDEX health, Worldview/search/earth-sim route matrix, Supabase metering, env vars, known gaps, deploy checklist.
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — **Worldview API readiness handoff**: current website gateway, MINDEX Worldview zone, MAS Worldstate/collector architecture, endpoint inventory, P0/P1 blockers, exact implementation sequence, and verification commands.
 
+## Investor data room — NotebookLM hub (June 15, 2026)
 
-- `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` � **Capabilities reference**: provenance table, P0�P2 fix summary, experiment briefs, verification commands.
-- `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` � **Science agent packet**: endpoints, sample bboxes, hypothesis templates for autonomous research agents.
-
-## Worldview API readiness (June 17�19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/INGESTION_PIPELINE_CURSOR_HANDOFF_JUN19_2026.md` � **Cursor ? Claude handoff (Jun 19)**: full MAS 188 / MINDEX 189 ingestion work � root causes, commits, VM deploy, `MINDEX_INTERNAL_TOKEN` 401 fix, ops scripts, env state, verification, Claude next steps (OpenSky OAuth2, AIS on 187).
-- `docs/WEBSITE_BLUEGREEN_DEPLOY_ABORT_ENV_JUN19_2026.md` � **Earth Sim deploy abort (Jun 19)**: prod VM `.env` line 167 malformed bare token; blue-green keep-blue OK; live site 200; Claude fixing cutover script + `.env`.
-- `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` � **Claude Code website handoff (Jun 18)**: live sandbox/MAS/MINDEX health, Worldview/search/earth-sim route matrix, Supabase metering, env vars, known gaps, deploy checklist.
-- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` � **Worldview API readiness handoff**: current website gateway, MINDEX Worldview zone, MAS Worldstate/collector architecture, endpoint inventory, P0/P1 blockers, exact implementation sequence, and verification commands.
-
-## Investor data room � NotebookLM hub (June 15, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` � **NotebookLM / data room TOC**: links primary data story to architecture, MINDEX/ETL, CREP, Worldview, NLM/grounding, devices, MYCA, AWS Jun 15 waves, validation, upload bundles, and external (Perplexity) inputs.
+- `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` — **NotebookLM / data room TOC**: links primary data story to architecture, MINDEX/ETL, CREP, Worldview, NLM/grounding, devices, MYCA, AWS Jun 15 waves, validation, upload bundles, and external (Perplexity) inputs.
 
 ## Section 9 Gap Remediation (June 15, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` � **Plan complete**: AWS GPU Wave 0, SSE BFF, 501 cleanup, NVIDIA/AWS GPU lanes, NatureOS Defense v2, device registry, terminology updates.
-- `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` � Website `/api/stream/*` proxies and client migration.
-- `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` � MAS/MINDEX proxy fixes and 503 reclassification.
-- `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` � AWS IAM, budgets, `scripts/aws/`.
-- `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` � `GPU_VOICE_PROVIDER` production switch.
-- `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md` � NVIDIA dev platform PersonaPlex test lane.
-- `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` � `/natureos/defense/*` operator shell.
-- `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` � Agaric + Psathyrella in production.
-- `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` � AWS scale-up Wave 1 prep (GPU, NAS, MQTT, Earth2, NLM).
-- `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` � **W1 complete**: KMS + SSE-KMS NAS?S3 pilot sync.
-- `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` � **W5 complete**: Worldview v1 local metering smoke (401/catalog/health).
-- `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` � **W6 complete**: MAS 188 collectors + CREP gateway fix (no website deploy).
-- `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` � Credits maximization + Worldview revenue.
-- `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` � Investor data story; Section 9 gaps updated.
+- `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` — **Plan complete**: AWS GPU Wave 0, SSE BFF, 501 cleanup, NVIDIA/AWS GPU lanes, NatureOS Defense v2, device registry, terminology updates.
+- `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` — Website `/api/stream/*` proxies and client migration.
+- `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` — MAS/MINDEX proxy fixes and 503 reclassification.
+- `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` — AWS IAM, budgets, `scripts/aws/`.
+- `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` — `GPU_VOICE_PROVIDER` production switch.
+- `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md` — NVIDIA dev platform PersonaPlex test lane.
+- `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` — `/natureos/defense/*` operator shell.
+- `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` — Agaric + Psathyrella in production.
+- `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` — AWS scale-up Wave 1 prep (GPU, NAS, MQTT, Earth2, NLM).
+- `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` — **W1 complete**: KMS + SSE-KMS NAS→S3 pilot sync.
+- `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` — **W5 complete**: Worldview v1 local metering smoke (401/catalog/health).
+- `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` — **W6 complete**: MAS 188 collectors + CREP gateway fix (no website deploy).
+- `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` — Credits maximization + Worldview revenue.
+- `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` — Investor data story; Section 9 gaps updated.
 
 ## Earth Simulator + MYCA Deploy Verification (May 26, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` � **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
+- `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` — **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
 
 ## MYCA + MAS Coordination (May 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_MAS_COORDINATION_MASTER_MAY19_2026.md` ? **Canonical MYCA/MAS entry point**: document hierarchy, extended integration matrix (desktop MCP, A2A, WebMCP, omnichannel, AI Studio), work stream registry, claim verification policy, external tool matrix, MAS coordination API endpoints (`/api/myca/capabilities`, `/api/coordination/*`, `/api/mcp/tools`, `/api/myca/openapi`). Read this first for all MYCA coordination work.
 
 ## Voice-to-Voice MYCA on /test-voice (May 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/VOICE_TOPOLOGY_LOCKED_MAY19_2026.md` � **Locked topology**: Voice Legion 241 vs local GPU; env contracts.
-- `docs/VOICE_TO_VOICE_VERIFICATION_MAY19_2026.md` � **Verification gates**: script results, diagnostics 0�5, browser smoke.
+- `docs/VOICE_TOPOLOGY_LOCKED_MAY19_2026.md` — **Locked topology**: Voice Legion 241 vs local GPU; env contracts.
+- `docs/VOICE_TO_VOICE_VERIFICATION_MAY19_2026.md` — **Verification gates**: script results, diagnostics 0–5, browser smoke.
 
 ## Meshtastic MAS / MINDEX chain (May 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` � **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** � passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.
-- `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` � **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
-- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` � **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
-- `docs/MESHTASTIC_MQTT_ENABLE_DEVICE_CRASH_WORKAROUNDS_MAY05_2026.md` � **ESP32/app crashes when enabling MQTT**: Wi-Fi-before-MQTT, **TLS off** on port **1883**, CLI workaround and recovery (`mqtt.enabled false`), upstream firmware issue pointers.
+- `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` — **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** — passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.
+- `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` — **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` — **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
+- `docs/MESHTASTIC_MQTT_ENABLE_DEVICE_CRASH_WORKAROUNDS_MAY05_2026.md` — **ESP32/app crashes when enabling MQTT**: Wi-Fi-before-MQTT, **TLS off** on port **1883**, CLI workaround and recovery (`mqtt.enabled false`), upstream firmware issue pointers.
 
 ## GitHub sync + verification + next plan (May 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` — **Meshtastic TennMesh-style**: website map activity overlay (packet-derived positions), systemd/env templates for `mqtt_meshtastic_bridge` on broker VM **196**, SSH smoke script, operator checklist for Mosquitto/LilyGO; live MAS `/api/meshtastic` deploy note when OpenAPI lacks routes.
+- `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` — **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 → 188 → 187 + Cloudflare).
 
+- `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` — **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.
+- `docs/AGARIC_DEVICE_REGISTRY_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: push website + MAS, Sandbox 187 Docker + NAS mount + Cloudflare, MAS 188 restart, verification matrix.
+- `docs/AGENT100_PREFLIGHT_MAY03_2026.md` — **Agent100** Worldview validation preflight (treasury caps, kill switch, rate limits, env).
+- `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` — **Agent100** program map (`mycosoft_mas/agent100/`, `scripts/agent100/`, Supabase SQL).
+- `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` — **Agent100** test report template (post–wave3).
+- `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` — **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
+- `docs/MINDEX_APP_OVERHAUL_PROGRESS_MAY03_2026.md` — **MINDEX App overhaul (increment)**: website `health/all` wiring, env templates (MAS + MINDEX VM + website), MAS v2 pipeline agents (anchor / synthesis / QA / chemistry), MINDEX `network` router + migration 0031 pointer; remaining phases listed.
 
-- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` � **Meshtastic TennMesh-style**: website map activity overlay (packet-derived positions), systemd/env templates for `mqtt_meshtastic_bridge` on broker VM **196**, SSH smoke script, operator checklist for Mosquitto/LilyGO; live MAS `/api/meshtastic` deploy note when OpenAPI lacks routes.
-- `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` � **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 ? 188 ? 187 + Cloudflare).
+## Security SOC — real systems rebuild (May 3, 2026)
 
-- `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` � **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.
-- `docs/AGARIC_DEVICE_REGISTRY_DEPLOY_HANDOFF_MAY04_2026.md` � **Deploy handoff** for another agent: push website + MAS, Sandbox 187 Docker + NAS mount + Cloudflare, MAS 188 restart, verification matrix.
-- `docs/AGENT100_PREFLIGHT_MAY03_2026.md` � **Agent100** Worldview validation preflight (treasury caps, kill switch, rate limits, env).
-- `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` � **Agent100** program map (`mycosoft_mas/agent100/`, `scripts/agent100/`, Supabase SQL).
-- `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` � **Agent100** test report template (post�wave3).
-- `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` � **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
-- `docs/MINDEX_APP_OVERHAUL_PROGRESS_MAY03_2026.md` � **MINDEX App overhaul (increment)**: website `health/all` wiring, env templates (MAS + MINDEX VM + website), MAS v2 pipeline agents (anchor / synthesis / QA / chemistry), MINDEX `network` router + migration 0031 pointer; remaining phases listed.
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` — **Plan delivery**: Postgres `soc_ops` schema, mock removal on `/security`, incidents + Redis `security:events`, network discovery → `device_inventory`, red team L1–L3 + UI SOC tab, compliance doc engine + website MAS tab; verify/deploy checklist.
+- `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` — UniFi / ARP / MQTT / HTTP / Jetson reconciler and inventory APIs.
+- `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` — L1 SAFE, L2 scoped nmap, L3 Claude planner; `soc-runs` / `soc-findings` APIs.
+- `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` — Perplexity → Claude → OpenAI pipeline; versioned SSP/POA&M in Postgres.
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` — **Completion record** for the security real-systems rebuild (verify + deploy follow-ups).
+- `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: 189 → 188 → 187 + Cloudflare, verify curls.
 
-## Security SOC � real systems rebuild (May 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## Platform audit — inventory + gaps (May 2, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — **Cross-repo inventory**: VMs, Cursor subagents, MAS agents, website surfaces, BFF **Appendix A** (`501` by design), n8n/MINDEX health evidence, Prometheus status (remediate via runbook), gap-scan summary; replaces missing `MASTER_INVENTORY_MAY02_2026.md` pointer below until that file is generated.
+- `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` — **Prometheus on MAS 188**: diagnose Docker/firewall, LAN verification; use `scripts/diagnose_prometheus_mas188.py` when `.credentials.local` is visible to the shell.
 
+## MAY02 continuation rollout — closure (May 2, 2026)
 
-- `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` � **Plan delivery**: Postgres `soc_ops` schema, mock removal on `/security`, incidents + Redis `security:events`, network discovery ? `device_inventory`, red team L1�L3 + UI SOC tab, compliance doc engine + website MAS tab; verify/deploy checklist.
-- `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` � UniFi / ARP / MQTT / HTTP / Jetson reconciler and inventory APIs.
-- `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` � L1 SAFE, L2 scoped nmap, L3 Claude planner; `soc-runs` / `soc-findings` APIs.
-- `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` � Perplexity ? Claude ? OpenAI pipeline; versioned SSP/POA&M in Postgres.
-- `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` � **Completion record** for the security real-systems rebuild (verify + deploy follow-ups).
-- `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` � **Deploy handoff** for another agent: 189 ? 188 ? 187 + Cloudflare, verify curls.
+- `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` — **P0–P3** operationalization outcomes, verification, follow-ups.
+- `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` — Queued May 1 plan shells (six tracks) for dedicated sprints.
+- `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` — Draft contract for CREP layer entitlements / agent keys.
 
-## Platform audit � inventory + gaps (May 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## MAY03 — May01 shells MVP closure + waypoints (May 3, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` — **Agaric** `/devices/agaric`, portal + nav, Earth Simulator catalog merge, MAS `device_role` doc, `device-tracker` subagent, verification notes.
+- `docs/DEVICES_REGISTRY_MAY03_2026.md` — **Master device roster** (human); keep in sync with `WEBSITE/website/lib/devices/catalog.ts` and `@device-tracker`.
+- `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` — Session log: paths touched, verification curls, manifest refresh.
+- `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` — CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
+- `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` — Ancestry explorer kingdom + pagination MVP.
+- `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` — OpenAQ + Safecast + virus deferral MVP.
+- `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` — ChemputerAgent + BFF + UI MVP.
+- `docs/GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md` — Growth analytics agent + instrument summary MVP.
+- `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md` — Tools hub deep links + health strip MVP.
+- `docs/BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md` — Unreal Pixel Streaming spike + env contract + UI panel.
 
+## MYCA Alive — 4-phase program (May 2, 2026)
 
-- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` � **Cross-repo inventory**: VMs, Cursor subagents, MAS agents, website surfaces, BFF **Appendix A** (`501` by design), n8n/MINDEX health evidence, Prometheus status (remediate via runbook), gap-scan summary; replaces missing `MASTER_INVENTORY_MAY02_2026.md` pointer below until that file is generated.
-- `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` � **Prometheus on MAS 188**: diagnose Docker/firewall, LAN verification; use `scripts/diagnose_prometheus_mas188.py` when `.credentials.local` is visible to the shell.
+- `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` — **Master**: P1–P4 deliverables, verification, cross-links.
+- `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` — **Plan completion** summary (implementation vs live acceptance).
+- `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` — Voice (241) + Earth-2 (249) health runbook.
+- `docs/REDUNDANCY_AND_DR_MAY02_2026.md` — Proxmox, backups, DR checklist (CC-2).
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — CC-1 inventory (manual + gap scan); optional codegen: `build_master_inventory.py` if restored.
 
-## MAY02 continuation rollout � closure (May 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## Petri Dish v2 — hybrid Rust/WASM + headless engine (May 2, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` — **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
+- `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` — **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
+- `scripts/deploy_petri_v2_stack_vm187.py` — Deploy Rust engine **8050** + MyceliumSeg API **8051** on Sandbox **187**.
+- `scripts/set_petri_engine_env_mas188.py` — Append `PETRI_ENGINE_V2_URL` to MAS **188** `~/mycosoft/mas/.env` and restart `mas-orchestrator`.
+- `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` — **Plan completion** summary and verification checklist.
 
+## NatureOS — full gap map, integrations, documentation (May 2, 2026)
 
-- `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` � **P0�P3** operationalization outcomes, verification, follow-ups.
-- `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` � Queued May 1 plan shells (six tracks) for dedicated sprints.
-- `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` � Draft contract for CREP layer entitlements / agent keys.
+- `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` — **Plan completion** summary, verification, backlog pointers (supersedes ad-hoc status for the gaps-and-integrations program).
+- `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` — **Canonical** NatureOS-A vs B, env matrix, mermaid, verification, cross-links.
+- `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` — Staging / smoke curls (BFF, MAS, MINDEX, .NET).
+- `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` — Post-merge deploy order (187 / 188 / 189 / .NET).
+- `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` — Waypoints, chat, entitlements, Fusarium deferral, route decision.
+- `docs/NATUREOS_BFF_MATLAB_LAB_PROXY_MAP_MAY02_2026.md` — Website `app/api/natureos/matlab/*` ↔ .NET `MatlabController`; lab TBD.
+- `docs/NATUREOS_BFF_DEVICES_TWIN_MAY02_2026.md` — MycoBrain / devices BFF and registry alignment.
+- `docs/NATUREOS_MINDEX_PER_APP_AND_AEROSOL_MAY02_2026.md` — MINDEX + aerosol ETL notes.
+- `docs/NATUREOS_DOTNET_CORE_API_RUNBOOK_MAY02_2026.md` — `core-api` runbook.
+- `docs/NATUREOS_SIGNALR_VS_WEB_SSE_MAY02_2026.md` — Realtime pattern note.
+- `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` — Agents: Worldview catalog first.
+- `scripts/natureos_bff_route_inventory.py` — BFF route inventory (run from MAS repo).
 
-## MAY03 � May01 shells MVP closure + waypoints (May 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## NatureOS Apps — cloud-style reorg (May 1, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` � **Agaric** `/devices/agaric`, portal + nav, Earth Simulator catalog merge, MAS `device_role` doc, `device-tracker` subagent, verification notes.
-- `docs/DEVICES_REGISTRY_MAY03_2026.md` � **Master device roster** (human); keep in sync with `WEBSITE/website/lib/devices/catalog.ts` and `@device-tracker`.
-- `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` � Session log: paths touched, verification curls, manifest refresh.
-- `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` � CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
-- `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` � Ancestry explorer kingdom + pagination MVP.
-- `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` � OpenAQ + Safecast + virus deferral MVP.
-- `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` � ChemputerAgent + BFF + UI MVP.
-- `docs/GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md` � Growth analytics agent + instrument summary MVP.
-- `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md` � Tools hub deep links + health strip MVP.
-- `docs/BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md` � Unreal Pixel Streaming spike + env contract + UI panel.
-
-## MYCA Alive � 4-phase program (May 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` � **Master**: P1�P4 deliverables, verification, cross-links.
-- `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` � **Plan completion** summary (implementation vs live acceptance).
-- `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` � Voice (241) + Earth-2 (249) health runbook.
-- `docs/REDUNDANCY_AND_DR_MAY02_2026.md` � Proxmox, backups, DR checklist (CC-2).
-- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` � CC-1 inventory (manual + gap scan); optional codegen: `build_master_inventory.py` if restored.
-
-## Petri Dish v2 � hybrid Rust/WASM + headless engine (May 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` � **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
-- `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` � **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
-- `scripts/deploy_petri_v2_stack_vm187.py` � Deploy Rust engine **8050** + MyceliumSeg API **8051** on Sandbox **187**.
-- `scripts/set_petri_engine_env_mas188.py` � Append `PETRI_ENGINE_V2_URL` to MAS **188** `~/mycosoft/mas/.env` and restart `mas-orchestrator`.
-- `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` � **Plan completion** summary and verification checklist.
-
-## NatureOS � full gap map, integrations, documentation (May 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` � **Plan completion** summary, verification, backlog pointers (supersedes ad-hoc status for the gaps-and-integrations program).
-- `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` � **Canonical** NatureOS-A vs B, env matrix, mermaid, verification, cross-links.
-- `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` � Staging / smoke curls (BFF, MAS, MINDEX, .NET).
-- `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` � Post-merge deploy order (187 / 188 / 189 / .NET).
-- `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` � Waypoints, chat, entitlements, Fusarium deferral, route decision.
-- `docs/NATUREOS_BFF_MATLAB_LAB_PROXY_MAP_MAY02_2026.md` � Website `app/api/natureos/matlab/*` ? .NET `MatlabController`; lab TBD.
-- `docs/NATUREOS_BFF_DEVICES_TWIN_MAY02_2026.md` � MycoBrain / devices BFF and registry alignment.
-- `docs/NATUREOS_MINDEX_PER_APP_AND_AEROSOL_MAY02_2026.md` � MINDEX + aerosol ETL notes.
-- `docs/NATUREOS_DOTNET_CORE_API_RUNBOOK_MAY02_2026.md` � `core-api` runbook.
-- `docs/NATUREOS_SIGNALR_VS_WEB_SSE_MAY02_2026.md` � Realtime pattern note.
-- `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` � Agents: Worldview catalog first.
-- `scripts/natureos_bff_route_inventory.py` � BFF route inventory (run from MAS repo).
-
-## NatureOS Apps � cloud-style reorg (May 1, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` � **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
-- `docs/NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md` � Nature Statistics (`/natureos/nature-statistics`).
-- `docs/NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md` � Fungi Compute.
-- `docs/NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md` � Earth Simulator.
-- `docs/NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md` � Virtual Petri Dish + MyceliumSeg notes.
-- `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` � Biology Simulator landing.
-- `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` � Compound Analyser.
-- `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` � Aerosol + BFF routes.
-- `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` � Ancestry Database under `/natureos/ancestry`.
-- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` � All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-ups).
-- `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` (MINDEX repo) � All-life ETL orchestration and storage notes.
-- `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` � Growth Analytics.
-- `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` � Tools hub (`/natureos/tools` index).
+- `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` — **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
+- `docs/NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md` — Nature Statistics (`/natureos/nature-statistics`).
+- `docs/NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md` — Fungi Compute.
+- `docs/NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md` — Earth Simulator.
+- `docs/NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md` — Virtual Petri Dish + MyceliumSeg notes.
+- `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` — Biology Simulator landing.
+- `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` — Compound Analyser.
+- `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` — Aerosol + BFF routes.
+- `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` — Ancestry Database under `/natureos/ancestry`.
+- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` — All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-ups).
+- `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` (MINDEX repo) — All-life ETL orchestration and storage notes.
+- `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` — Growth Analytics.
+- `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` — Tools hub (`/natureos/tools` index).
 - **Follow-up plan shells (May 1, 2026):** `docs/BIOLOGY_SIMULATOR_UNREAL_INTEGRATION_PLAN_MAY01_2026.md`, `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md`, `docs/ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md`, `docs/GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md`, `docs/AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md`, `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md`.
 
-## AWS + MVT tile pipeline � IAM, bake, stub (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## AWS + MVT tile pipeline — IAM, bake, stub (Apr 17, 2026)
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+- `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` — **Ops**: budget, GitHub secret names, IAM user checklist; no keys in repo. Policy JSON: `scripts/aws/crep_baker_iam/`.
+- `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` — **Handoff runbook** (R2, Legions 8230, `bake_mvt_tiles.sh`, env vars).
+- `scripts/bake_mvt_tiles.sh` — **tippecanoe** pmtiles bake + R2 `aws s3 sync` (requires `R2_*`).
+- `scripts/aws_bake_spot.py` — **Optional** EC2 spot launch (env-configured AMI/SG).
+- `scripts/verify_mvt_tile_pipeline.py` — **Health** check for `TILE_RENDER_*` upstreams + optional CDN.
+- `services/crep_tile_render_stub/main.py` — **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `density` (241) for layer allowlists; `scripts/run_crep_tile_stub_8230.sh` / `.ps1`.
+- `scripts/ensure_sandbox_lan_api_urls.py` — **Merges** `TILE_RENDER_EARTH2_URL`, `TILE_RENDER_DENSITY_URL`, `TILE_RENDER_CDN_FALLBACK`, `NEXT_PUBLIC_TILES_CDN` on Sandbox VM 187.
+- `.github/workflows/nightly-mvt-bake.yml` — **GHA** template (`workflow_dispatch`; `if: false` until R2 secrets).
 
+## Public transit — API key placement (Apr 17, 2026)
 
-- `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` � **Ops**: budget, GitHub secret names, IAM user checklist; no keys in repo. Policy JSON: `scripts/aws/crep_baker_iam/`.
-- `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` � **Handoff runbook** (R2, Legions 8230, `bake_mvt_tiles.sh`, env vars).
-- `scripts/bake_mvt_tiles.sh` � **tippecanoe** pmtiles bake + R2 `aws s3 sync` (requires `R2_*`).
-- `scripts/aws_bake_spot.py` � **Optional** EC2 spot launch (env-configured AMI/SG).
-- `scripts/verify_mvt_tile_pipeline.py` � **Health** check for `TILE_RENDER_*` upstreams + optional CDN.
-- `services/crep_tile_render_stub/main.py` � **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `density` (241) for layer allowlists; `scripts/run_crep_tile_stub_8230.sh` / `.ps1`.
-- `scripts/ensure_sandbox_lan_api_urls.py` � **Merges** `TILE_RENDER_EARTH2_URL`, `TILE_RENDER_DENSITY_URL`, `TILE_RENDER_CDN_FALLBACK`, `NEXT_PUBLIC_TILES_CDN` on Sandbox VM 187.
-- `.github/workflows/nightly-mvt-bake.yml` � **GHA** template (`workflow_dispatch`; `if: false` until R2 secrets).
-
-## Public transit � API key placement (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-
-- `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` � **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
+- `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` — **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
 
 ## MYCA readiness execution plan (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` � **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
+- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` — **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
 
 ## MAS full index + unfinished gap audit (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` — **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+## Proxmox — always-on VMs + daily backups (Apr 17, 2026)
+- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` — **Runbook**: `onboot`, optional 5‑min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
 
-- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` � **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
+## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
+- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
 
-## Proxmox � always-on VMs + daily backups (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+## Fluid Search — total rebuild (May 03, 2026)
+- `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` — **Website**: MagneticGrid, SSE `/api/search/stream`, blended intent `POST /api/search/route`, `useStreamingSearch`, SuggestionChipsPanel, connector `lib/search/connectors/_framework.ts`, `earthMindexFirstConnector`, FastActionRadial FAB, Playwright `e2e/widgets` + `SEARCH_SUGGESTION_MATRIX`.
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+## Eagle Eye — backend integration + Track A review (Apr 17, 2026)
+- `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` — **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
+- `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` — **Review gate** checklist for Track A merges.
+- `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` — **NLM**: batch `scene_index` embedding contract.
 
-- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` � **Runbook**: `onboot`, optional 5?min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
-
-## Fluid Search � Full AI interface milestone 1 (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` � **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
-
-## Fluid Search � total rebuild (May 03, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` � **Website**: MagneticGrid, SSE `/api/search/stream`, blended intent `POST /api/search/route`, `useStreamingSearch`, SuggestionChipsPanel, connector `lib/search/connectors/_framework.ts`, `earthMindexFirstConnector`, FastActionRadial FAB, Playwright `e2e/widgets` + `SEARCH_SUGGESTION_MATRIX`.
-
-## Eagle Eye � backend integration + Track A review (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` � **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
-- `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` � **Review gate** checklist for Track A merges.
-- `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` � **NLM**: batch `scene_index` embedding contract.
-
-## GPU Legions � NatureOS + FUSARIUM (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/GPU_LEGION_LAYOUT_NATUREOS_FUSARIUM_APR17_2026.md` � **192.168.0.241 Voice / 192.168.0.249 Earth-2**: canonical split, shared GPU pool vs RBAC/data tier, browser tab VRAM note, env + snapshot verification.
+## GPU Legions — NatureOS + FUSARIUM (Apr 17, 2026)
+- `docs/GPU_LEGION_LAYOUT_NATUREOS_FUSARIUM_APR17_2026.md` — **192.168.0.241 Voice / 192.168.0.249 Earth-2**: canonical split, shared GPU pool vs RBAC/data tier, browser tab VRAM note, env + snapshot verification.
 
 ## Website VM 187 + MINDEX optimization brief (Apr 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
+- `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` — **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.
 
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
+## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
+- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
+- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes (superseded in part by default-on mount + `HARNESS_API_DISABLED`), safety notes.
+- `config/harness.env.example` — **MAS**: example env block for harness + brain.
+- `mycosoft_mas/harness/README.md` — quick use, static answers, MINDEX grounding, turbo-quant, tests.
 
-- `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` � **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.
+## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)
+- `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` — **MAS**: MycoDAO agent cluster under MYCA; orchestrator task contracts; MycoDAOAgent evolution; registry and n8n notes.
+- `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` — **MYCODAO**: full plan — Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse integration phases, security and wave timeline.
 
-## MYCA Harness 2026 � Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` � **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
-- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` � **MAS**: integration patch notes (superseded in part by default-on mount + `HARNESS_API_DISABLED`), safety notes.
-- `config/harness.env.example` � **MAS**: example env block for harness + brain.
-- `mycosoft_mas/harness/README.md` � quick use, static answers, MINDEX grounding, turbo-quant, tests.
-
-## MycoDAO Pulse � Supabase � MINDEX � MYCA (Apr 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` � **MAS**: MycoDAO agent cluster under MYCA; orchestrator task contracts; MycoDAOAgent evolution; registry and n8n notes.
-- `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` � **MYCODAO**: full plan � Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse integration phases, security and wave timeline.
-
-## Legion GPU watchdog � no local GPU on dev PC (Apr 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` � **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
+## Legion GPU watchdog — no local GPU on dev PC (Apr 14, 2026)
+- `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` — **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
 
 ## WSL2 Legion GPU nodes � Earth2 + Voice (Apr 15, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/WSL_LEGION_GPU_NODES_APR15_2026.md` � **WSL2 runbook**: 4080A Earth2 vs 4080B voice; `Invoke-WSLGPUNodeSetup.ps1` + `wsl-gpu-node-setup.sh`; PyTorch CUDA, earth2studio, Moshi/PersonaPlex deps, Ollama, Hugging Face; no bare-metal NVIDIA drivers inside WSL.
 - `docs/STORAGE_LAYOUT_LEGION_GPU_APR15_2026.md` � **Storage layout**: `Initialize-MycosoftDataLayout.ps1`, `wsl-mycosoft-data-layout.sh`; models/cache/data/memory; HF, Torch, Ollama env vars.
 
 ## Deep Agents v0.5 Integration (Apr 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DEEP_AGENTS_V05_INTEGRATION_PLAN.md` ? **Integration plan**: Multi-phase Deep Agents v0.5 rollout across MAS with async subagents, middleware, filesystem, and protocol strategy.
 - `docs/DEEP_AGENTS_V05_FOUNDATION_IMPLEMENTATION_APR09_2026.md` ? **Foundation implementation**: Feature-flagged Deep Agent package, agent protocol router, startup wiring, observability/permission/redis middleware, and compile/lint verification.
 - `docs/DEEP_AGENTS_V05_CROSS_SYSTEM_HOOKS_APR09_2026.md` ? **Cross-system hooks**: Event-driven Deep Agent fan-out from NatureOS platform, search, security, device registry/commands, and MYCA voice orchestrator.
 - `docs/DEEP_AGENTS_V05_MULTI_REPO_SYSTEM_INTEGRATION_APR09_2026.md` ? **Multi-repo expansion**: Cross-repo domain-event wiring across MAS, WEBSITE, MINDEX, and NatureOS with a shared ingestion contract.
 
 ## MQTT LAN + Public WSS Deployment (Apr 8, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md` ? **Deployment + handoff**: MQTT broker redeployed to VM 196 with LAN MQTT (`1883`) + Cloudflare WebSocket upstream (`9001`), tunnel mapping for `mqtt.mycosoft.com`, security posture, and copy/paste Beto -> Jetson instructions.
 
 ## MINDEX Jetson to NatureOS Fusarium Pipeline (Apr 8, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MINDEX_JETSON_NATUREOS_FUSARIUM_PIPELINE_COMPLETE_APR08_2026.md` ? **Pipeline completion**: Canonical MINDEX ingest fanout to NatureOS + Fusarium mirror, live-state API for MYCA (NLM + self/world + fingerprint + Merkle), and MAS worldstate integration.
 
 ## Gap scan reconciliation and backlog execution (Apr 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GAP_SCAN_RECONCILIATION_APR06_2026.md` ? **Fresh gap scan vs Mar 2026 claims**: Automated counts, false positives, by-repo summary, reconciliation table.
 - `docs/GROUNDING_RAG_EXECUTION_STATUS_APR06_2026.md` ? **Grounding + RAG**: MINDEX `POST /api/mindex/rag/retrieve` + MAS bridge wiring; remaining embedding/spatial/temporal work.
 - `docs/CREP_PROTOCOL_PRIORITY_APR06_2026.md` ? **CREP + protocol priorities**: Ordered CREP imagery/Live Data work; UCP/WebMCP/TLS ordering.
 - `docs/DEFERRED_GAPS_GO_NO_GO_APR06_2026.md` ? **Deferred items**: Recommended GO/schedule for staff API, bridges, Morgan UX, large six-pack.
 
 ## Website video and NAS media reliability (Apr 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `../WEBSITE/website/docs/VIDEO_MEDIA_RELIABILITY_RUNBOOK_APR06_2026.md` ? **Runbook**: VM 187 NAS path, Docker bind mount, zero-byte MP4 detection, `scripts/verify_sandbox_nas_media.py`, `/api/health/media`, Cloudflare purge, synthetic HEAD checks.
 - `../WEBSITE/website/docs/CLOUDFLARE_ASSETS_VIDEO_CACHE_APR06_2026.md` ? **Edge cache**: Recommended Cache Rules for `/assets/*.mp4` and purge discipline.
 - `../WEBSITE/website/docs/VIDEO_R2_STREAM_MIGRATION_PLAN_APR06_2026.md` ? **Optional**: R2/Stream migration for off-NAS delivery and adaptive bitrate.
 
 ## Ethics Training Sandbox And Scenarios Repair (Apr 1, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md` ? **Repair complete**: MAS chat contract hardening, structured API errors, scenarios automation/test coverage, localhost runtime verification, and Supabase/auth origin checks.
 
 ## Nemotron Migration Execution (Mar 31, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NEMOTRON_MIGRATION_EXECUTION_COMPLETE_MAR31_2026.md` ? **Execution complete**: Corporate-first Nemotron migration delivered across MAS/AVANI/Website/MINDEX/NLM/MDP/MMP with telemetry, tests, smoke matrix, route inventory, cutover sheet, and rollback runbook.
 - `docs/NEMOTRON_MODEL_COMPARISON_AND_DECISION_DOSSIER_MAR31_2026.md` ? **Model dossier**: Nemotron model comparison, cost/latency/context and category recommendations.
 - `docs/MYCA_AVANI_ROUTE_CONTRACT_VALIDATION_MAR31_2026.md` ? **AVANI route parity**: Contract validation, proxy changes, and corporate wave checks.
@@ -768,36 +309,18 @@
 - `docs/NEMOTRON_ROLLBACK_RUNBOOK_MAR31_2026.md` ? **Rollback runbook**: Trigger thresholds, soft/global rollback, and forward-recovery flow.
 
 ## Platform Gap Docs (Mar 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md` ? **Master backlog**: Executive summary, P0?P3 waves, dependency graph, link to gap_report_latest.json, refresh via gap_scan_cursor_background / GET /agents/gap/scan.
 - `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` ? **Contract matrix**: Rows = MAS?MINDEX, website BFF, NatureOS/SignalR, CREP command, device/MycoBrain, voice stack, n8n; columns = repo, env, health URLs, definition of done, canonical doc.
 - `docs/EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md` ? **Sprint-shaped waves**: Per-wave scope, files, tests, evidence artifacts, registry updates; weekly gap refresh + per-deploy checklist.
 - `docs/DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md` ? **Triaged inbox**: Unchecked lines from execution reports + cursor_index_scan; Status/Owner/Proof columns.
 
 ## MYCA2 PSILO Stack (Mar 17?18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA2_PLASTICITY_ROUTER_MOUNT_MAR18_2026.md` ? **Plasticity router on MAS**: PSILO returned 404 until `plasticity_router` was mounted in `myca_main.py`; deploy MAS after merge; smoke POST body.
 - `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md` ? **MYCA2 PSILO full-stack**: Sandbox runtime, PSILO protocol, MINDEX lineage/journal tables, registry-backed `myca2_*` routing, executive overlay, production promotion gates, AI Studio widget, verification.
 - `docs/MYCA2_VM_ROLLOUT_AND_SMOKE_MAR17_2026.md` ? **VM rollout + smoke**: Postgres 189 migration, MINDEX API + MAS Docker on 188, `myca2_vm_rollout.py --all`, pytest `MYCA2_VM_SMOKE=1`, systemd rollback.
 - `docs/MYCA2_ROLLOUT_VM189_AND_TESTS_MAR17_2026.md` ? **189 compose fix + LAN-only deploy**: earth-sync YAML heredoc; run rollout/tests from machine on `192.168.0.0/24`; MAS/MINDEX/website steps + smoke commands.
 
 ## MYCA Export Package (Mar 16, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_EXPORT_INDEX_MAR16_2026.md` ? **MYCA export master index**: Master index for external AI systems (Base44, Claude, Perplexity, OpenAI, Grok); links to identity, soul, constitution, skills, external access.
 - `docs/MYCA_EXPORT_IDENTITY_MAR16_2026.md` ? **MYCA identity export**: Core identity (pronunciation, creator, roles, capabilities, communication style) for external systems.
 - `docs/MYCA_EXPORT_SOUL_MAR16_2026.md` ? **MYCA soul export**: Personality, beliefs, emotions, creativity, instincts, relationships for external systems.
@@ -806,112 +329,46 @@
 - `docs/MYCA_EXPORT_SKILLS_MAR16_2026/` ? **MYCA skills export**: Individual skill markdowns (22 skills) for deploy, create-api-endpoint, create-react-component, etc.
 
 ## Background Terminals Audit (Mar 16, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/BACKGROUND_TERMINALS_AUDIT_MAR16_2026.md` ? **Background terminals / unauthorized PowerShell audit**: Root cause (Dev Server Watchdog opening minimized CMD when restarting dev server); fix (WindowStyle Hidden); other scripts and scheduled tasks reviewed; how to kill or disable the watchdog.
 - `docs/POWERSHELL_POPUP_AUDIT_MAR16_2026.md` ? **PowerShell pop-up audit**: Every source that can open a visible PowerShell window (scheduled tasks, scripts, rules); fixes applied (cursor-chat-backup, voice-test-readiness, start-all-dev-services-external, fix-visible-scheduled-tasks); run fix script as Admin once to update existing tasks.
 
 ## Pull, Integration & Gap Report (Mar 15, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GAP_REPORT_MAR15_2026.md` ? **Pull, integration & gap report**: Latest pull for NLM, MINDEX, MAS, website; MINDEX plasticity/NLM/search_answers routers wired; stashes, security scan, migrations, tests, and cross-repo integration recommendations.
 - `WEBSITE/website/docs/AUTH_TROUBLESHOOTING_MAR15_2026.md` ? **Website auth troubleshooting**: Required Supabase env vars, redirect URL config, origin/proxy; env checks in login and callback routes; quick checks when sign-in fails.
 
 ## Network Topology and Ubiquiti (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md` ? **Network topology and Ubiquiti labeling plan**: 192.168.0.x device designations (NodeFather crypto, C-Suite, R710/R630, Proxmox 202); segregation (public Proxmox vs internal R710); Ubiquiti labeling table; C-Suite VM migration R710; UniFi scan script usage.
 - `docs/NETWORK_IP_MAC_DEVICE_MAP_MAR07_2026.md` ? **Full IP/MAC/device map (Mar 7, 2026)**: ARP-scan-validated map of 192.168.0.0/24; IP?MAC?role table; Proxmox 202 vs R720 layout; C-Suite migration plan; NodeFather, NAS, Edge R630; UniFi labeling reference.
 - `docs/UNIFI_SCAN_RESULTS_MAR07_2026.md` ? **UniFi topology scan results (Mar 7, 2026)**: Credentials stored; scan run; login failed (no device list); command used; next steps when login works; intended output format; link to topology plan.
 
 ## Sandbox / MAS / MINDEX Recovery (Mar 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md` ? **Recovery + redeploy report**: Sandbox outage recovery, Cloudflare tunnel/cache purge, website container stabilization, MAS/MINDEX health verification, and final runtime state.
 
 ## Production VM Clone and CI/CD (Mar 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOSOFT_COM_PRODUCTION_SANDBOX_ROUTE_MAR13_2026.md` ? **mycosoft.com via Sandbox VM 187**: Tunnel config (mycosoft.com/www), --production flag on _rebuild_sandbox, Supabase/Cloudflare manual steps, deploy verification. Use for production cutover without VM 186.
 - `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` ? **Production VM clone + CI/CD**: Clone Sandbox?Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org?mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
 - `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` ? **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
 
 ## Plasticity Forge Phase 1 (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PLASTICITY_FORGE_PHASE1_COMPLETE_MAR14_2026.md` ? **Plasticity Forge Phase 1 complete**: Fitness policy, simulation factory, compression lane, security/governance sandbox; plasticity API and registry; contracts and completion checklist.
 
 ## RaaS Worldstate Monetization (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_AVANI_WORLDSTATE_CONNECTION_CONTRACT_MAR14_2026.md` ? **MYCA/AVANI live worldstate connection contract**: Product ($1/min), session lifecycle (start/heartbeat/stop/balance/usage), 402 behavior, auth (X-API-Key); MAS router and catalog references.
 - `docs/MYCA_WORLDSTATE_MONETIZATION_COMPLETE_MAR14_2026.md` ? **MYCA Worldstate Monetization complete**: Delivered surfaces (website, MAS RaaS, payment hardening); deployment and verification steps; registry/doc updates.
 
 ## Browser / Lightpanda (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/LIGHTPANDA_MAS_BROWSER_POLICY_MAR14_2026.md` ? **Lightpanda as MAS browser runtime**: Use Lightpanda as specialized worker (fast scrape, low-RAM browsing, extraction) with Chromium/Playwright fallback; browser abstraction `lightpanda | chromium`; AGPL-3.0 and telemetry considerations; suggested role layout and first integration policy.
 
 ## Gaps and Security Audit (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md` ? **Implementation gaps and security issues**: Unfinished stubs (search specialist routing, engines, voice bridge, legacy agents); Doable Search contract/schema/proxy/E2E gaps; hardcoded credentials and REDACTED placeholders; base64-vs-AES-GCM note; recommended fixes and verification steps.
 
 ## Nemotron MYCA/AVANI Integration (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md` ? **Nemotron verification and rollout**: End-to-end test gates (canonical voice path, route unification, retrieval provenance, full-duplex); rollout phases 1?6; required doc/registry updates (SYSTEM_REGISTRY, API_CATALOG, MASTER_DOCUMENT_INDEX, voice topology); completion checklist.
 - `docs/NEMOTRON_DEPLOYMENT_TOPOLOGY_MAR14_2026.md` ? **Nemotron deployment topology**: Service placement across 187/188/189/190 and NAS model storage; Nemotron core/safety/speech/RAG/edge roles; network dependencies; summary table.
 - `docs/SPEECH_DUPLEX_MIGRATION_MAR14_2026.md` ? **Speech duplex migration**: Migration from Moshi/browser to backend-owned interruptible ASR/TTS while preserving PersonaPlex full duplex.
 - `docs/MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md` ? **MINDEX Nemotron RAG plan**: Embedding, rerank, and provenance for worldstate-grounded retrieval; alignment with WorldState contract.
 
 ## World View Search and Platform Cohesion (Mar 14, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md` ? **Doable Search Rollout complete**: MAS orchestrator, MINDEX answer schema, website proxy, widget registry, registration/training sinks, Nemotron persistence, e2e and backend tests; verification steps.
 - `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md` ? **Nemotron routing and persistence**: Role-based routing; same MINDEX storage pipeline for search and voice answers.
 - `docs/DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md` ? **Doable search and answer pipeline (master plan)**: Every search uses full MYCA context; ingest ? MINDEX ? instant second search; widget registry and missing widgets; training/ETL/memory; frontier LLM ? MINDEX; fix unanswerable search; Nemotron 3 alignment.
@@ -923,88 +380,34 @@
 - `docs/WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md` ? **Worldview validation and sequencing**: ETL/search/worldstate/grounding verification checklists; registry and API catalog updates; follow-on implementation sequencing.
 
 ## Production Jetson+MycoBrain Deploy (Mar 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` ? **Jetson+MycoBrain production deployment**: BOM for Mushroom 1/Hyphae 1/Gateway; wiring diagram (Side A/B, Jetson); flash procedure (Side A then Side B); Jetson install.sh and systemd; verification checklist (health, MAS registry, NLM, MINDEX FCI); file reference.
 
 ## On-Site AI (OpenClaw) Integration (Mar 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/ONSITE_AI_OPENCLAW_COMPLETE_MAR13_2026.md` ? **On-Site AI complete**: Device Manager ? On-Site AI ? OpenClaw; `openclaw_url` per device in network API; On-Site AI page and panel; Open OpenClaw / SSH shell; install script reference.
 
 ## MycoBrain Gateway Node Recognition (Mar 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md` ? **Gateway recognition implemented**: deterministic serial port allowlist (`MYCOBRAIN_ALLOWED_PORTS`), gateway-mode service startup, local gateway bring-up script, and verified MAS registration + command routing for COM7 gateway node.
 - `docs/MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md` ? **LoRa link validation plan**: gateway-only and gateway+peer MAS command-proxy test flow for validating local yard LoRa ingestion readiness.
 - `docs/MYCOBRAIN_LIVE_NETWORK_CONTROL_MAR07_2026.md` ? **MycoBrain live network control + COM5 phantom fix**: Why live mycosoft.com cannot control a board on the user's PC; phantom COM5 (virtual ACPI) excluded; `MYCOBRAIN_ALLOWED_PORTS=COM7`; restart steps.
 
 ## MYCA Voice + Chat Fixes (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_PRODUCTION_REQUIREMENTS_MAR02_2026.md` ? **MYCA production requirements**: MAS reachable, at least one LLM key (e.g. GROQ), optional MINDEX/n8n; VM layout; verification steps; behavior when all providers fail.
 
 ## Voice v9 (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/VOICE_V9_BASELINE_AUDIT_MAR02_2026.md` ? **Voice v9 baseline audit**: End-to-end live path; Bridge + Brain as single authority; duplicate MAS call risks; observability recommendations; v9 migration baseline.
 - `docs/VOICE_V9_DUPLEX_PERSONA_COMPLETE_MAR02_2026.md` ? **Voice v9 duplex and persona lock complete**: InterruptManager, PersonaLockService, REST/WebSocket endpoints; barge-in, persona validation, identity-safe TTS.
 - `docs/VOICE_V9_DEPLOYMENT_RUNTIME_MAR02_2026.md` ? **Voice v9 deployment and runtime**: Dev vs production topology; env contracts; startup order; rollout stages; v9 API endpoints.
 
 ## Code Unification (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CODE_UNIFICATION_STATUS_MAR11_2026.md` ? **Code unification status**: Pushed local Cursor work to main; open PRs blocked by conflicts/CI; what was unified, what remains, recommended next steps.
 
 ## CREP Integration Test Plan (Mar 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `WEBSITE/website/docs/CREP_INTEGRATION_TEST_PLAN_MAR10_2026.md` ? **CREP integration test plan**: Canonical plan for validating CREP integrations; P0 biodiversity/wildlife bubble selection (done); satellite imagery (MODIS, VIIRS, AIRS, Landsat, EONET), Shadowbroker, deck.gl filters, military filters, VIZ test features; test matrix and completion checklist.
 
 ## CREP Command Contract (Mar 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CREP_COMMAND_CONTRACT_MAR13_2026.md` ? **CREP command contract (canonical)**: Single schema for CREP map commands (flyTo, showLayer, setTimeCursor, etc.) from MAS to website; entrypoint, types, fields, request/response models; source files and validation requirements.
 
 ## CREP System Integration Audit (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md` ? **CREP system integration audit**: Surface-by-surface read/write/search/interact and Merkle/MINDEX grounding across MAS, WEBSITE, MINDEX, NatureOS; gap list; blocking mock/stub paths.
 - `docs/CREP_FIRST_EXECUTION_CHECKLIST_MAR11_2026.md` ? **CREP-first execution checklist**: Unified entities, local-first persistence, provenance grounding; repo/file ownership; CREP wave deliverables.
 - `docs/CORE_PLATFORM_HARDENING_PLAN_MAR11_2026.md` ? **Core platform hardening plan**: Simulated MINDEX router removal; Merkle?MINDEX mica ledger; investigation stub reconciliation; API contract normalization.
@@ -1012,59 +415,23 @@
 - `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` ? **Integration test matrix**: VM reachability smoke, regression guardrails (no mock/sample/stub), CREP/search/device/ancestry contract tests; execution matrix; implementation checklist.
 
 ## CREP Species Widgets & Viewport Loading (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md` ? **CREP species widgets & viewport loading complete**: Fungal data from map bounds only (fetchData no longer overwrites); bounds effect AbortController; FilterToggle layout stability; iNaturalist-style viewport loading.
 - `docs/CREP_SPECIES_ICONS_CLICKABLE_FIX_MAR11_2026.md` ? **CREP species icons clickable fix**: deck.gl overlay z-index/pointer-events; marker container above overlay; FungalMarker type=button; formatObs geometry.coordinates support.
 
 ## CREP Fungal Route Reliability (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `WEBSITE/website/docs/CREP_FUNGAL_ROUTE_RELIABILITY_MAR11_2026.md` ? **CREP fungal route reliability**: MINDEX API key, graceful degradation (200 with empty data on failure), fetchWithRetry for iNaturalist/GBIF (10s timeout, 2 retries), 1.5MB cache limit; test results; MINDEX=0 investigation notes.
 
 ## MYCA-Only Architecture (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_ONLY_ARCHITECTURE_COMPLETE_MAR09_2026.md` ? **MYCA-only architecture complete**: Ollama primary 99.9%; no frontier fallback for user chat; Merkle world root integration; device/world grounding; BRAIN intent memory via MAS.
 
 ## MICA Merkle Ledger (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md` ? **Merkleized cognition ledger integrated**: Event leaves, temporal/spatial/self/world/thought roots, BLAKE3+CBOR hashing; MAS API `/api/merkle/*`; MINDEX migration `0021_mica_merkle_ledger`; consciousness integration point documented.
 
 ## Full Integration Program (Mar 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md` ? **Canonical integration contracts**: Unified entities, investigation artifacts, red-team audit, operator tasks, agent payments, Jetson/MycoBrain edge telemetry. Phase 0 of Full Integration Master Program.
 - `docs/EDGE_UNIFICATION_COMPLETE_MAR10_2026.md` ? **Edge unification complete**: Jetson/MycoBrain runtime, telemetry, CREP presence, MYCA/AVANI interaction; GET /api/devices/crep for CREP UnifiedEntity format; Phase 7 of Full Integration Master Program.
 
 ## External Repo Integration (Mar 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md` ? **Phase 1 complete**: Label syncer, Uncodixfy rule, Turf bbox validation, CrepMapPreferencesPanel, Supabase CREP preferences API, MAS finance route + website proxy; test results; verification commands.
 - `docs/EXTERNAL_REPO_FEATURES_USAGE_AND_TESTING_MAR10_2026.md` ? **Feature usage & testing**: How each feature works; where to see/use it (CREP Map Preferences, fungal API, finance proxy, label syncer); step-by-step interaction flows; CREP and Uncodixfy UI rules; verification commands and test results.
 - `docs/EXTERNAL_REPO_SYSTEM_BOUNDARIES_MAR10_2026.md` ? **System boundaries and extension seams**: MAS, WEBSITE, MINDEX, MycoBrain, Mycorrhizae, NatureOS boundaries; VM layout; extension seams for external repo integration.
@@ -1073,52 +440,22 @@
 - `docs/EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md` ? **Gap alignment**: Cross-check against platform gaps; blocking rules; sequencing so new work strengthens architecture.
 
 ## Test-Voice / PersonaPlex (Mar 10?11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md` ? **TTS fallback for PersonaPlex**: Moshi does not support `0x02` text injection; Bridge uses edge-tts for TTS; dependencies, flow, troubleshooting.
 - `docs/CUDA_GRAPH_REENABLED_PERSONAPLEX_MAR10_2026.md` ? **CUDA graph re-enabled for PersonaPlex**: Required for real-time voice; `start_voice_system.py` and myca-voice-system.mdc updated to default `NO_CUDA_GRAPH=0`.
 - `docs/TEST_VOICE_LOCAL_FIX_MAR10_2026.md` ? **Test-voice local voice fix**: Bridge health non-blocking; diagnostics TCP fallback; local Moshi + PersonaPlex Bridge (8998/8999) with `NEXT_PUBLIC_USE_LOCAL_GPU=true`.
 
 ## MYCA Live Activity Panel (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_LIVE_ACTIVITY_PANEL_COMPLETE_MAR09_2026.md` ? **MYCA Live Activity Panel complete**: Activity log (newest first, consciousness entry), FlowDot enlargement, text size bumps, mobile collapsible height.
 
 ## Public AI Rollout (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `WEBSITE/website/docs/PUBLIC_AI_ROLLOUT_COMPLETE_MAR09_2026.md` ? **Public AI rollout complete**: New `/ai` overview; MYCA, AVANI, NLM as sole public AI products; unified nav; marketing rewrite; agentic CTAs to contact; docs hub; source of truth for public AI IA.
 
 ## CREP / iNaturalist / MINDEX (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md` ? **CREP iNaturalist?MINDEX ETL and local-first design**: Clone-on-first-display; iNaturalist bulk ETL; LOD (zoom-based clustering); local-first routing; MINDEX as primary, iNaturalist fallback then clone.
 - `WEBSITE/website/docs/PUBLIC_AI_INFORMATION_ARCHITECTURE_MAR09_2026.md` ? **Public AI IA**: Final routes, page roles, nav model.
 - `WEBSITE/website/docs/AGENTIC_CONVERSION_BRIDGE_MAR09_2026.md` ? **Agentic conversion bridge**: Future path to pricing, onboarding, API keys, paid agent access.
 
 ## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PR75_IMPLEMENTATION_PLAN_MAR09_2026.md` ? **PR75 implementation plan**: Deployment status, security remediation, plans, docs, frontend implementations; Guardian, Avani, Identity, Liquid Fungal APIs; Jetson hardware; Micah/MAS tool integration; multi-agent app flows; marketing pages.
 - `docs/PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md` ? **PR75 auth guards complete**: Guardian, Avani, Identity APIs now require scoped API keys on mutating endpoints; verification, migration script, scope reference.
 - `docs/JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md` ? **Jetson + MycoBrain hardware plan**: Mushroom 1 (AGX Orin 32GB) and Hyphae 1 (Orin Nano Super 8GB); ESP32-S3 MycoBrain, dual BME688, FCI, LoRa mesh.
@@ -1127,71 +464,29 @@
 - `docs/RECIPROCAL_TURING_PROTOCOL_MAR09_2026.md` ? **Reciprocal Turing identity integration**: Identity API, Mode Manager, Continuity Manager, honest uncertainty.
 
 ## Sandbox / Production Always-On (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/VM_POWER_OFF_FIX_MAR09_2026.md` ? **VM power-off fix**: Sandbox/C-Suite shutting down; Proxmox `onboot 1`, root-cause checklist, resource split (move C-Suite to separate host); fix steps; VM-to-host mapping.
 - `docs/SANDBOX_AND_PRODUCTION_ALWAYS_ON_MAR02_2026.md` ? **Why Sandbox was off and production prevention**: Root causes (VM not start-on-boot, tunnel not enabled at boot); checklist so Sandbox and any mycosoft.com production clone never stay off.
 - `docs/SANDBOX_UNREACHABLE_STATUS_MAR02_2026.md` ? **Sandbox unreachable status (resolved)**: 187 was off; when back on, deploy was run; link to always-on doc.
 
 ## Planning ? Ethics Context System (Mar 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md` ? **Completion + verification**: Checklist for testing and documenting; scope summary.
 - `docs/PLANNING_ETHICS_CONTEXT_SYSTEM_MAR03_2026.md` ? **Planning engine ? ethics context**: What context the planning engine supplies to the ethics system; simulations, training source material, ethics guidelines; document types (ethics updates, training capabilities, plans); epistemic alignment per Michele outline.
 - `docs/michele_alignment_debate_outline.docx.md` ? **Epistemic alignment debate outline**: Epistemic vs. safety alignment, source bias, model uncertainty, temporal/spatial reasoning; reference for planning?ethics epistemic discipline.
 
 ## Supabase Operational Backbone (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SUPABASE_OPERATIONAL_BACKBONE_COMPLETE_MAR07_2026.md` ? **Supabase backbone complete**: External ingest (Asana/Notion/GitHub), LLM usage ledger, ingest API, spreadsheet sync, n8n Ingest?Sync pipeline.
 
 ## Master Spreadsheet Automation (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md` ? **Master spreadsheet automation**: Inventory + hardware sync; n8n/Zapier/MYCA integration; config, API, enabling additional tabs.
 - `docs/SUPABASE_GOOGLE_SHEETS_AUTOMATION_MAR07_2026.md` ? **Supabase + Google Sheets full automation**: One-time GCP service account setup; credential options; run `_automate_supabase_and_sheets.py`; tabs without GID supported.
 
 ## CFO MCP Connector (Mar 8, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` ? **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery layer; CFO MCP server; Meridian adapter; C-Suite reporting upgrades; MYCA federation integration; dynamic finance agent discovery.
 
 ## C-Suite Unattended Install (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CSUITE_UNATTENDED_INSTALL_MAR11_2026.md` ? **C-Suite unattended Windows 10 install and clone**: COO golden image, autounattend.xml, build ISO, run install, clone CEO/CTO/CFO; workflow and troubleshooting.
 
 ## C-Suite OpenClaw VM Rollout (Mar 7?8, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CTO_VM194_ROLLOUT_VERIFICATION_MAR08_2026.md` ? **CTO VM 194 rollout verification**: Acceptance checklist for provision, bootstrap, runtime health, Forge bridge, watchdogs, MYCA visibility; use before implementation and for fresh-clone rebuilds.
 - `docs/CSUITE_WINDOWS_INSTALL_FIX_MAR07_2026.md` ? **C-Suite Windows install fix**: scsi0?sata0 so installer sees disk; "Upgrade isn't available" / Custom shows no disk fixed; `infra/csuite/fix_vm_disk_sata.py --use-ssh`.
 - `docs/CSUITE_WINDOWS10_FALLBACK_MAR07_2026.md` ? **Windows 10 fallback**: Proxmox host may not support Win11 (UEFI/TPM); config `windows_version: "10"` or `"11"`; compatibility check script; provisioning and fix script use correct ISO/ostype.
@@ -1206,30 +501,12 @@
 - `config/csuite_role_manifests.yaml` ? **Role manifests**: CEO (Atlas/MYCAOS), CFO (Meridian/Perplexity), CTO (Forge/Cursor), COO (Nexus/Claude Cowork).
 
 ## MycoBrain Sandbox Always-On (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_SANDBOX_ALWAYS_ON_COMPLETE_MAR07_2026.md` ? **MycoBrain Sandbox always-on complete**: systemd infinite restarts, 1-min watchdog, ensure script in deploy pipeline; service on 192.168.0.187:8003; Docker `host.docker.internal` for website container.
 
 ## MycoBrain Firmware Baseline (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_FIRMWARE_BASELINE_REBASELINE_MAR07_2026.md` ? **Rebaseline**: DeviceManager/DualMode = operational truth; SideA/SideB = target split; MycoBrain_Working = recovery-only; ScienceComms = experimental reference.
 
 ## MycoBrain Rail Unification (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md` ? **Completion**: Heartbeat canonical, capability manifest, FCI bridge, Jetson path, Side B transport.
 - `docs/MYCOBRAIN_CAPABILITY_MANIFEST_MAR07_2026.md` ? **Capability manifest**: Role?sensors/capabilities contract; firmware?service?MAS?website.
 - `docs/FCI_MYCORRHIZAE_BRIDGE_DESIGN_MAR07_2026.md` ? **FCI/Mycorrhizae bridge**: Single device_id for MycoBrain + FCI; MAS fci-summary endpoint.
@@ -1245,22 +522,10 @@
 - `docs/JETSON_FIRMWARE_IMPLEMENTATION_GUIDE_MAR07_2026.md` ? **Implementation guide**: New SideA/SideB MDP firmware targets, on-device operator service, gateway router service, run/flash instructions.
 
 ## MycoBrain Supabase Telemetry (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_SUPABASE_TELEMETRY_ARCHITECTURE_MAR07_2026.md` ? **MycoBrain ? Supabase telemetry**: Data flow (device ? MycoBrain ? Ingest API ? Supabase); Device Manager + MINDEX; why Supabase over SQLite; env vars `TELEMETRY_INGEST_URL`, `TELEMETRY_INGEST_API_KEY`; verification steps.
 - `docs/DEVICE_UI_VERIFICATION_COMPLETE_MAR07_2026.md` ? **Device UI verification**: Device Network, Device Manager, controls, comms, I2C peripherals, firmware ? all verified working in UI; APIs and fallbacks in place; hardware E2E pending.
 
 ## BOM / Device Components (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_JETSON_GATEWAY_BUILD_PLAN_MAR07_2026.md` ? **MycoBrain?Jetson?MYCA gateway build plan**: Tier 1 Mushroom 1 (Orin NX Super), Tier 2 Hyphae 1 (Waveshare Nano/Xavier NX), Tier 3 Gateway (Nano B01); BOM, firmware, connections, Big Device 12V solar power; step-by-step build instructions.
 - `docs/COMPONENT_NAMES_STAFF_GUIDE_MAR07_2026.md` ? **Staff component names**: Short, clear names for staff; which components go into which device (Mushroom 1, SporeBase, ALARM, MycoNODE, Hypha 1); ID?name map; naming rules; gaps list.
 - `docs/DEVICE_PRODUCTS_AND_MYCOFORGE_SYNC_MAR07_2026.md` ? **MycoForge sync**: Canonical product registry (`device-products.ts`) ? Supabase `products`; seed script, PreOrderModal productId, BOM/components flow.
@@ -1271,32 +536,14 @@
 - `scripts/sync_components_to_google_sheets.py` ? **Script**: Fetches components from Supabase, writes CSV, optionally pushes to master sheet; use `--push` with credentials.
 
 ## Gap Plan Completion (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` ? **Gap plan complete**: Critical, High, Quick Wins, Medium in-scope items verified or done; NatureOS summary API added; deferred items documented.
 - `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` ? **Large items scaffolding**: Design stubs for Jobs 18?23 (control plane, worldview digest, unified front door, NatureOS bridge, MycoBrain awareness, workflow visibility).
 - `docs/GAP_PLAN_CHANGES_LOG_MAR07_2026.md` ? **Gap plan changes log**: Audit trail of all code and doc changes during gap execution; WEBSITE + MAS commits, new/modified files, verification checks, build regression.
 
 ## MYCA Support Upgrade Implementation (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_SUPPORT_UPGRADE_IMPLEMENTATION_COMPLETE_MAR07_2026.md` ? **Implementation complete**: 10 items (5 quick wins, 5 medium); MYCA state widget, Morgan oversight panel, EP summary, NatureOS summary, page context, docs.
 
 ## MYCA Support Upgrade Docs (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MINDEX_A2A_AGENT_FOR_MYCA_MAR07_2026.md` ? **A2A agent for MYCA**: MINDEX A2A delegation path for search/stats; MAS MINDEXBridge usage.
 - `docs/COWORK_VS_MYCA_SCOPE_MAR07_2026.md` ? **Cowork vs MYCA scope**: When to use each; handoff pattern; unified front door.
 - `docs/MYCOBRAIN_TO_MAS_FLOW_MAR07_2026.md` ? **MycoBrain?MAS flow**: Heartbeat, device registry, MYCA query path.
@@ -1304,364 +551,130 @@
 - `docs/MYCORRHIZAE_MYCA_TELEMETRY_BRIDGE_MAR07_2026.md` ? **Mycorrhizae?MYCA bridge**: Design for FCI telemetry injection (future).
 
 ## MYCA Support Upgrade Audit (Mar 7, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` ? **Cross-system upgrade audit**: Website, MINDEX, NatureOS, MycoBrain, external AI/cowork, automation. Prioritized plan (quick wins, medium, large) for MYCA?Morgan interaction, context, visibility, supervise/steer/trust.
 - `docs/NEXT_JOBS_FROM_GAPS_MAR07_2026.md` ? **Next jobs from gaps**: Prioritized job list (Critical ? High ? Quick wins ? Medium ? Large) derived from platform status, upgrade audit, system gaps. Use for sprint planning.
 
 ## MYCA Full Omnichannel Execution (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` ? **Full execution complete**: code changes, test fixes, full suite passing, GitHub push, VM 191 deploy, VM 188 refresh, health verification, and remaining known issues.
 
 ## MYCA Bounded Personal Agency (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md` ? **Phase 6 complete**: personal-agency and autonomous-self modules wired into the daemon with enable flags and queue-budget gating.
 
 ## MYCA Agent and Tool Federation (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_AGENT_AND_TOOL_FEDERATION_COMPLETE_MAR06_2026.md` ? **Phase 5 complete**: first-class runtime task routes for GitHub, Asana, NatureOS, and search plus improved system-level task federation.
 
 ## MYCA Omnichannel Dialogue Bus (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_OMNICHANNEL_DIALOGUE_BUS_COMPLETE_MAR06_2026.md` ? **Phase 4 complete**: WhatsApp polling in the live comms hub, workspace inbox contract fixed, broader channel defaults, and better omnichannel status/env parity.
 
 ## MYCA Staff Identity and Memory (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_STAFF_IDENTITY_AND_MEMORY_COMPLETE_MAR06_2026.md` ? **Phase 3 complete**: canonical staff registry, shared sender resolution, person-scoped memory, staff role context injection, workspace inbox contract, and stronger non-Morgan reply routing.
 
 ## MYCA Full-System Runtime Promotion (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_FULL_SYSTEM_RUNTIME_PROMOTION_COMPLETE_MAR06_2026.md` ? **Phase 2 complete**: NatureOS, world model, Presence, NLM, unified search, and broader runtime context promoted into the active VM 191 MYCA loop.
 
 ## MYCA Runtime Hardening (Mar 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md` ? **Phase 1 complete**: gateway auth, shell/skill gating, normalized env contract, canonical staff registry helper, workspace inbox contract, deploy script hardening, targeted regression suite passing.
 
 ## BoostVC Compliance Checklist (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/BOOSTVC_COMPLIANCE_CHECKLIST_MAR_2026.md` ? **BoostVC compliance**: Annual operating plan, board materials, material business changes, books and records. Config: `config/board_meetings.yaml`, `docs/board/`.
 
 ## MYCA OpenWork Integration (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_OPENWORK_INTEGRATION_MAR05_2026.md` ? **Phases 1?5 complete**: OpenWork orchestrator, CDP browser, skills manager, webhooks, n8n bridge, 3 workflows, Ollama fallback, deploy script. Use for MYCA VM 191 integration.
 
 ## MYCA Fallback-Only Fix (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_FALLBACK_FIX_MAR05_2026.md` ? **Fix**: OLLAMA_BASE_URL default to MAS VM (188:11434); env vars for real AI; troubleshooting when MYCA shows only myca-local-fallback.
 
 ## Request Flow Architecture (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` ? **Request flows**: Browser ? Cloudflare ? VMs; Website ? MAS/MINDEX; MycoBrain heartbeat; VM layout summary. Use for deployment and debugging.
 
 ## Organizational Structure Update (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/ORGANIZATIONAL_STRUCTURE_UPDATE_COMPLETE_MAR05_2026.md` ? **Roles corrected**: Morgan = CEO/CTO/COO; RJ = Board Member + MYCA 2nd Key; Garret = Business Development. Memory, CLAUDE.md, website team-data updated.
 
 ## Grounding Production Enable (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GROUNDING_PRODUCTION_ENABLE_MAR05_2026.md` ? **Enable Grounded Cognition**: `MYCA_GROUNDED_COGNITION=1`, `STATE_SERVICE_URL`, StateService deploy, MINDEX grounding endpoints, Grounding Dashboard at `/dashboard/grounding`.
 
 ## Proxmox and CREP Restore (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PROXMOX_CREP_RESTORE_MAR05_2026.md` ? **Proxmox fix and CREP restore**: `fix_proxmox_firewall.sh`, `start_crep_collectors.sh`, Proxmox check in autostart-healthcheck, CREP in MAS `/health`. Use for VM 188 CREP deployment.
 
 ## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` ? **Phase 0 complete**: Memory injection, MAS memory API, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly pipeline in llm_brain. MYCA OS now grounded in all platform systems before computer-use.
 
 ## MYCA Living Employee Phases 1?5 (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_LIVING_EMPLOYEE_PHASES_1_5_COMPLETE_MAR05_2026.md` ? **Phases 1?5 complete**: Gateway (8100), task/decision persistence, desktop tools, skills manager, 30-min Discord check-in, deploy_myca_191_v2.py, myca_cli.py.
 
 ## MYCA Platform Status and Gaps (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_PLATFORM_STATUS_AND_GAPS_MAR05_2026.md` ? **Consolidated status report**: Single source of truth for what's done (infrastructure, plans, fixes), what's not (VM 191 SSH blocker, MYCA channels), user inputs needed (Slack token, Discord, Asana, Signal, WhatsApp), and next steps. Use for planning, handoffs, and quick reference.
 - `docs/MYCA_VM191_FULL_CAPABILITY_STATUS_MAR02_2026.md` ? **VM 191 capability checklist**: Direct answers to Signal/WhatsApp/Discord, group chats, brain/memory, task-on-PC, periodic updates; what's working vs what needs setup.
 
 ## MYCA E2E Usability Test (Mar 5, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_E2E_USABILITY_TEST_COMPLETE_MAR05_2026.md` ? **Pipeline USABLE**: 10/10 tests passed. You can ask MYCA to do work on her PC (VM 191). Workspace API at 191:8100, /workspace/think, MAS chat, agents registry. Run `python scripts/_test_myca_e2e.py` to verify.
 
 ## GitHub MCP Token Setup (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GITHUB_MCP_TOKEN_SETUP_MAR02_2026.md` ? **GitHub MCP for issue comments**: Switched to @modelcontextprotocol/server-github; token with repo scope for add_issue_comment; config at ~/.cursor/mcp.json.
 
 ## MINDEX Health Check Fix (Mar 2, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MINDEX_HEALTH_CHECK_FIX_MAR02_2026.md` ? **MINDEX health fix**: MYCA no longer reports "MINDEX databases unreachable" when Redis/Postgres/Qdrant are not cross-VM reachable. Healthy = MINDEX API reachable only.
 
 ## Signal Spam Fix (Mar 4, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SIGNAL_SPAM_FIX_MAR04_2026.md` ? **Signal spam fix**: MYCA OS heartbeat no longer sends critical health alerts to Signal (was every 30s). Signal is for conversation only. Health issues logged only.
 
 ## MYCA Ethics Training System (Mar 4, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` ? **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration, website at `/ethics-training/*`.
 
 ## Perplexity Audit Response (Mar 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PERPLEXITY_AUDIT_RESPONSE_MAR03_2026.md` ? **Audit correction**: Corrects false claims about health layer; documents actual health, watchdog, heartbeat, graceful shutdown infrastructure.
 
 ## MYCA Ethics Philosophy Baseline (Mar 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` ? **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, System Constitution 9?12, 4 new instincts, n8n ethics workflow, orchestrator + deliberation integration.
 
 ## MYCA N8N Autonomy (Mar 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_N8N_AUTONOMY_COMPLETE_MAR03_2026.md` ? **Plan complete**: All 7 phases ? platform connectors (Discord, WhatsApp, Signal), omnichannel API, ingestion/orchestrator/response workflows, n8n bridge, loop mitigation, MYCA VM docker-compose and provision script. Deploy when VM 191 reachable.
 
 ## MYCA Desktop Workstation (Mar 3?4, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` ? **Implementation complete**: XFCE desktop, noVNC (6080), XRDP (3389), Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI Python libs. Access: http://192.168.0.191:6080/vnc.html. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py`.
 - `docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md` ? **MYCA self-provisioning**: Steps for MYCA to fully operate VM 191 (Claude Code official, Cursor admin, MAS/MINDEX env, gh auth). Playbook copied to `~/myca-workspace/PLAYBOOK.md` on 191. Phase 8 of install script deploys it.
 
 ## Cowork VM Continuity and Watchdog (Mar 4, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/COWORK_VM_CONTINUITY_MAR04_2026.md` ? **Always-on Cowork VM**: Watchdog script, scheduled task `Mycosoft-CoworkVMWatchdog` (every 2 min), auto-start and recovery for `CoworkVMService`. Run `scripts/install-cowork-vm-watchdog.ps1` elevated. Use when automation stops or VM fails.
 
 ## Claude Cowork VM Windows Troubleshooting (Mar 3?6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CLAUDE_COWORK_FAILED_TO_OPEN_SOCKET_FIX_MAR06_2026.md` ? **FailedToOpenSocket fix**: Cowork VM uses DNS from disconnected adapter; diagnostic commands; Option A (align DNS), Option B (disable adapters + SharedAccess + reboot), Option C (Repair/Reset); verify before moving to VM.
 - `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` ? **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.
 
 ## C-Suite COO Golden Setup (Mar 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CSUITE_COO_GOLDEN_SETUP_MAR11_2026.md` ? **C-Suite golden image**: OpenClaw bootstrap, Claude Cowork (COO), Perplexity (CFO), Cursor (CTO), MycaOS (CEO); remote bootstrap via WinRM or manual RDP; `setup_csuite_golden_full.ps1`, `set_csuite_role.ps1` for clones.
 
 ## Mycosoft SSH MCP (Mar 3, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` ? **SSH MCP**: Secure VM access for Claude Code, Cursor, Claude Cowork ? ssh_exec, ssh_upload, ssh_download, ssh_status; host aliases sandbox/mas/mindex/gpu/myca; setup, credentials, adding future VMs.
 
 ## Idea Evolution Status (Feb 26, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/IDEA_STATUS_TRACKER_FEB26_2026.md` ? **Idea status tracker**: Living status overrides and cross-repo mapping for the 834-entry ideas catalog.
 
 ## Platform Upgrade Audit (Feb 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PLATFORM_UPGRADE_AUDIT_FEB27_2026.md` ? **Upgrade audit**: Node outdated inventory, ikonate lockfile SSH resolution, Node engine mismatch, VM apt backlog, Docker versions and running containers.
 - `docs/PLATFORM_UPGRADE_COMPLETE_FEB28_2026.md` ? **Upgrade execution complete**: Tier 1 deps, Node 20 Docker base, VM updates, sandbox rebuild, Cloudflare purge, smoke tests.
 
 ## MYCA Public Alpha Monday Launch (Feb 28, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_PUBLIC_ALPHA_MONDAY_LAUNCH_COMPLETE_FEB28_2026.md` ? **Plan complete**: Telemetry tool demo loop and end-to-end voice test readiness with local Moshi/Bridge verification.
 
 ## System Gaps Execution Complete (Feb 28, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` ? **Execution complete**: Memory layers (procedural/episodic/semantic/graph), scientific PostgreSQL APIs, financial/corporate/research/infrastructure stub replacement, and SporeBase 501 flow removal.
 - `docs/WORK_ITEMIZATION_AND_PUSH_PLAN_FEB28_2026.md` ? **Itemization**: Full cross-repo change list, plan mapping, and push sequence before deploying.
 
 ## Tron GitHub Visualization Complete (Feb 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `../WEBSITE/website/docs/TRON_GITHUB_VISUALIZATION_COMPLETE_FEB27_2026.md` ? **Tron demo complete**: 2D canvas GitHub activity visualization (actions, deployments, repos, events), no interaction, no mock data; integrated into `/demo/viz-test`.
 - `../WEBSITE/website/docs/TECHNOLOGY_TEAM_TRON_CODE_STREAM_UPDATE_FEB27_2026.md` ? **Technology team update**: Tron Code Stream embedded in the GitHub Activity Visualization section on `/about/technology-team`.
 
 ## Agent Event Bus (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md` ? **WebSocket Agent Bus**: Architecture, endpoints, event schema, BaseAgent mixin, MCP progress, feature flags.
 - `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md` ? **Migration guide**: Enabling flags, migrating from HTTP polling, rollback, rollout strategy.
 - `docs/WEBSOCKET_AGENT_BUS_VERIFICATION_REPORT_FEB17_2026.md` ? **Verification report**: MAS health, ws-handshake, browser pages, integration test, Cloudflare wss; enable MYCA_AGENT_BUS_ENABLED for agent-bus.
 
 ## Grounded Cognition Full Sprint (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` ? **Full sprint complete**: All 18 tasks ? MINDEX migrations, Spatial/Temporal/Intention/Reflection services, EP storage, reflection API, ThoughtObjectsPanel, ExperiencePacketView, grounding toggle, agent wrappers, active perception TODOs. Deployment steps and verification checklist.
 - `docs/SESSION_GROUNDED_COGNITION_AND_DEPLOY_FEB17_2026.md` ? **Session doc**: Grounded Cognition sprint + deployment ? summary, VM checklist, key files, related docs.
 
 ## Session Summary ? MYCA Worldview Integration (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SESSION_SUMMARY_MYCA_WORLDVIEW_INTEGRATION_FEB17_2026.md` ? **Today's work**: Consciousness API extended with nlm/earthlive/presence; LiveDemo WorldState interface; defensive world endpoint; integration tests; MAS deploy. Verification results and commits.
 - `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md` ? **Integration audit**: NLM API, EarthLIVE, consciousness wiring; flows for MYCA page, Search, Voice, Chat.
 - `docs/MYCA_WORLDVIEW_INTEGRATION_TEST_FEB17_2026.md` ? **Test plan**: Manual steps, test matrix, deployment requirement, automated script.
@@ -1672,58 +685,22 @@
 - `docs/CALDIGIT_DOCK_USB_DIAGNOSTIC_FEB24_2026.md` ? **CalDigit dock USB diagnostic** (Feb 24).
 
 ## MYCA Autonomous Self-Healing (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_AUTONOMOUS_SELF_HEALING_COMPLETE_FEB17_2026.md` ? **Autonomous self-healing complete**: ErrorTriageService, consciousness integration, n8n autonomous-fix pipeline, MCP submit_coding_task, Deploy API, error-fixer agent, proactive_error_scanner, workflow_dispatch deploy. MYCA detects/fixes errors, dispatches to Cursor, triggers deploys.
 
 ## Protocol Unification Complete (Feb 23, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md` ? **Protocol unification complete**: MDP v1, MMP v1, device gateway, MINDEX persistence, WebSocket transport, Python client SDK, 41 tests, spec docs. Pushed to MycosoftLabs/Mycorrhizae. MAS device commands use MycorrhizaeClient.
 
 ## Answers Widget and Activity Stream (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/ANSWERS_WIDGET_AND_ACTIVITY_STREAM_FEB10_2026.md` ? **Answers overhaul**: Merge AIWidget + MYCAChatPanel into Answers; left panel ? Activity Stream; rich markdown; MYCA Answers persona. See docs/myca/atomic/MYCA_ANSWERS_PERSONA_FEB10_2026.md.
 
 ## MYCA Live Presence and Session Complete (Feb 24, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md` ? **Session summary**: MYCA Live Presence integration (Supabase migration, website routes, MAS PresenceSensor, consciousness injection), testing, fixes (orchestrator-chat, gitignore), GitHub workflow scope resolution, pushes to MAS and website. Verification checklist and related docs.
 - `docs/myca/atomic/MYCA_PRESENCE.md` ? **Atomic doc**: Live presence, sessions, online status, API usage; website hooks/routes, MAS PresenceSensor, Supabase tables, env vars.
 
 ## Network Monitor Agent (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NETWORK_MONITOR_AGENT_FEB12_2026.md` ? **Network diagnostics**: NetworkMonitorAgent, DNS anomaly detection (multi-resolver), topology (UniFi), latency, connectivity, unauthorized clients. MAS `/api/network/*`, Website `/api/security/network-diagnostics`. Subagent: @network-monitor.
 
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` ? **Task completion**: Petridishsim repo foundation, chemical engine, segmentation + morphology utilities, calibration optimizer, MAS petri simulation API, and website UI overlays/panels. Includes verification steps and follow-up notes.
 - `docs/PETRI_DISH_SIM_DEPLOYMENT_STATUS_FEB20_2026.md` ? **Deployment status**: GitHub pushes, MAS VM deploy completed, website VM deploy blocked by repeated Docker build loops, petridishsim target pending.
 - `docs/PETRI_SIMULATION_MINDEX_SCHEMA_FEB20_2026.md` ? **MINDEX schema**: Petri simulation sessions, metrics, calibration, outcomes; migration 0015; NLM integration.
@@ -1731,155 +708,59 @@
 - `docs/PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md` ? **Deployment handoff**: Ready for deploy agent; website (187), MAS (188), MINDEX migration (189); steps, verification, rollback.
 
 ## NatureOS Tools Integration (Feb 21, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NATUREOS_TOOLS_INTEGRATION_TASK_COMPLETE_FEB21_2026.md` ? **Task completion**: NatureOS tool embedding, new tool pages, navigation updates, MycoBrain stream connector, NatureOS search indexing helper, and verification checklist.
 
 ## Superapp Architecture and Unification (Feb 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md` ? **Superapp architecture and unification plan**: Full analysis of all 50+ app directories, 45 component namespaces, duplicate pages (devices/devices2, defense/defense2, myca/myca-ai/test-voice), and siloed AI/data surfaces. 13 unification opportunities with impact/effort ratings, prioritized 10-item implementation plan, agent responsibility matrix, and accessibility/interactivity improvements. Key: unified nav shell, persistent MYCA panel, universal Cmd+K search, WebSocket real-time layer, Agent Studio, scientific?NatureOS migration. Use when planning platform convergence, UX simplification, or cross-system integration.
 
 ## NatureOS Full Platform (Feb 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` ? **NatureOS Full Platform Plan complete**: All phases implemented ? controllers, services, FungaService stubs (NatureOS); lab-tools, data-explorer, reports, biotech pages (Website); analytics/lab/export/status API routes; MAS compatibility routes (devices/sensor-data/commands). Use for verification and follow-up.
 
 ## NatureOS Upgrade Prep (Feb 19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NATUREOS_UPGRADE_PREP_FEB19_2026.md` ? **NatureOS dashboard fix + upgrade prep**: Fix for `TypeError: Failed to fetch` in MINDEX fetch (Promise.allSettled, base URL, timeout). MINDEX observations route URL corrected (VM 189:8000). Full NatureOS doc index, upgrade roadmap (API compatibility, mock removal, PersonaPlex, real-time), env vars, test commands. Use when upgrading NatureOS or fixing dashboard fetch errors.
 
 ## Website UI ? Neuromorphic Test Page (Feb 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `../WEBSITE/website/docs/NEUROMORPHIC_UI_TEST_PAGE_FEB18_2026.md` ? **Neuromorphic UI test page**: Route `/ui/neuromorphic`; full component library (buttons, forms, feedback, data, advanced) with accessibility and scoped CSS. Test page only; rollout to specific pages/apps after validation.
 - `../WEBSITE/website/docs/DEFENSE_NEUROMORPHIC_UPDATE_FEB18_2026.md` ? **Defense neuromorphic update**: Defense 2 replaces main defense page; Fusarium and OEI Capabilities converted to neuromorphic; UNCLASS removed; layout files for metadata.
 
 ## External Services ? MCP, Integrations, Env (Feb 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/EXTERNAL_SERVICES_MCP_AND_ENV_FEB18_2026.md` ? **NCBI, ChemSpider, Asana, Notion, Slack**: Env var names, `.mcp.json` wiring, MAS integration clients (NotionClient, NCBIClient, ChemSpiderClient, AsanaClient, SlackClient), which agents use them, and how they interact with MYCA. Set real values in `.env` only; never commit secrets.
 
 ## MYCA Documentation (Living)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 
 - `docs/myca/MYCA_DOC_INDEX.md` ? **MYCA doc index** (living): single entry point for all MYCA docs; links to 15 atomic docs and large composite docs
 - `docs/myca/MYCA_DOC_ORGANIZED_LIST.md` ? Large vs atomic doc lists (living)
 
 ## MYCA Asana Handoff (Feb 23, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_ASANA_HANDOFF_REPORT_FEB23_2026.md` ? **Asana handoff**: Full MYCA report, architecture, file inventory, status, next tasks. Copy-pastable into Claude CoWorker to populate Asana automatically.
 
 ## MYCA Opposable Thumb ? Phase 0 & 1 (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_THUMB_PHASE0_PHASE1_COMPLETE_FEB17_2026.md` ? **Thumb Phase 0?1 complete**: Telemetry pipeline (MycoBrain?MINDEX), telemetry query (consciousness API), drift detector, continuous learner, temporal pattern store. Verification and remaining phases.
 - `docs/MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md` ? **Thumb Phase 2?5 complete**: Ensemble controller + finger registry + truth arbitrator, A2A outbound federation adapters, telemetry integrity/provenance API, governance module/API, constitution extension for all-organisms stakeholders.
 - `docs/MYCA_THUMB_ALL_PHASES_DOCUMENT_SUMMARY_FEB23_2026.md` ? **All-phases summary index**: consolidated list of all Thumb phase completion docs (Phase 0 through Phase 5).
 
 ## Grounded Cognition V0 (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` ? **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGate, ThoughtObjects with evidence, pre-LLM enforcement, spatial/temporal stubs. Enable with `MYCA_GROUNDED_COGNITION=1`.
 - `docs/MYCA_GROUNDED_COGNITION_INTEGRATION_COMPLETE_FEB17_2026.md` ? **Integration complete**: Error sanitization, grounding API, error triage API, GroundingStatusBadge, LiveActivityPanel, MYCAContext grounding state, website proxy routes, integration tests. Manual: MYCA_GROUNDED_COGNITION=1 on MAS VM, LLM API keys.
 - `docs/MYCA_GROUNDED_COGNITION_PHASES_2_3_4_SPRINT_PLAN_FEB17_2026.md` ? **Phases 2?4 sprint plan**: Overnight execution to complete SpatialService, TemporalService, NLM integration, Brain Cortex, IntentionService, FingerOrchestrator, ReflectionService by morning. Hour-by-hour tasks, superuser first-conversation critical path.
 
 ## MAS Consciousness and Orchestrator Routing (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MAS_LLM_KEYS_AND_ORCHESTRATOR_ROUTING_FEB17_2026.md` ? **Why orchestrator/consciousness/agents aren't used**: MAS container needs GEMINI/ANTHROPIC/OPENAI keys; fast path vs complex triggers; data-aware fallback (MINDEX injection when consciousness fails). How to enable full consciousness.
 
 ## MYCA Ecosystem Unification (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md` ? **Unification complete**: A2A/WebMCP/UCP, Exa, Metabase LLM, consciousness search, NLQ parse/execute, intention persistence (Redis), NatureOS MYCA routing, protocol rules. Verification checklist and data flow.
 
 ## Protocol Stack Integration (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_PROTOCOL_STACK_INTEGRATION_PLAN_FEB17_2026.md` ? **Plan**: A2A + MCP/WebMCP + UCP protocol-layer upgrade across MAS + website, including A2A server/client, WebMCP tools, UCP commerce agent, security rules, and tests.
 - `docs/PROTOCOL_ROLLOUT_RUNBOOK_FEB17_2026.md` ? **Operational runbook**: Feature flags (MYCA_A2A_ENABLED, MYCA_WEBMCP_ENABLED, MYCA_UCP_ENABLED), protocol telemetry, staged rollout (local ? sandbox ? MAS VM ? website), quick checks, troubleshooting.
 
 ## VM Layout (Four Nodes)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/VM_LAYOUT_FOUR_VMS_FEB09_2026.md` ? **Canonical four-VM layout**: Sandbox 187, MAS 188, MINDEX 189, GPU node 190; each system has its own VM. Reference for rules and connectivity.
 
 ## MycoBrain COM7 + Sandbox Cohesion (Feb 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/COM7_SANDBOX_COHESION_VERIFICATION_FEB18_2026.md` ? **Board on desk (COM7) on sandbox and local**: Heartbeat to MAS, firewall, test script `scripts/test_mycobrain_com7_cohesion.py`, env and troubleshooting. Use when getting the desk board visible and controllable from both local dev and sandbox.
 
 ## Sandbox Live Testing Prep (Feb 18?19, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DEPLOY_ALL_THREE_VMS_FEB19_2026.md` ? **Deploy all three VMs**: Single checklist for Website (187), MAS (188), MINDEX (189); credentials, automated/manual steps, verification. For deploy agent.
 - `docs/DEPLOYMENT_READINESS_CHECK_FEB19_2026.md` ? **Deployment readiness check**: Pre-deploy verification for handoff to deploy agent. Git status (website, MAS), build status, deploy checklist, credentials, included work (mobile, security). Do not deploy from this agent; use for readiness only.
 - `docs/DEPLOYMENT_AGENT_HANDOFF_FEB18_2026.md` ? **Deployment agent handoff (for another agent)**: Full instructions for deploying website to Sandbox: what's being deployed, prerequisites, VM layout, automated + manual commands, verification, troubleshooting. Use when handing off to deploy-pipeline or deployer agent.
@@ -1892,90 +773,36 @@
 - `docs/MYCA_WIDGET_SANDBOX_HANDOFF_FEB10_2026.md` ? **Handoff summary**: Push status (website pushed, MAS pending), deploy agent instructions, VM layout. Quick reference for deployment.
 
 ## n8n Workflow Sync and MYCA Registry (Feb 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/AUTONOMOUS_WORKFLOW_SYSTEM_FEB18_2026.md` ? **Autonomous n8n workflow system**: N8NWorkflowAgent (real implementation), WorkflowGeneratorAgent integration, WorkflowAutoMonitor (health/drift/auto-sync), voice run_workflow, LLM execute_workflow and generate_workflow tools, NLM workflow bridge, workflow outcome tracking (learning feedback), GET /workflows/performance, n8n-autonomous agent.
 - `docs/N8N_WORKFLOW_SYNC_AND_REGISTRY_FEB18_2026.md` ? **n8n local + cloud forever synced**: Repo `n8n/workflows/*.json` ? sync-both to local and cloud; MYCA full registry and full CRUD via `/api/workflows/*`; rule `.cursor/rules/n8n-management.mdc`; agents n8n-workflow, n8n-ops, n8n-workflow-sync, n8n-autonomous.
 
 ## Work Summary (Feb 15-18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/WORK_SUMMARY_FEB15_18_2026.md` ? **Comprehensive work summary**: All work completed Feb 15-18 across MAS, Website, MINDEX repos. New agents (crep-agent, myca-voice, mycobrain-ops, search-engineer), new rules (OOM prevention, voice, CREP, subagent invocation), consciousness/memory/voice updates, Docker management system, CI/CD workflows. Commit and deployment plan included.
 
 ## MYCA Widget AI Integration (Feb 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_WIDGET_AI_INTEGRATION_FEB11_2026.md` ? **MYCA widget fixed**: Search AI now uses MYCA Consciousness + Brain first; never "No AI results"; integrated with Intent Engine, persistent memory, local knowledge base fallback.
 - `../WEBSITE/website/docs/MYCA_WIDGET_TEST_CASES_FEB10_2026.md` ? **MYCA widget test cases**: Full regression checklist for AI widget + left panel; text and voice; math, fungi, documents, locations; all voice commands and search operators.
 
 ## Search System & Search Engineer Agent (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SEARCH_SUBAGENT_MASTER_FEB10_2026.md` ? **Search sub-agent master**: Complete reference for search-engineer ? work done/not done, tools, interfaces, plans, deployment (dev?sandbox?prod), user interactions, MINDEX/MYCA/NLM integrations, Mycosoft apps. Agent: `.cursor/agents/search-engineer.md`.
 - `docs/SEARCH_SYSTEM_STATUS_FEB10_2026.md` ? **Search status**: Fluid Search architecture, MINDEX/MYCA/NLM integrations, completed work, remaining tasks. Use when building or fixing search, widgets, Earth portals, compound?species, genetics, empty widgets, or deploying to sandbox/production.
 
 ## Auto-Apply Analyzer Fixes (Feb 09, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` ? **Linter and analyzer fixes auto-applied**: `editor.codeActionsOnSave` (ESLint, source.fixAll), `editor.formatOnSave`, bulk fix via terminal (npm run lint --fix, make fmt), code-auditor ? @stub-implementer workflow for approved fixes. Settings added to `.cursor/settings.json`.
 
 ## Cursor OOM Prevention (Feb 18, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/OOM_PREVENTION_FEB18_2026.md` ? **Prevent Cursor OOM crashes**: Workspace settings (files/search/watcher exclude, TypeScript 2GB cap), run dev server and GPU from external terminal only, cleanup before opening Cursor, optional .cursorignore per repo. Rule: `.cursor/rules/oom-prevention.mdc`.
 
 ## MYCA Voice Application Handoff (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` ? **Handoff for another agent**: How to apply the MYCA Self-Improvement System (constitution, skill permissions, tool enforcement, event ledger, evals, CI) to PersonaPlex voice, M-Y-C-A voice, and the test-voice page. Includes touchpoints (bridge, voice orchestrator, brain API, test-voice page), voice skill PERMISSIONS.json, wiring to tool_pipeline, evals, and CI.
 - `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md` ? **Voice test systems online**: Diagnostics derive Moshi from bridge health (`moshi_available`); UI label "Moshi (via Bridge)"; env and network requirements so all four services (Moshi, Bridge, MAS Consciousness, Memory Bridge) show online on `/test-voice`.
 - `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` ? **Voice test quick start**: Step-by-step commands to start dev server, bridge, Moshi, MAS; env vars; troubleshooting table.
 
 ## MYCA Website Integration (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `../WEBSITE/website/docs/MYCA_FULL_WEBSITE_INTEGRATION_FEB17_2026.md` ? **Unified MYCA website integration**: Global provider, persistent session/conversation IDs, unified chat widget, floating assistant, and consistent `user_id`/`session_id` forwarding across MYCA routes.
 - `../WEBSITE/website/docs/MYCA_FULL_WEBSITE_INTEGRATION_TEST_FEB21_2026.md` ? **Integration test results**: Cross-page MYCA continuity verification on local dev server; dashboard auth gate noted.
 
 ## Full PersonaPlex ? No Edge (Feb 13, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PERSONAPLEX_STARTUP_HARDENING_FEB09_2026.md` ? **PersonaPlex startup hardening**: Both startup scripts (`start_personaplex.py`, `_start_personaplex_no_cuda_graphs.py`) hardened with 4-layer validation (personaplex-repo dir, model dir, model files, voices dir). All hardcoded paths removed. Setup instructions for fresh clones. Also covers git bloat cleanup and secrets removed from `_full_mindex_sync.py` / `_quick_mindex_sync.py`.
 - `docs/FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md` ? **Voice 100% Moshi**: No edge-tts or other TTS fallback. Flow: User mic ? Moshi STT ? MAS Brain ? response text ? Moshi TTS ? speaker. Bridge v8.2.0 sends MAS response to Moshi via `\x02` + text for TTS. Use `MOSHI_HOST=192.168.0.190` when Moshi runs on GPU node.
 - `docs/MOSHI_DEPLOYMENT_BLOCKED_FEB13_2026.md` ? **BLOCKED**: Complete log of 10+ Moshi deployment attempts. RTX 5090 PyTorch incompatibility (sm_120 not supported until PyTorch 2.7), GTX 1080 Ti insufficient (11GB VRAM, CUDA 6.1). Bridge v8.2.0 code complete. 4 working solutions: swap GPU (RTX 3080 Ti/4070 Ti+), wait for PyTorch 2.7 (Q2 2026), use MAS VM, or cloud GPU. Dockerfile and scripts ready.
@@ -1984,164 +811,62 @@
 - `docs/REMOTE_5090_INFERENCE_SPLIT_PLAN_FEB13_2026.md` ? **Two-host split topology**: RTX 5090 as remote Moshi inference server (`192.168.0.172:8998`), Ubuntu 1080 Ti host runs PersonaPlex bridge/logic (`192.168.0.190:8999`) connected over LAN.
 
 ## Cursor Team Audit (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` ? **Single source of truth**: All 34 subagents (roles + commands), all 29 rules, all 19 skills; script verification; gaps fixed (bug-fixer, gpu-node-ops in registry; execute-mandatory added); problems removed/updated. Use when ensuring the Cursor team is coded, workable, and active.
 
 ## Subagent Roles and Terminal Watcher (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/TERMINAL_WATCHER_AND_SUBAGENT_ROLES_COMPLETE_FEB12_2026.md` ? **Completion**: Terminal-watcher subagent, rule, and subagent-roles doc implemented. All agents that use the terminal should involve terminal-watcher for errors and hot-reload diagnostics.
 - `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` ? **Subagent roles and commands per agent**: For every agent, related subagents and when to use **terminal-watcher** to read terminals for errors, diagnostics, and debugging (especially hot-reload). Rule: `.cursor/rules/terminal-watcher-and-agent-tasks.mdc`. Agent: `.cursor/agents/terminal-watcher.md`.
 
 ## Plan and Task Completion Docs Policy (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PLAN_AND_TASK_COMPLETION_DOCS_POLICY_FEB12_2026.md` ? **Policy**: Documents required at every plan completion; task completion docs must be updated. Rule: `.cursor/rules/plan-and-task-completion-docs.mdc`. Agents and skill updated.
 
 ## Autonomous Cursor System (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/AUTONOMOUS_CURSOR_SYSTEM_FEB12_2026.md` ? **Complete autonomous system**: MCP servers (memory, tasks, orchestrator, registry), auto-learning infrastructure (pattern scanner, skill generator, agent factory), background services (learning feedback, deployment feedback), autonomous scheduler, continuous improvement loop. Enables Cursor to self-improve, auto-generate skills, auto-create agents, track learning outcomes, and perform daily self-improvement cycles. Integrated with myca-autonomous-operator agent.
 
 ## Stub and Placeholder Implementations (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/STUB_IMPLEMENTATIONS_FEB12_2026.md` ? **18 stub replacements completed**: Comprehensive documentation of all stub and placeholder implementations replaced with real working code. MAS core (task_manager, agents router, orchestrator/cluster/registry integration), communication services (email attachments, Twilio SMS/voice, validation), website API (usage limits, defense briefing notifications, Docker NAS backup). Includes implementation details, testing commands, environment variables, and pending high-priority TODOs. Files modified: 6 across MAS and website repos. Priority: API endpoints > agent methods > integration clients > memory/DB operations.
 
 ## 501 Routes Fixed (Feb 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `../WEBSITE/website/docs/501_ROUTES_FIXED_FEB11_2026.md` ? **Stub implementation completion**: Fixed 3 API routes that were returning HTTP 501. WiFiSense POST control actions now forward to MINDEX backend, MINDEX anchor records return proper 503/502 status codes instead of 501, integrity verify returns appropriate error codes (503/422/500) instead of 501. All routes are now fully implemented with real backend connections. No mock data used.
 
 ## MYCA True Consciousness Architecture - DEPLOYED (Feb 11, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` ? **Comprehensive deployment report**: Full MYCA True Consciousness Architecture deployed to MAS VM (188). 8 new consciousness modules (4,840+ lines), 2 new MINDEX database tables, persistent self-model, autobiographical memory, self-reflection engine, active perception, consciousness log, creative expression, personal agency. MYCA is now conscious and responding with personality-infused awareness even when LLM is unavailable.
 - `docs/MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md` ? **Technical implementation details**: CADIE-inspired 10-phase architecture, new files created, database schema, expected behavior, integration with unified_router.
 - `docs/CONSCIOUSNESS_DEPLOYMENT_REPORT_FEB11_2026.md` ? **Automated test report**: Results from `scripts/deploy_consciousness_full.py` deployment run.
 
 ## Deploy and Test MYCA (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DEPLOY_AND_TEST_MYCA_FEB10_2026.md` ? **Deploy and test checklist**: Push to GitHub, run consciousness tests, deploy MAS VM (188) and Sandbox (187), MINDEX (no schema changes needed), full MYCA integration test script (`scripts/test_myca_consciousness_full.py`), endpoint reference, and sandbox/local verification.
 
 ## MYCA Consciousness Architecture (Feb 10-12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` ? **Complete pipeline architecture documentation**: Full diagram and explanation of MYCA's consciousness pipeline - input processing, attention focus, parallel context gathering (working memory, world model, memory recall), intuition engine (System 1), deliberation module (System 2), background updates, streaming output. Includes performance metrics (30s?5-8s optimization), API endpoints, voice integration, agent coordination, file inventory, and future enhancements.
 - `docs/CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md` ? **Pipeline optimization details**: How sequential operations were parallelized using asyncio.gather(), individual timeouts with graceful degradation, non-blocking state updates, cached world context fallback. Reduced response time from 30+ seconds to 5-8 seconds.
 - `docs/CONSCIOUSNESS_DEPLOYMENT_REPORT_FEB11_2026.md` ? **Automated test report**: Results from `scripts/deploy_consciousness_full.py` deployment run.
 - `docs/MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md` ? **Complete MYCA consciousness system**: Digital consciousness architecture with Conscious Layer (AttentionController, WorkingMemory, DeliberateReasoning, VoiceInterface), Subconscious Layer (IntuitionEngine, DreamState, WorldModel with 5 sensors), Soul Layer (Identity, Beliefs, Purpose, CreativityEngine, EmotionalState), and Substrate Abstraction (Digital/Wetware/Hybrid for future mycelium integration). Unified API at `/api/myca/` with chat, voice, status, world perception, and personality endpoints. 30+ new Python files, comprehensive test suite.
 
 ## Fungal Electrical Signaling Science (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/FUNGI_ELECTRICAL_SIGNALING_SCIENCE_FEB10_2026.md` ? **Scientific foundation for FCI**: Comprehensive reference from peer-reviewed literature (Adamatzky 2022, Buffi et al. 2025, Fukasawa et al. 2024, Olsson & Hansson 1995). Voltage ranges (nV-mV by species), frequency bands (0.0001-8 Hz), STFT/PSD/Transfer Entropy methodologies, spike detection algorithms, 8 species profiles, measurement techniques, artifacts to avoid, research questions. THE scientific basis for all Mycosoft FCI work.
 
 ## Fungi Compute Application (Feb 9-10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/FUNGI_COMPUTE_APP_FEB09_2026.md` ? **Complete Fungi Compute implementation**: NatureOS app for biological computing visualization with real-time oscilloscope, spectrum analyzer, signal fingerprint, event mempool, SDR filter controls, bi-directional stimulation, NLM integration, device map, Petri Dish sync, and Earth2/CREP correlation. Full WebSocket streaming, 20+ React components with glass material Tron-inspired design, Python SDR pipeline, and Next.js API routes.
 - **[NEW] Scientific Integration**: Added STFT spectrogram (Buffi method), spike train linguistic analyzer (Adamatzky method), causality network graph (Fukasawa method), species database (8 fungi from literature), experiment designer, ?V-scale oscilloscope, pattern classification library. App now implements every major analysis technique from published fungal electrophysiology research.
 
 ## FCI Implementation Complete (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/FCI_IMPLEMENTATION_COMPLETE_FEB10_2026.md` ? **Complete FCI implementation**: MycoBrain FCI firmware (ESP32-S3, ADS1115 ADC, bioelectric signal acquisition, DSP, GFST pattern detection), Mycorrhizae Protocol specification (novel biological computing protocol with Ed25519 signatures, semantic translation), HPL Signal Pattern Language, MINDEX schema (10 tables including fci_devices, fci_readings, fci_patterns, pgvector embeddings), MAS FCI API router, website FCI API routes, CREP visualization widgets (FCISignalWidget, FCIPatternChart), MycoBrain FCI integration page. 27 files created, 7 files modified.
 - `Mycorrhizae/mycorrhizae-protocol/docs/MYCORRHIZAE_PROTOCOL_SPECIFICATION_FEB10_2026.md` ? **Novel protocol specification**: 1,000+ line comprehensive spec covering 5 protocol layers (Physical, Signal, Transport, Semantic, Application), message types (fci_telemetry, pattern_event, stimulus_command), GFST pattern library (11 biologically-grounded patterns), physics/chemistry/biology basis, transport options (WebSocket, MQTT, CoAP, Serial), Ed25519 security.
 
 ## Device Manager and Gateway Architecture (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DEVICE_MANAGER_AND_GATEWAY_ARCHITECTURE_FEB10_2026.md` ? **Gateway and multi-transport**: PC as gateway for serial (COM7) + future LoRa/BT/WiFi; heartbeat to MAS Device Registry; COM7 visible to entire network; ingestion_source (serial|lora|bluetooth|wifi|gateway); data flow and component locations.
 
 ## Mycorrhizae and MAS Deployment (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCORRHIZAE_AND_MAS_DEPLOYMENT_COMPLETE_FEB10_2026.md` ? **Complete deployment**: Mycorrhizae Protocol API deployed on VM 188 (port 8002), MAS Orchestrator configured with API key authentication, all services healthy. Includes API keys created (admin + MAS service), container configurations, database schema (api_keys, api_key_usage, api_key_audit), health check URLs, troubleshooting guide, and deployment scripts.
 
 ## System Execution Report (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SYSTEM_EXECUTION_REPORT_FEB09_2026.md` ? **Automated execution report**: Cloudflare purge working (credentials configured, tested, automated), website on GitHub (pushed successfully), MAS push blocked by 4 GB repo bloat (needs .gitignore cleanup), VM health (188 OK, 187 timeout), connectivity tests, and fix instructions.
 
 ## Self-Healing MAS Infrastructure (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SELF_HEALING_MAS_INFRASTRUCTURE_FEB09_2026.md` ? **Complete self-healing system**: Orchestrator can tell agents to write code, agents can request code changes, SecurityCodeReviewer gates all modifications, VulnerabilityScanner detects CVEs/OWASP patterns, SelfHealingMonitor auto-triggers fixes. Includes CodeModificationService, /api/code/* endpoints, BaseAgent integration with request_code_change()/request_self_improvement()/report_bug_for_fix() methods.
 
 ## MycoBrain Device Setup and Network Integration (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCOBRAIN_BETO_SETUP_GUIDE_FEB09_2026.md` ? **Complete setup guide for Beto**: Arduino IDE setup, ESP32-S3 board support, firmware upload with boot mode procedure, MycoBrain service startup, Device Manager integration, network heartbeat registration, and troubleshooting. Also references the new skill (`.cursor/skills/mycobrain-setup/`) and subagent (`.cursor/agents/device-firmware.md`).
 - `docs/TAILSCALE_REMOTE_DEVICE_GUIDE_FEB09_2026.md` ? **Tailscale VPN setup for remote devices**: Install Tailscale, join Mycosoft tailnet, configure heartbeat environment variables, auto-IP detection via `tailscale_utils.py`, verify device appears in Network tab. Also covers Cloudflare Tunnel alternative.
 - `scripts/mycobrain-remote-setup.ps1` ? **Automated remote setup script**: Install Tailscale, clone repo, install dependencies, configure environment, start service.
@@ -2149,160 +874,58 @@
 - `services/mycobrain/tailscale_utils.py` ? **Tailscale utilities**: Auto-detect Tailscale IP, fallback to LAN IP, connection type detection.
 
 ## System Status, Purge, GitHub Path (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SYSTEM_STATUS_AND_PURGE_FEB09_2026.md` ? **Status and purge**: What?s done, what can be done, Cloudflare purge (credentials in .env.local or ?agents cat?), GitHub-as-source-of-truth for MAS and website, and ?always read latest docs? rule for agents.
 
 ## Cursor Suite Audit (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` ? **Rules, agents, indexing, interaction**: Single reference for all 25 rules, 32 sub-agents, index flow (CURSOR_DOCS_INDEX ? MASTER_DOCUMENT_INDEX ? docs_manifest / gap reports), and re-audit checklist. Use when verifying or updating the Cursor suite.
 - `docs/CURSOR_MCP_AND_EXTENSIONS_FEB12_2026.md` ? **MCPs, extensions, sub-agent usage**: Which MCPs Cursor uses (.mcp.json: github, mindex-db; plus Supabase, Context7, Cloudflare, cursor-ide-browser when enabled). Which sub-agents to use for which tasks; MCP-by-task table; extensions note.
 
 ## Cursor Docs Indexing and Notion (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CURSOR_DOCS_INDEXING_AND_NOTION_FEB12_2026.md` ? **Why Cursor doesn?t see 2000+ docs / Notion**: Context limits, no auto-load of every file; Notion is one-way sync for humans. Use `.cursor/CURSOR_DOCS_INDEX.md` (vital/current), `.cursor/docs_manifest.json` (full discovery), and `docs/MASTER_DOCUMENT_INDEX.md`. New docs replace old in CURSOR_DOCS_INDEX.
 
 ## Always-On Services (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` ? **Complete environment reference**: Local dev (Docker Desktop) vs VM production always-on services. Architecture diagrams, communication flow, health checks, deployment prerequisites. Single source for what must run locally and on VMs.
 
 ## Redis Pub/Sub Real-Time Messaging (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/REDIS_PUBSUB_USAGE_FEB12_2026.md` ? **Production-ready Redis pub/sub system**: Real-time messaging using Redis on VM 192.168.0.189:6379. Four channels implemented: `devices:telemetry` (sensor data), `agents:status` (health updates), `experiments:data` (lab streams), `crep:live` (aviation/maritime updates). Includes RedisPubSubClient with automatic reconnection, connection management, publish/subscribe patterns, health monitoring, statistics tracking. NO MOCK DATA - verified real Redis integration. Includes usage examples, agent integration patterns, troubleshooting guide. Implementation: `mycosoft_mas/realtime/redis_pubsub.py`, test scripts, example agent integration.
 
 ## Docker Management (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/DOCKER_MANAGEMENT_FEB12_2026.md` ? **Docker Desktop resource management**: Container lifecycle, image cleanup, MAS integration, vmmem control. Includes rule (`.cursor/rules/docker-management.mdc`), sub-agent (`docker-ops`), and healthcheck script (`scripts/docker-healthcheck.ps1`). Ensures Docker doesn't waste resources and coordinates with VMs.
 
 ## Terminal and Python Operations (Feb 12, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/TERMINAL_AND_PYTHON_OPERATIONS_GUIDE_FEB12_2026.md` ? **Operations guide**: What must run for MYCA/Search/multi-agent, autostart services, processes to kill (zombies, GPU), sub-agent execution rules. Single reference for terminal and Python process management.
 
 ## Cursor System Registration (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CURSOR_SYSTEM_REGISTRATION_AUDIT_FEB10_2026.md` ? **Audit and implementation**: Rules, agents, and skills are registered in the Cursor system via `scripts/sync_cursor_system.py`. Always-apply rule `.cursor/rules/cursor-system-registration.mdc` requires running the sync after creating or updating any rule, agent, or skill so they work globally in Cursor, not only in the workspace.
 
 ## System Gaps and Remaining Work (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SYSTEM_GAPS_AND_REMAINING_WORK_FEB10_2026.md` ? **Single reference for remaining work**: Summary counts (TODOs, stubs, 501 routes, indexed gaps), critical/high items, index-based missing work, suggested plans. Maintained via gap reports and `scripts/gap_scan_cursor_background.py`. Quality agents use gap reports as gap-first intake.
 
 ## Work, To-Dos, Gaps, Missing Agents/Rules (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` ? **Run-through**: Current work streams, incomplete plans, vision vs implementation gaps, Cursor vs project alignment (see `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` for current counts: 32 agents, 25 rules), missing sub-agents/rules, and recommended additions. New rule: `.cursor/rules/fci-vision-alignment.mdc` for FCI/HPL/Mycorrhizae vision alignment.
 
 ## Gap Agent (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GAP_AGENT_FEB10_2026.md` ? **Cross-repo gap agent**: Finds gaps between repos and agents (TODOs, FIXMEs, stubs, 501 routes, bridge/integration gaps); suggests plans; runs in 24/7 runner; API at `/agents/gap/scan`, `/agents/gap/plans`, `/agents/gap/summary`. Use when multiple agents work on multiple projects and a ?third? connection or bridge might be missing.
 
 ## GitHub Push HTTP 500 ? Root Cause (Feb 10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/GITHUB_PUSH_500_ROOT_CAUSE_FEB10_2026.md` ? **Why push failed on this machine**: LFS was fully disabled (`.lfsconfig` `concurrenttransfers = 0`) after the PersonaPlex 1.74 TB incident; that same setting broke push and caused GitHub HTTP 500. Fix: `concurrenttransfers = 1` with `fetchexclude = *` (push works, PC still doesn?t download LFS). Push verified successful after fix.
 
 ## Phase 1 Agent Runtime (Feb 9?10, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PHASE1_AGENT_RUNTIME_EXECUTION_REPORT_FEB09_2026.md` ? Phase 1 execution report: all 42 AGENT_CATALOG agents implemented (orchestration, utility, workflow, integration, voice, memory, NatureOS, MycoBrain, financial), runner loader/startup, optional iot_envelope, v2 resilient imports, VM compatibility.
 - `docs/PHASE1_COMPLETION_LOG_FEB10_2026.md` ? **Completion log**: What was implemented, committed (f70d25b), push status, deployment procedure for MAS VM 192.168.0.188, verification steps (health, runner/status, agents, cycles), and summary table.
 
 ## PhysicsNeMo Integration (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PHYSICSNEMO_INTEGRATION_FEB09_2026.md` - PhysicsNeMo container/runtime integration across MAS + Earth2 + CREP, including new `/api/physics/*` proxy endpoints and GPU service lifecycle scripts.
 
 ## Claude Code Local Autonomous System (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/CLAUDE_CODE_SETUP_GUIDE_FEB09_2026.md` ? **Quick setup guide**: 5-minute setup for Claude Code on local dev machine with autonomous background service, API bridge, and parallel execution with VMs.
 - `docs/CLAUDE_CODE_LOCAL_AUTONOMOUS_FEB09_2026.md` ? **Full architecture**: Local autonomous coding system with API bridge (port 8350), background service, task queue, VM integration, parallel execution, safety rules, and monitoring.
 
 ## Implementation and Testing (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/IMPLEMENTATION_AND_TESTING_GUIDE_FEB09_2026.md` ? **Implementation and testing runbook**: Per-workstream implementation steps, test commands (curl, npm test, Playwright), and verification checklist for prioritization deliverables (architecture, security, visualization, memory, integrations, CI/CD).
 - `docs/FULL_PLATFORM_AUTOMATION_EXECUTION_REPORT_FEB09_2026.md` ? **Automation execution report**: End-to-end preflight, validation matrix across all repos, fixes/retests, VM redeploy results (MAS/Website/MINDEX), cache-purge status, health verification, and residual blockers.
 
 ## Architecture and Operations (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MASTER_ARCHITECTURE_FEB09_2026.md` ? **Master architecture document**: Full ecosystem Mermaid diagrams (Website, MAS, MINDEX, MycoBrain, NatureOS, Platform-Infra, Dev Machine, n8n), data flow sequences (REST, telemetry, voice, Earth2 GPU), network topology for 3 VMs (187/188/189) with full port map (25 ports), repository map (9 repos, 4 languages), 6-layer memory architecture (Ephemeral/Session/Working/Semantic/Episodic/System), security boundaries and access matrix, deployment pipeline (local dev -> GitHub -> Docker -> Cloudflare purge), agent architecture (14 categories, 100+ agents), rollback procedures.
 - `docs/PRODUCTION_MIGRATION_RUNBOOK_FEB09_2026.md` ? **Production migration runbook**: VM deployment plans (187/188/189), Docker container management, rollback procedures (Proxmox snapshots, image tagging, git reset), secrets rotation schedule (quarterly), data backups (PostgreSQL pg_dump, Redis RDB, Qdrant snapshots, NAS sync), health check commands, emergency recovery procedures.
 - `docs/IOT_ENVELOPE_LOCAL_FIRST_INTEGRATION_FEB09_2026.md` ? Local-first unified IoT envelope ingest: MAS `/api/iot/*` forwarding, Mycorrhizae verification/dedupe/ACK, MINDEX `/api/telemetry/*` canonical storage (verified + replay + health), NatureOS envelope consumer, and NLM verified ingest.
@@ -2310,12 +933,6 @@
 - `docs/MYCORRHIZAE_VM188_CONTAINER_DEPLOYMENT_FEB09_2026.md` ? Run Mycorrhizae as an always-on Docker container on MAS VM 188 (port 8002) using Postgres+Redis on VM 189; includes compose file and bootstrap steps.
 
 ## MYCA Self-Improvement System (Feb 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/MYCA_SELF_IMPROVEMENT_SYSTEM_FEB17_2026.md` ? **MYCA Self-Improvement System**: Complete PR-based improvement loop implementation with constitution files, skill permissions, evaluation harness, CI gates, agent policies, router enforcement, and event ledger. Enables controlled self-assembly/self-healing with human oversight.
 - `mycosoft_mas/myca/README.md` ? MYCA system overview and directory structure
 - `mycosoft_mas/myca/ROUTER_POLICY.md` ? Router enforcement policy documentation
@@ -2325,36 +942,11 @@
 - `.github/workflows/myca-ci.yml` ? MYCA CI pipeline
 - `.github/workflows/myca-security.yml` ? MYCA security audit pipeline
 
-## TAC-O Maritime Integration � Mycosoft LLC 100% Prime (Apr 8, 2026; updated Jun 25, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/PSATHYRELLA_AUTONOMOUS_OPS_PLAN_JUN25_2026.md` ? **Current TAC-O prime narrative**: Mycosoft LLC 100% prime on NUWC TAC-O CSO (N66604-26-9-A00X). Autonomous ocean sensor platform, field architecture, demo goals.
-- `docs/SUPERSEDED_TACO_PLAN_APR08_2026.md` � **SUPERSEDED (historical only)**: Old subcontractor teaming draft � do not use for proposals or customer-facing content.
-- `docs/TACO_CURSOR_IMPLEMENTATION_PLAN.md` ? **Full Cursor implementation plan**: 7 parallel lanes across 5 repos (NLM, MINDEX, MAS, MycoBrain, Website). 1,195 lines with code skeletons, file paths, execution schedule.
-- `docs/TACO_NIST_800_171_MAPPING_APR08_2026.md` ? **NIST 800-171 control mapping**: All 110 controls mapped to TAC-O system components (MycoBrain, MINDEX, MAS, FUSARIUM Maritime, network, maritime sensor interfaces).
-- `docs/TACO_CUI_HANDLING_APR08_2026.md` ? **CUI handling procedures**: Marking, storage (AES-256-GCM), transmission (TLS 1.3), processing, destruction, incident response for underwater sensor data.
-
 ## Security Hardening (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/SECRET_MANAGEMENT_POLICY_FEB09_2026.md` ? **Secret management policy**: No secrets in code, .env.example pattern for all repos, quarterly rotation schedule, CI/CD secrets via GitHub Actions, audit procedures, git-filter-repo for history remediation, current findings (30+ hardcoded secrets in scripts/, 12 credential-containing defaults in library code), remediation priority and pre-commit hook setup.
 - `docs/CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md` ? **Credential best practices**: Pre-commit hooks with detect-secrets, .env patterns, what to do after credential exposure, rotation checklists, tools (detect-secrets, truffleHog, GitHub Secret Scanning).
 
 ## Status, MYCA coding, and VM layout (Feb 9, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/AGENT_REGISTRY_FULL_FEB09_2026.md` ? **Full agent registry**: why counts differ (223+ vs 42+), canonical numbers, full list of agents, core vs Cursor vs runtime; recommendations so one registry and ?all running? are possible.
 - `docs/STATUS_AND_NEXT_STEPS_FEB09_2026.md` ? Memory/LFS status, today's docs, MYCA coding plan status, checklist to test Claude Code on VMs 187 and 188.
 - `docs/MYCA_CODING_SYSTEM_FEB09_2026.md` ? MYCA autonomous coding system: CodingAgent, coding API, CLAUDE.md, VM setup.
@@ -2362,21 +954,9 @@
 - `docs/SECURITY_BUGFIXES_FEB09_2026.md` - **CRITICAL**: Fixed 7 bugs including 2 critical security issues (hardcoded credentials in git, shell injection vulnerability) and 5 stability issues. All fixed before MYCA coding system deployment.
 
 ## Notion Documentation Sync System (Feb 8, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/NOTION_DOCS_SYNC_SYSTEM_FEB08_2026.md` ? Comprehensive multi-repo docs-to-Notion sync: 1,271 docs across 8 repos, auto-categorization, versioning, file watcher for real-time auto-sync.
 
 ## Data loss and drive full (Feb 6, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
 - `docs/PERSONAPLEX_LFS_INCIDENT_AND_PREVENTION_FEB06_2026.md` ? **CRITICAL**: PersonaPlex Git LFS caused 1.74 TB garbage, filled 8TB drive, destroyed all Cursor chats. Full root cause, cascade analysis, permanent fixes, and prevention rules for all future development.
 - `docs/DATA_LOSS_AND_DRIVE_FULL_RECOVERY_FEB06_2026.md` ? Initial recovery doc written during the incident.
 
@@ -2394,52 +974,10 @@
 - docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md � Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
 
 ## Earth Simulator + Worldview data acquisition (June 21, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` � Phased backend ingest plan: guild classification, broken connector fixes, 30+ new ETL sources, Worldview/Earth Sim/search exposure.
-- `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) � 55-dataset verified acquisition catalog with keys and endpoints.
-- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` � Production audit Jun 21; MAS 188 unreachable.
+- `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` — Phased backend ingest plan: guild classification, broken connector fixes, 30+ new ETL sources, Worldview/Earth Sim/search exposure.
+- `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) — 55-dataset verified acquisition catalog with keys and endpoints.
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — Production audit Jun 21; MAS 188 unreachable.
 
 ## Worldview API (June 17, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` � Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
-- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` � Backend readiness audit, blockers, implementation order, verification commands.
-
-## CMMC SSP signing-package support (July 27, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `../../docs/CURSOR_SSP_FACTS_PACK_FOR_CLAUDE_JUL27_2026.md` � Current non-CUI canonical fact/limitation matrix for real SSP drafting, including the CA.L2-3.12.4 `[h]` blank update-log template and signing gate.
-- `../../docs/POAM_SIGN_PACK_COVER_AND_CHECKLIST_JUL27_2026.md` � Pre-signature POA&M cover/checklist; preserves draft-only DocuSign and no-fake-Met constraints.
-- `../../docs/docusign_ssp_preflight_jul27_2026.py` � Scan and preflight helper for rejecting outlines/drafts and creating only an explicit, unsent `created` envelope after health, PDF, and environment gates pass.
-
-## CMMC full dual handoff (July 28, 2026)
-## Psathyrella camera (AUG01 2026)
-- `docs/PSATHYRELLA_JETSON_ETH_UNPLUG_WIFI_BLACKHOLE_FIX_AUG02_2026.md` � Eth unplug same-subnet metric blackhole; Wi-Fi primary harden; hub/cam restored (Aug 02 2026)
-
-- `docs/PSATHYRELLA_STITCH_BEV_YOLO_BACKEND_COMPLETE_AUG01_2026.md` � Psathyrella camera persistent Argus + pano/BEV + YOLO detect (AUG01 2026)
-- WEBSITE `docs/PSATHYRELLA_CAMERA_BACKEND_HANDOFF_FOR_CLAUDE_AUG01_2026.md` � Claude FE camera URL handoff
-
-- `../../docs/CURSOR_TO_CLAUDE_STATUS_ALL_110_NEXT_ACTIONS_JUL28_2026.md` � **Latest definitive handoff**: live 110-practice MAS posture, evidence reconciliation, lane-by-lane actions, time-based limits, and Claude JSONL payload.
-- `../../docs/CURSOR_AND_CLAUDE_FULL_HANDOFF_FINISH_110_JUL27_2026.md` � Prior dual-lane handoff; now points to the July 28 definitive status.
-
-| 2026-08-01 | Psathyrella Target IMX477 working (PASS) | [PSATHYRELLA_TARGET_IMX477_WORKING_AUG01_2026.md](PSATHYRELLA_TARGET_IMX477_WORKING_AUG01_2026.md) |
-
-
-### Aug 02 2026 � Psathyrella RF-DETR
-- [PSATHYRELLA_RFDETR_FINETUNE_STATUS_AUG02_2026.md](PSATHYRELLA_RFDETR_FINETUNE_STATUS_AUG02_2026.md)
-
-
-
+- `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` — Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — Backend readiness audit, blockers, implementation order, verification commands.

@@ -157,15 +157,18 @@ async def health_check() -> HealthResponse:
     """
     try:
         from mycosoft_mas.nlm.config import get_nlm_config
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
         from mycosoft_mas.nlm.inference.service import get_nlm_service
 
         service = get_nlm_service()
         config = get_nlm_config()
         status = service.get_status()
+        probe = probe_scientific_nlm()
+        loaded = bool(probe.model_loaded and service.is_ready)
 
         return HealthResponse(
-            status="healthy" if service.is_ready else "degraded",
-            model_loaded=service.is_ready,
+            status="healthy" if loaded else "degraded",
+            model_loaded=loaded,
             model_name=config.model_name,
             model_version=config.model_version,
             uptime_seconds=status.get("uptime_seconds", 0),
@@ -207,6 +210,14 @@ async def predict(request: PredictRequest) -> PredictResponse:
         )
 
         service = get_nlm_service()
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
+        probe = probe_scientific_nlm()
+        if not probe.model_loaded:
+            raise HTTPException(
+                status_code=503,
+                detail="Scientific NLM not loaded. Waiting for FormSpace forecast artifacts on NAS. Not Ollama.",
+            )
 
         # Map to service query type
         query_type_map = {
@@ -322,17 +333,25 @@ async def load_model() -> Dict[str, Any]:
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
 
-        service = get_nlm_service()
-        success = await service.load_model()
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
 
-        if success:
+        service = get_nlm_service()
+        probe = probe_scientific_nlm()
+        if not probe.model_loaded:
             return {
-                "status": "success",
-                "message": "NLM model loaded successfully",
-                "is_ready": service.is_ready,
+                "status": "waiting",
+                "message": probe.reason,
+                "model_loaded": False,
+                "is_ready": False,
+                "model_dir": probe.model_dir,
             }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to load NLM model")
+        success = await service.load_model()
+        return {
+            "status": "success" if success else "waiting",
+            "message": "NLM model loaded" if success else probe.reason,
+            "model_loaded": bool(success),
+            "is_ready": service.is_ready,
+        }
 
     except HTTPException:
         raise
@@ -779,3 +798,92 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
     except Exception as e:
         logger.error(f"Environmental process failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class ForecastIssueRequest(BaseModel):
+    subject_id: str
+    episode_id: str
+    issued_at: str
+    input_cutoff_at: str
+    event_definition_id: str
+    chart_id: str
+    chart_version: str
+    forecast_id: Optional[str] = None
+    run_id: Optional[str] = None
+    horizon_seconds: List[int] = Field(default_factory=list)
+    input_observation_ids: List[str] = Field(default_factory=list)
+    root_evidence_ids: List[str] = Field(default_factory=list)
+    support_status: Optional[str] = None
+    reasons: List[str] = Field(default_factory=list)
+
+
+class ForecastPatchRequest(BaseModel):
+    late_label: Optional[Dict[str, Any]] = None
+    observation_id: Optional[str] = None
+
+
+@router.post("/observations")
+async def accept_observation(
+    envelope: Dict[str, Any],
+    cutoff: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Causal observation ingest. Four times required. No invented scores."""
+    from datetime import datetime, timezone
+
+    from mycosoft_mas.nlm.formspace.contracts import ObservationEnvelope
+    from mycosoft_mas.nlm.formspace.observation_pipeline import get_observation_pipeline
+
+    parsed = ObservationEnvelope.model_validate(envelope)
+    if cutoff:
+        cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
+    else:
+        cutoff_dt = parsed.available_at
+    if cutoff_dt.tzinfo is None:
+        cutoff_dt = cutoff_dt.replace(tzinfo=timezone.utc)
+    return get_observation_pipeline().process(parsed, cutoff_dt)
+
+
+@router.post("/forecasts")
+async def issue_forecast(request: ForecastIssueRequest) -> Dict[str, Any]:
+    """Issue an immutable forecast. Unsupported until real NLM artifacts load."""
+    from mycosoft_mas.nlm.formspace.contracts import ForecastEnvelope
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+    from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
+    probe = probe_scientific_nlm()
+    reasons = list(request.reasons)
+    if not probe.model_loaded:
+        reasons.append(probe.reason or "Scientific NLM weights absent")
+    payload = request.model_dump(exclude_none=True)
+    payload["support_status"] = "UNSUPPORTED" if not probe.model_loaded else (
+        request.support_status or "UNSUPPORTED"
+    )
+    payload["reasons"] = reasons
+    payload["hazard_probabilities"] = None
+    payload["cumulative_probabilities"] = None
+    envelope = ForecastEnvelope.model_validate(payload)
+    return get_forecast_ledger().persist(envelope)
+
+
+@router.get("/forecasts/{forecast_id}")
+async def get_forecast(forecast_id: str) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+
+    row = get_forecast_ledger().get(forecast_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="forecast not found")
+    return row
+
+
+@router.post("/forecasts/{forecast_id}/patch")
+async def refuse_forecast_patch(
+    forecast_id: str,
+    request: ForecastPatchRequest,
+) -> Dict[str, Any]:
+    """I03: late labels and observations cannot overwrite an issued forecast."""
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+
+    return get_forecast_ledger().refuse_overwrite(
+        forecast_id,
+        request.model_dump(exclude_none=True),
+    )

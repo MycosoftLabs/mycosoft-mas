@@ -118,32 +118,21 @@ class NLMBaseModel(BaseNLM):
             return True
 
         try:
-            logger.info(f"Loading NLM from {self.model_path}")
+            from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
 
-            # Check if local model exists
-            if self.model_path.exists():
-                # In production, load with transformers:
-                # from transformers import AutoModelForCausalLM, AutoTokenizer
-                # self._tokenizer = AutoTokenizer.from_pretrained(self.model_path)
-                # self._model = AutoModelForCausalLM.from_pretrained(
-                #     self.model_path,
-                #     device_map=self.device,
-                #     torch_dtype="auto",
-                # )
-                logger.info(f"NLM model loaded from {self.model_path}")
-                self._is_loaded = True
-                return True
-            else:
-                logger.warning(
-                    f"NLM model not found at {self.model_path}. "
-                    "Model generation will use fallback."
-                )
-                # Mark as loaded to use fallback generation
-                self._is_loaded = True
-                return True
+            probe = probe_scientific_nlm(str(self.model_path) if self.model_path else None)
+            if not probe.model_loaded:
+                logger.info("Scientific NLM not loaded: %s", probe.reason)
+                self._is_loaded = False
+                return False
+
+            logger.info("Scientific NLM artifacts accepted from %s", probe.model_dir)
+            self._is_loaded = True
+            return True
 
         except Exception as e:
             logger.error(f"Failed to load NLM model: {e}")
+            self._is_loaded = False
             return False
 
     async def unload(self) -> None:

@@ -120,6 +120,9 @@ _safe_import(".incentive_auditor_agent", "IncentiveAuditorAgent")
 _safe_import("mycosoft_mas.avani.agents.avani_agent", "AvaniAgent")
 _safe_import("mycosoft_mas.avani.agents.micah_agent", "MicahAgent")
 
+# ITDX Task 8 seven-role review (September 9, 2026)
+_safe_import(".itdx_task8_agent", "ITDXTask8Agent")
+
 # Earth Search — planetary-scale unified search (March 2026)
 _safe_import(".earth_search_agent", "EarthSearchAgent")
 
