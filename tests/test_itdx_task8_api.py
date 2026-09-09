@@ -230,3 +230,17 @@ def test_google_timeout_reason_is_not_request_denied():
     )
     assert stamped["traffic"]["reason"] == "google_maps_timeout"
     assert stamped["traffic"]["p"] is None
+
+
+def test_nlm_stub_helpers_reject_placeholder_confidence():
+    from mycosoft_mas.core.routers.itdx_api import (
+        NLM_STUB_CONFIDENCE,
+        is_usable_nlm_confidence,
+        nlm_text_is_stub,
+    )
+
+    assert NLM_STUB_CONFIDENCE == 0.85
+    assert nlm_text_is_stub("NLM stub — model is not loaded")
+    assert not is_usable_nlm_confidence(0.85, "ok", {})
+    assert not is_usable_nlm_confidence(0.4, "ok", {"stub": True})
+    assert is_usable_nlm_confidence(0.4, "live ecology note", {})

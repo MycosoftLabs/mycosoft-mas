@@ -29,6 +29,7 @@ Fusarium Google Maps key (`FUSARIUM_GOOGLE_MAPS_API_KEY`, sha256_12 `8655e95ff59
 - Timeout reason is **`google_maps_timeout`**, never a fake `p` and not mislabeled `REQUEST_DENIED`.
 - Prefer `FUSARIUM_GOOGLE_MAPS_API_KEY` over the Map Tiles alias.
 - NLM / Ollama compartmentalization unchanged (NAS scientific NLM vs 188 `:11434` MYCA chat). Protected orchestrator / soul / security files not edited. No 187.
+- `itdx_api.py` imports NLM stub-rejection helpers with a local fallback so 188 can mount ITDX without shipping a newer `nlm/inference/service.py`.
 
 ---
 
@@ -41,6 +42,8 @@ curl -sS -m 45 -X POST http://192.168.0.188:8001/api/itdx/situation-assessment \
 ```
 
 Expect `channels.traffic.status=SUPPLIED` and `channels.pathways.status=SUPPLIED` with `duration_in_traffic` / polyline cites when Google returns OK. If Google still exceeds 12s, those channels stay **NOT_SUPPLIED** with `reason=google_maps_timeout`.
+
+**188 Fort Stewart proof (2026-09-09, after remount):** HTTP 200 in ~6.7s; `in_process=true`, `self_http=false`, `p=null`. `traffic` / `pathways` / `navigation` **SUPPLIED** with Distance Matrix / Directions cites (Hunter AAF **52 mins**, Hinesville **10 mins**, Directions polyline ~1224). Weather and biology stayed **SUPPLIED**. No invented scores.
 
 ---
 

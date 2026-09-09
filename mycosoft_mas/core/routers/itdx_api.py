@@ -35,11 +35,49 @@ from mycosoft_mas.core.routers.itdx_public_sources import (
     gather_google_maps,
     gather_public_osint,
 )
-from mycosoft_mas.nlm.inference.service import (
-    NLM_STUB_CONFIDENCE,
-    is_usable_nlm_confidence,
-    nlm_text_is_stub,
-)
+
+try:
+    from mycosoft_mas.nlm.inference.service import (
+        NLM_STUB_CONFIDENCE,
+        is_usable_nlm_confidence,
+        nlm_text_is_stub,
+    )
+except ImportError:
+    # 188 may still run an NLM service that predates these helpers.
+    # Keep stub 0.85 rejected here. Do not ship or rewrite NLM/Ollama.
+    NLM_STUB_CONFIDENCE = 0.85
+
+    def nlm_text_is_stub(text: str) -> bool:
+        lowered = (text or "").lower()
+        markers = (
+            "placeholder",
+            "would come from model",
+            "nlm stub",
+            "model is not loaded",
+            "error generating response",
+            "not yet fully trained",
+        )
+        return any(marker in lowered for marker in markers)
+
+    def is_usable_nlm_confidence(
+        confidence: Any,
+        text: str = "",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        meta = metadata or {}
+        if meta.get("stub") or meta.get("confidence_usable") is False:
+            return False
+        if nlm_text_is_stub(text):
+            return False
+        if confidence is None:
+            return False
+        try:
+            value = float(confidence)
+        except (TypeError, ValueError):
+            return False
+        if abs(value - NLM_STUB_CONFIDENCE) < 1e-9:
+            return False
+        return 0.0 <= value <= 1.0
 
 logger = logging.getLogger(__name__)
 
@@ -340,7 +378,7 @@ async def _nlm_predict_inprocess(text: str, query_type: str = "ecology") -> Dict
 
 async def _nlm_status_inprocess() -> Dict[str, Any]:
     from mycosoft_mas.nlm.config import get_nlm_config
-    from mycosoft_mas.nlm.inference.service import get_nlm_service, is_usable_nlm_confidence
+    from mycosoft_mas.nlm.inference.service import get_nlm_service
 
     service = get_nlm_service()
     config = get_nlm_config()
