@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -26,9 +27,6 @@ from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetwo
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-MINDEX_API_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000/api/mindex").rstrip("/")
-MINDEX_INTERNAL_TOKEN = os.environ.get("MINDEX_INTERNAL_TOKEN", "").strip()
-MINDEX_API_KEY = os.environ.get("MINDEX_API_KEY", "").strip()
 sensor_network_client = MaritimeSensorNetworkClient()
 TACO_AGENTS = {
     "signal_classifier": SignalClassifierAgent(config={}),
@@ -57,17 +55,110 @@ class DispersalRequest(BaseModel):
     wind_factor: float = Field(default=1.0, ge=0.1, le=5.0)
 
 
-async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    async with httpx.AsyncClient(timeout=25.0) as client:
-        headers = (
-            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
-            if MINDEX_INTERNAL_TOKEN
-            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
-        )
-        response = await client.get(f"{MINDEX_API_URL}{path}", params=params, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, dict) else {"items": data}
+@dataclass
+class MindexFetch:
+    ok: bool
+    status: int
+    data: Dict[str, Any]
+    reason: str
+    path: str
+
+
+def _mindex_api_base() -> str:
+    """``MINDEX_API_URL`` is origin-only on 188; Fusarium paths live under ``/api/mindex``."""
+    raw = (os.environ.get("MINDEX_API_URL") or "http://192.168.0.189:8000").rstrip("/")
+    if raw.endswith("/api/mindex"):
+        return raw
+    return f"{raw}/api/mindex"
+
+
+def _mindex_headers() -> Dict[str, str]:
+    headers: Dict[str, str] = {"Accept": "application/json"}
+    secret = (os.environ.get("MINDEX_INTERNAL_SECRET") or "").strip()
+    token = ""
+    if secret:
+        from mycosoft_mas.integrations.mqtt_mycobrain_bridge import _mindex_hmac_token
+
+        svc = (os.environ.get("MINDEX_INTERNAL_SERVICE_NAME") or "mas-orchestrator").strip()
+        token = _mindex_hmac_token(svc, secret)
+    if not token:
+        token = (
+            os.environ.get("MINDEX_INTERNAL_TOKEN")
+            or os.environ.get("MINDEX_INTERNAL_TOKENS", "").split(",")[0]
+            or ""
+        ).strip()
+    if token:
+        headers["X-Internal-Token"] = token
+    api_key = (os.environ.get("MINDEX_API_KEY") or "").strip()
+    if api_key:
+        headers["X-API-Key"] = api_key
+    return headers
+
+
+def _empty_mindex_payload() -> Dict[str, Any]:
+    return {
+        "items": [],
+        "data": [],
+        "species": [],
+        "assessments": [],
+        "environments": [],
+        "events": [],
+        "observations": [],
+        "total": 0,
+    }
+
+
+def _public_list(key: str, items: List[Dict[str, Any]], fetch: MindexFetch) -> Dict[str, Any]:
+    qualification = "QUALIFIED" if fetch.ok and items else "UNQUALIFIED"
+    reason = fetch.reason if not fetch.ok else ("ok" if items else "empty")
+    return {
+        key: items,
+        "items": items,
+        "qualification": qualification,
+        "source": "mindex",
+        "source_path": fetch.path,
+        "source_status": fetch.status,
+        "reason": reason,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> MindexFetch:
+    url = f"{_mindex_api_base()}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            response = await client.get(url, params=params, headers=_mindex_headers())
+            if response.status_code >= 400:
+                logger.warning("MINDEX GET %s failed status=%s", path, response.status_code)
+                return MindexFetch(False, response.status_code, _empty_mindex_payload(), "upstream_error", path)
+            raw = response.json()
+            data = raw if isinstance(raw, dict) else {"items": raw if isinstance(raw, list) else []}
+            return MindexFetch(True, response.status_code, data, "ok", path)
+    except httpx.TimeoutException as exc:
+        logger.warning("MINDEX GET %s timeout: %s", path, exc)
+        return MindexFetch(False, 504, _empty_mindex_payload(), "upstream_timeout", path)
+    except Exception as exc:
+        logger.warning("MINDEX GET %s unavailable: %s", path, exc)
+        return MindexFetch(False, 502, _empty_mindex_payload(), "upstream_unavailable", path)
+
+
+async def _post_json(path: str, payload: Dict[str, Any]) -> MindexFetch:
+    url = f"{_mindex_api_base()}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            response = await client.post(url, json=payload, headers=_mindex_headers())
+            if response.status_code >= 400:
+                logger.warning("MINDEX POST %s failed status=%s", path, response.status_code)
+                return MindexFetch(False, response.status_code, {}, "upstream_error", path)
+            raw = response.json()
+            data = raw if isinstance(raw, dict) else {"items": raw if isinstance(raw, list) else []}
+            return MindexFetch(True, response.status_code, data, "ok", path)
+    except httpx.TimeoutException as exc:
+        logger.warning("MINDEX POST %s timeout: %s", path, exc)
+        return MindexFetch(False, 504, {}, "upstream_timeout", path)
+    except Exception as exc:
+        logger.warning("MINDEX POST %s unavailable: %s", path, exc)
+        return MindexFetch(False, 502, {}, "upstream_unavailable", path)
 
 
 @router.get("/health")
@@ -76,11 +167,11 @@ async def health_check():
         "status": "healthy",
         "service": "fusarium",
         "timestamp": datetime.utcnow().isoformat(),
-        "upstream": MINDEX_API_URL,
+        "upstream": _mindex_api_base(),
     }
 
 
-@router.get("/species", response_model=List[Dict[str, Any]])
+@router.get("/species")
 async def get_fungal_species(
     min_lat: Optional[float] = Query(default=None, ge=-90, le=90),
     max_lat: Optional[float] = Query(default=None, ge=-90, le=90),
@@ -90,30 +181,31 @@ async def get_fungal_species(
     pathogenic_only: bool = False,
     limit: int = Query(default=100, ge=1, le=1000),
 ):
-    try:
-        params: Dict[str, Any] = {"limit": limit}
-        if species_name:
-            params["name"] = species_name
-        if pathogenic_only:
-            params["pathogenic"] = "true"
-        if min_lat is not None:
-            params["min_lat"] = min_lat
-        if max_lat is not None:
-            params["max_lat"] = max_lat
-        if min_lon is not None:
-            params["min_lon"] = min_lon
-        if max_lon is not None:
-            params["max_lon"] = max_lon
+    params: Dict[str, Any] = {
+        "limit": limit,
+        "q": species_name or "Fusarium",
+        "kingdom": "Fungi",
+    }
+    if pathogenic_only:
+        params["lineage_contains"] = "Fusarium"
+    if min_lat is not None:
+        params["min_lat"] = min_lat
+    if max_lat is not None:
+        params["max_lat"] = max_lat
+    if min_lon is not None:
+        params["min_lon"] = min_lon
+    if max_lon is not None:
+        params["max_lon"] = max_lon
 
-        data = await _get("/species/fungi", params)
-        if "species" in data and isinstance(data["species"], list):
-            return data["species"]
-        if "items" in data and isinstance(data["items"], list):
-            return data["items"]
-        return []
-    except httpx.HTTPError as exc:
-        logger.error("Species query failed: %s", exc)
-        raise HTTPException(status_code=502, detail="mindex_species_query_failed") from exc
+    fetch = await _get("/taxa", params)
+    rows: List[Dict[str, Any]] = []
+    if isinstance(fetch.data.get("data"), list):
+        rows = [item for item in fetch.data["data"] if isinstance(item, dict)]
+    elif isinstance(fetch.data.get("items"), list):
+        rows = [item for item in fetch.data["items"] if isinstance(item, dict)]
+    elif isinstance(fetch.data.get("species"), list):
+        rows = [item for item in fetch.data["species"] if isinstance(item, dict)]
+    return _public_list("species", rows, fetch)
 
 
 @router.post("/dispersal")
@@ -125,16 +217,18 @@ async def calculate_spore_dispersal(request: DispersalRequest):
         "forecast_hours": request.forecast_hours,
         "wind_factor": request.wind_factor,
     }
-    # Uses tactical assessment endpoint as current upstream model surface.
-    async with httpx.AsyncClient(timeout=25.0) as client:
-        headers = (
-            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
-            if MINDEX_INTERNAL_TOKEN
-            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
-        )
-        response = await client.post(f"{MINDEX_API_URL}/nlm/assess/tactical", json=payload, headers=headers)
-        response.raise_for_status()
-        return response.json()
+    fetch = await _post_json("/nlm/assess/tactical", payload)
+    if not fetch.ok:
+        return {
+            "qualification": "UNQUALIFIED",
+            "source": "mindex",
+            "source_path": fetch.path,
+            "source_status": fetch.status,
+            "reason": fetch.reason,
+            "items": [],
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    return fetch.data
 
 
 @router.get("/dispersal")
@@ -144,14 +238,24 @@ async def get_current_dispersal(
     min_lon: Optional[float] = Query(default=None, ge=-180, le=180),
     max_lon: Optional[float] = Query(default=None, ge=-180, le=180),
 ):
-    # Returns ocean environment + assessments; client can render active zones from real observations.
     ocean = await _get("/maritime/ocean-environments", {"limit": 200})
     assessments = await _get("/taco/assessments", {"limit": 200, "offset": 0})
+    environments = ocean.data.get("environments", []) if isinstance(ocean.data.get("environments"), list) else []
+    assessment_rows = assessments.data.get("assessments", []) if isinstance(assessments.data.get("assessments"), list) else []
+    ok = ocean.ok and assessments.ok
+    has_rows = bool(environments or assessment_rows)
+    failed = assessments if not assessments.ok else ocean
     return {
         "timestamp": datetime.utcnow().isoformat(),
         "bounds": {"min_lat": min_lat, "max_lat": max_lat, "min_lon": min_lon, "max_lon": max_lon},
-        "ocean_environments": ocean.get("environments", []),
-        "assessments": assessments.get("assessments", []),
+        "ocean_environments": environments,
+        "assessments": assessment_rows,
+        "items": assessment_rows,
+        "qualification": "QUALIFIED" if ok and has_rows else "UNQUALIFIED",
+        "source": "mindex",
+        "source_path": failed.path,
+        "source_status": failed.status if not ok else 200,
+        "reason": failed.reason if not ok else ("ok" if has_rows else "empty"),
     }
 
 
@@ -160,10 +264,12 @@ async def get_risk_zones(
     crop: Optional[str] = None,
     threat_level: Optional[str] = None,
 ):
-    assessments = await _get("/taco/assessments", {"limit": 200, "offset": 0})
-    result = []
-    for item in assessments.get("assessments", []):
-        urgency = float(item.get("urgency", 0.0))
+    fetch = await _get("/taco/assessments", {"limit": 200, "offset": 0})
+    result: List[Dict[str, Any]] = []
+    for item in fetch.data.get("assessments", []):
+        if not isinstance(item, dict):
+            continue
+        urgency = float(item.get("urgency", 0.0) or 0.0)
         if threat_level == "low" and urgency > 0.33:
             continue
         if threat_level == "medium" and not (0.33 < urgency <= 0.66):
@@ -173,7 +279,7 @@ async def get_risk_zones(
         if crop and crop.lower() not in str(item).lower():
             continue
         result.append(item)
-    return result
+    return _public_list("risk_zones", result, fetch)
 
 
 @router.get("/threats")
@@ -182,21 +288,25 @@ async def get_active_threats(
     category: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
 ):
-    assessments = await _get("/taco/assessments", {"limit": max(limit, 200), "offset": 0})
+    fetch = await _get("/taco/assessments", {"limit": max(limit, 200), "offset": 0})
     threats: List[Dict[str, Any]] = []
-    for item in assessments.get("assessments", []):
-        urgency = float(item.get("urgency", 0.0))
+    for item in fetch.data.get("assessments", []):
+        if not isinstance(item, dict):
+            continue
+        urgency = float(item.get("urgency", 0.0) or 0.0)
         threat_severity = "critical" if urgency >= 0.85 else "high" if urgency >= 0.66 else "medium" if urgency >= 0.33 else "low"
         domain_category = item.get("assessment_type", "marine")
         if severity and severity != threat_severity:
             continue
         if category and category != domain_category:
             continue
+        classification = item.get("classification") if isinstance(item.get("classification"), dict) else {}
+        recommendation = item.get("recommendation") if isinstance(item.get("recommendation"), dict) else {}
         threats.append(
             {
                 "id": str(item.get("assessment_id") or item.get("id") or datetime.utcnow().timestamp()),
-                "title": item.get("classification", {}).get("label", "Tactical Assessment"),
-                "description": item.get("recommendation", {}).get("summary", "Assessment available"),
+                "title": classification.get("label", "Tactical Assessment"),
+                "description": recommendation.get("summary", "Assessment available"),
                 "severity": threat_severity,
                 "category": domain_category,
                 "source": "mindex/taco",
@@ -206,7 +316,7 @@ async def get_active_threats(
         )
         if len(threats) >= limit:
             break
-    return threats
+    return _public_list("threats", threats, fetch)
 
 
 @router.post("/threats/report")
@@ -254,14 +364,17 @@ async def maritime_threat_panel():
 
 @router.get("/maritime/sensor-network")
 async def maritime_sensor_network():
-    return await _get("/taco/sensor-status")
+    fetch = await _get("/taco/sensor-status")
+    return fetch.data
 
 
 @router.get("/maritime/contacts")
 async def maritime_contacts(limit: int = Query(default=100, ge=1, le=500)):
     observations = await _get("/taco/observations", {"limit": limit, "offset": 0})
     contacts = []
-    for item in observations.get("observations", []):
+    for item in observations.data.get("observations", []):
+        if not isinstance(item, dict):
+            continue
         classification = item.get("nlm_classification") or {}
         contacts.append(
             {
@@ -291,25 +404,30 @@ async def maritime_environment(
     if lat is not None and lon is not None:
         params.update({"lat": lat, "lon": lon, "radius_nm": radius_nm})
     environments = await _get("/maritime/ocean-environments", params)
-    return {"environment": environments.get("environments", []), "total": len(environments.get("environments", []))}
+    rows = environments.data.get("environments", []) if isinstance(environments.data.get("environments"), list) else []
+    return {"environment": rows, "total": len(rows)}
 
 
 @router.post("/maritime/assess")
 async def maritime_assessment(payload: Dict[str, Any]):
-    async with httpx.AsyncClient(timeout=25.0) as client:
-        headers = (
-            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
-            if MINDEX_INTERNAL_TOKEN
-            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
-        )
-        response = await client.post(f"{MINDEX_API_URL}/nlm/assess/tactical", json=payload, headers=headers)
-        response.raise_for_status()
-        return response.json()
+    fetch = await _post_json("/nlm/assess/tactical", payload)
+    if not fetch.ok:
+        return {
+            "qualification": "UNQUALIFIED",
+            "source": "mindex",
+            "source_path": fetch.path,
+            "source_status": fetch.status,
+            "reason": fetch.reason,
+            "items": [],
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    return fetch.data
 
 
 @router.get("/maritime/threat-history")
 async def maritime_threat_history(limit: int = Query(default=100, ge=1, le=500)):
-    return await _get("/taco/assessments", {"limit": limit, "offset": 0})
+    fetch = await _get("/taco/assessments", {"limit": limit, "offset": 0})
+    return fetch.data
 
 
 @router.get("/maritime/fusion-status")
@@ -320,13 +438,13 @@ async def maritime_fusion_status():
     return {
         "sources": {
             "maritime_sensor_network": {"online_sensors": len(sensors), "status": "online" if sensors else "degraded"},
-            "mindex_observations": {"count": observations.get("total", 0)},
-            "taco_assessments": {"count": assessments.get("total", 0)},
+            "mindex_observations": {"count": observations.data.get("total", 0)},
+            "taco_assessments": {"count": assessments.data.get("total", 0)},
         },
         "processing_lag": "live",
         "data_quality_metrics": {
-            "observation_count": observations.get("total", 0),
-            "assessment_count": assessments.get("total", 0),
+            "observation_count": observations.data.get("total", 0),
+            "assessment_count": assessments.data.get("total", 0),
         },
     }
 
@@ -336,14 +454,16 @@ async def maritime_correlation_graph(limit: int = Query(default=100, ge=1, le=50
     events = await _get("/fusarium/correlation-events", {"limit": limit})
     nodes = {}
     edges = []
-    for event in events.get("events", []):
+    for event in events.data.get("events", []):
+        if not isinstance(event, dict):
+            continue
         entity_id = str(event.get("entity_id"))
         nodes[entity_id] = {"id": entity_id, "type": "entity"}
         for domain in event.get("domains", []):
             domain_id = f"domain:{domain}"
             nodes[domain_id] = {"id": domain_id, "type": "domain", "label": domain}
             edges.append({"source": entity_id, "target": domain_id, "confidence": event.get("confidence", 0.0)})
-    return {"nodes": list(nodes.values()), "edges": edges, "total_events": events.get("total", 0)}
+    return {"nodes": list(nodes.values()), "edges": edges, "total_events": events.data.get("total", 0)}
 
 
 @router.get("/maritime/provenance/{observation_id}")
@@ -352,13 +472,13 @@ async def maritime_provenance(observation_id: str):
     related = await _get("/taco/assessments", {"limit": 100, "offset": 0})
     matching = [
         item
-        for item in related.get("assessments", [])
-        if observation_id in [str(value) for value in item.get("observation_ids", [])]
+        for item in related.data.get("assessments", [])
+        if isinstance(item, dict) and observation_id in [str(value) for value in item.get("observation_ids", [])]
     ]
     return {
-        "observation": observation.get("observation"),
+        "observation": observation.data.get("observation"),
         "related_assessments": matching,
-        "merkle_hash": (observation.get("observation") or {}).get("merkle_hash"),
+        "merkle_hash": (observation.data.get("observation") or {}).get("merkle_hash"),
     }
 
 
@@ -366,7 +486,9 @@ async def maritime_provenance(observation_id: str):
 async def maritime_decision_aid(limit: int = Query(default=25, ge=1, le=100)):
     assessments = await _get("/taco/assessments", {"limit": limit, "offset": 0})
     recommendations = []
-    for item in assessments.get("assessments", []):
+    for item in assessments.data.get("assessments", []):
+        if not isinstance(item, dict):
+            continue
         recommendation = item.get("recommendation")
         if recommendation:
             recommendations.append(recommendation)

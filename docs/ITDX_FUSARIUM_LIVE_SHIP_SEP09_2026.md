@@ -37,7 +37,7 @@ Local env password-key names did not match Supabase (`grant_type=password` last 
 | Channel | Status | Notes |
 |---|---|---|
 | weather | **SUPPLIED** | Open-Meteo at **31.8697,-81.6072**. Earth-2 **249 down** — not required. |
-| biology | **SUPPLIED** | Live GBIF + iNaturalist. MINDEX 189 `/health` 200; taxa/observations still 404. |
+| biology | **SUPPLIED** | Live GBIF + iNaturalist. MINDEX 189 `/health` 200. Public Fusarium species now hits `/api/mindex/taxa` (see below). |
 | information / equipment_weapons_assets | **SUPPLIED** | Public names / roads only. Exercise tracks `live=false`. |
 | NLM | **BOUND** `model_loaded=true` | Not stub-only. Stub **0.85 is never Fusarium p**. |
 | chemistry / physics | **UNQUALIFIED** | Loaded NLM is not a labeled chemistry/physics p. `p=null`. No `SCORED` until a labeled checkpoint is ops-loaded. PhysicsNeMo unset. |
@@ -46,6 +46,23 @@ Local env password-key names did not match Supabase (`grant_type=password` last 
 | fusion p_truth / p_deception | **NOT_SUPPLIED** | Website geometry owns demo P(truth). |
 
 MAS health **200 degraded** is intentional: skip-startup ON, collectors off so 8001 does not wedge. Registry **48** agents. `health.agents` empty by design. AVANI **200**. n8n **5678** ok. MINDEX **189:8000** + Postgres/Redis/Qdrant healthy. Do **not** run huge GBIF syncs (188 disk was 94% after journal vacuum).
+
+---
+
+## Public Fusarium API 5xx fix (09 Sep 2026)
+
+Hot on MAS **188** before this commit. Persist so the next `git pull` on 188 does not revert production.
+
+**Cause:** `MINDEX_API_URL` on 188 is origin-only (`http://192.168.0.189:8000`). The router treated it as already including `/api/mindex`, called missing paths such as `/species/fungi`, and `raise_for_status()` turned MINDEX **404** into Fusarium **500**.
+
+**Fix:** Prefix `/api/mindex` when missing; species uses `/taxa` (`q=Fusarium`); public GETs return **200** with honest `UNQUALIFIED` when the list is empty or upstream is degraded. No mock rows.
+
+| Live `188:8001` route | Result |
+|---|---|
+| `GET /api/fusarium/threats` | **200** `UNQUALIFIED` empty (no TACO assessments) |
+| `GET /api/fusarium/dispersal` | **200** `UNQUALIFIED` empty |
+| `GET /api/fusarium/risk-zones` | **200** `UNQUALIFIED` empty |
+| `GET /api/fusarium/species` | **200** ~**100 Fusarium taxa** from MINDEX `/api/mindex/taxa` |
 
 ---
 
