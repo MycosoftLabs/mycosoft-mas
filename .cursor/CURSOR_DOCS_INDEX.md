@@ -6,6 +6,16 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+
+## ITDX26 connect (Sep 09, 2026)
+- `docs/ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md` — Live ship: local proofs, 188/189 hot data, Weka PASS + trial NOT_MET, blue-green 187
+- `docs/ITDX_VM_BACKENDS_SEP09_2026.md` — 188/189 source of truth; NLM model_loaded=true BOUND; no stub 0.85 p
+- `docs/ITDX_V14_LAB_INTEGRATION_SEP09_2026.md` — v1.4 Weka replay PASS; trial criteria NOT_MET
+- `docs/ITDX_EXTERNAL_SOURCES_INTEGRATION_SEP09_2026.md` — Public OSINT; traffic REQUEST_DENIED
+- `docs/MAS_MYCA_AVANI_FUSARIUM_ITDX_INTEGRATION_PLAN_SEP09_2026.md` — Situation contract; no fake green
+- `docs/CURSOR_ITDX26_CODEX_V13_CONNECT_SEP09_2026.md` — Codex v1.3 Fusarium ITDX app
+- `docs/CURSOR_ITDX26_INTEGRATION_SEP08_2026.md` — v1.2/v1.3 handoff; FOUO STOP_INGEST
+
 ## Earth Sim Phase 7 website handoff (June 22, 2026)
 | Doc | Purpose |
 |-----|---------|

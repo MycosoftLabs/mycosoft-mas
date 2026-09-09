@@ -1199,6 +1199,21 @@ try:
 except ImportError:
     pass
 
+# ITDX Task 8 + Earth Sim situation assessment (September 9, 2026)
+try:
+    from mycosoft_mas.core.routers.itdx_api import (
+        avani_task8_router,
+        myca_task8_router,
+        router as itdx_router,
+    )
+
+    app.include_router(itdx_router, tags=["itdx"])
+    app.include_router(avani_task8_router, tags=["itdx"])
+    app.include_router(myca_task8_router, tags=["itdx"])
+except ImportError:
+    pass
+
+
 
 # ---------------------------------------------------------------------------
 # RaaS — Robot-as-a-Service Agent Platform (March 2026)
