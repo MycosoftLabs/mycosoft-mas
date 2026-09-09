@@ -107,10 +107,25 @@ def _center(ao: Dict[str, Any]) -> Tuple[float, float]:
 
 def _mindex_headers() -> Dict[str, str]:
     headers = {"Accept": "application/json"}
-    token = (os.getenv("MINDEX_INTERNAL_TOKEN") or "").strip()
-    api_key = (os.getenv("MINDEX_API_KEY") or "").strip()
+    secret = (os.getenv("MINDEX_INTERNAL_SECRET") or "").strip()
+    token = ""
+    if secret:
+        try:
+            from mycosoft_mas.integrations.mqtt_mycobrain_bridge import _mindex_hmac_token
+
+            svc = (os.getenv("MINDEX_INTERNAL_SERVICE_NAME") or "mas-orchestrator").strip()
+            token = _mindex_hmac_token(svc, secret)
+        except Exception:
+            token = ""
+    if not token:
+        token = (
+            os.getenv("MINDEX_INTERNAL_TOKEN")
+            or (os.getenv("MINDEX_INTERNAL_TOKENS") or "").split(",")[0]
+            or ""
+        ).strip()
     if token:
         headers["X-Internal-Token"] = token
+    api_key = (os.getenv("MINDEX_API_KEY") or "").strip()
     if api_key:
         headers["X-API-Key"] = api_key
     return headers
@@ -146,19 +161,63 @@ async def _get_json(
 async def fetch_mindex_slice(ao: Dict[str, Any]) -> Dict[str, Any]:
     """MINDEX first. Empty/401/down is honest — callers fall back to public APIs."""
     health = await _get_json(f"{MINDEX_URL}/health")
-    # Live 189 exposes /health; /taxa and /observations 404. Do not burn the 5s budget.
+    headers = _mindex_headers()
+    west, south, east, north = _bbox(ao)
+    taxa = await _get_json(
+        f"{MINDEX_URL}/api/mindex/taxa",
+        params={
+            "q": "Fusarium",
+            "kingdom": "Fungi",
+            "limit": 8,
+            "min_lat": south,
+            "max_lat": north,
+            "min_lon": west,
+            "max_lon": east,
+        },
+        headers=headers,
+        timeout=1.6,
+    )
+    observations = await _get_json(
+        f"{MINDEX_URL}/api/mindex/observations",
+        params={"q": "Fusarium", "limit": 8, "min_lat": south, "max_lat": north, "min_lon": west, "max_lon": east},
+        headers=headers,
+        timeout=1.6,
+    )
+    def _rows(payload: Any, keys: tuple[str, ...]) -> List[Dict[str, Any]]:
+        if isinstance(payload, list):
+            return [row for row in payload if isinstance(row, dict)]
+        if not isinstance(payload, dict):
+            return []
+        out: List[Dict[str, Any]] = []
+        for key in keys:
+            value = payload.get(key)
+            if isinstance(value, list):
+                out.extend(row for row in value if isinstance(row, dict))
+        return out
+
+    taxa_rows = _rows(taxa.get("data"), ("data", "items", "species", "taxa"))
+    obs_rows = _rows(observations.get("data"), ("data", "items", "observations"))
+    has_taxa = bool(taxa.get("ok") and taxa_rows)
+    has_obs = bool(observations.get("ok") and obs_rows)
+    note = "MINDEX /api/mindex/taxa + /observations cheap Fusarium slice."
+    if not taxa.get("ok") and not observations.get("ok"):
+        note = (
+            f"MINDEX slice routes returned "
+            f"taxa={taxa.get('status_code')} observations={observations.get('status_code')}. "
+            "GBIF/iNat used instead."
+        )
     return {
         "source": "mindex",
         "base": MINDEX_URL,
         "health": health,
         "stats": {},
-        "taxa": {},
-        "observations": {},
+        "taxa": {"status_code": taxa.get("status_code"), "count": len(taxa_rows)},
+        "observations": {"status_code": observations.get("status_code"), "count": len(obs_rows)},
         "compounds": {},
-        "has_taxa": False,
-        "has_observations": False,
+        "has_taxa": has_taxa,
+        "has_observations": has_obs,
         "has_compounds": False,
-        "note": "MINDEX /health only on 189. Slice routes 404 — GBIF/iNat used instead.",
+        "note": note,
     }
 
 
