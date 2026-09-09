@@ -15,7 +15,7 @@ Morgan asked to save today's work so he can get to commit. FormSpace forecast we
 |---|---|---|---|
 | `MAS/mycosoft-mas` | `cursor/field-operator-live-observations-sep01` | `c945d7bc5` | Bind ITDX/FormSpace to real NAS NLM, never Ollama or stub 0.85 |
 | `WEBSITE/website-itdx-codex-v13` | `cursor/itdx-codex-v13-connect-20260909` | `e197be61` | Keep today's Fusarium ITDX walkthrough proofs |
-| `MAS/mycosoft-mas` (this note) | same as above | this docs commit | Record the save + next weights drop |
+| `MAS/mycosoft-mas` (this note) | same as above | 65af353a4 | Record the save + next weights drop |
 
 Website ITDX app code itself was already on `58384b2d` (`feat(itdx): ship Fusarium Intel Feed, Weka walkthrough, and owner-gated APIs`). Today's extra commit is proofs + verify scripts only.
 
