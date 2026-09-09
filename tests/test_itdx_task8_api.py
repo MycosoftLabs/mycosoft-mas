@@ -188,6 +188,7 @@ def test_assessment_does_not_http_self():
 
     source = open(itdx_api.__file__, encoding="utf-8").read()
     assert "gather_public_osint" in source
+    assert "gather_google_maps" in source
     assert "in-process (no HTTP to 127.0.0.1:8001 / self)" in source
     assert "MAS_INTERNAL_URL" not in source
     assert "_get_json(" not in source
@@ -200,4 +201,32 @@ def test_osint_keeps_weather_in_first_wave():
     assert "async def _await_named" in source
     assert '"weather": fetch_open_meteo(ao)' in source
     assert "priority = {" in source
-    assert itdx_api.ASSESSMENT_WALL_S >= 5.6
+    assert itdx_api.ASSESSMENT_WALL_S >= 14.0
+    assert itdx_api.GOOGLE_MAPS_WALL_S >= 12.0
+
+
+def test_fusarium_google_key_is_preferred():
+    from mycosoft_mas.core.routers.itdx_public_sources import GOOGLE_KEY_NAMES
+
+    assert GOOGLE_KEY_NAMES[0] == "FUSARIUM_GOOGLE_MAPS_API_KEY"
+
+
+def test_google_timeout_reason_is_not_request_denied():
+    from mycosoft_mas.core.routers.itdx_api import _google_channel_reason, _stamp_google_timeout_reasons
+
+    reason = _google_channel_reason(
+        {"google_key_present": True},
+        {"ok": False, "error": "timeout>12.0s", "reason": "google_maps_timeout"},
+        {"ok": False, "error": "timeout>12.0s", "reason": "google_maps_timeout"},
+    )
+    assert reason == "google_maps_timeout"
+    assert reason != "REQUEST_DENIED"
+    stamped = _stamp_google_timeout_reasons(
+        {
+            "traffic": {"status": "NOT_SUPPLIED", "p": None},
+            "pathways": {"status": "NOT_SUPPLIED", "p": None},
+            "navigation": {"status": "NOT_SUPPLIED", "p": None},
+        }
+    )
+    assert stamped["traffic"]["reason"] == "google_maps_timeout"
+    assert stamped["traffic"]["p"] is None
