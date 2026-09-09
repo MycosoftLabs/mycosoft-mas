@@ -67,7 +67,7 @@ class IntentionAgent(BaseAgent if BaseAgent is not object else object):  # type:
                 svc = IntentionService()
             candidates = await svc.get_plan_candidates(intent_graph)
             out = [
-                {"plan": getattr(c, "plan", c), "score": getattr(c, "score", 1.0)}
+                {"plan": getattr(c, "plan", c), "score": getattr(c, "score", None)}
                 for c in (candidates or [])
             ]
             return {"status": "success", "result": {"candidates": out}}

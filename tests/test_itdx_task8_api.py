@@ -133,6 +133,56 @@ def test_google_polyline_decodes_to_lonlat():
     assert abs(lon - (-120.2)) < 0.01
 
 
+def test_intention_service_is_importable_and_unscored():
+    import asyncio
+
+    from mycosoft_mas.engines.intention import IntentionService
+    from mycosoft_mas.engines.intention.intention_service import PlanCandidate
+
+    async def _run() -> None:
+        svc = IntentionService()
+        graph = await svc.decompose("Review Fort Stewart. Advisory only.")
+        assert "ADVISORY_ONLY" in graph.constraints
+        candidates = await svc.get_plan_candidates(graph)
+        assert candidates
+        assert isinstance(candidates[0], PlanCandidate)
+        assert candidates[0].score is None
+
+    asyncio.run(_run())
+
+
+def test_nlm_channel_from_predict_rejects_stub_085():
+    from mycosoft_mas.core.routers.itdx_api import _nlm_channel_from_predict
+
+    row = _nlm_channel_from_predict(
+        {
+            "ok": True,
+            "status_code": 200,
+            "data": {
+                "text": "NLM stub placeholder",
+                "confidence": 0.85,
+                "metadata": {"stub": True, "confidence_usable": False},
+            },
+        },
+        agent_id="nlm",
+        domain="ecology",
+    )
+    assert row["status"] == "UNQUALIFIED"
+    assert row["p"] is None
+
+
+def test_qualify_seven_roles_degraded_when_intention_errors():
+    from mycosoft_mas.agents.itdx_task8_agent import qualify_seven_roles
+
+    roles = [{"bound": True, "error": None} for _ in range(7)]
+    roles[1] = {
+        "bound": False,
+        "error": "No module named 'mycosoft_mas.engines.intention.intention_service'",
+    }
+    assert qualify_seven_roles(roles) == "DEGRADED"
+    assert qualify_seven_roles(roles) != "BOUND"
+
+
 def test_assessment_does_not_http_self():
     from mycosoft_mas.core.routers import itdx_api
 
