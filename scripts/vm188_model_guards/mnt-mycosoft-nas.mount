@@ -1,0 +1,13 @@
+[Unit]
+Description=Mycosoft NAS (8-bay, currently 2x8TB) for NLM + MYCA model trees
+After=network-online.target
+Wants=network-online.target
+
+[Mount]
+What=//192.168.0.105/mycosoft.com
+Where=/mnt/mycosoft-nas
+Type=cifs
+Options=credentials=/etc/samba/mycosoft-nas.creds,vers=3.0,iocharset=utf8,uid=1000,gid=1000,file_mode=0664,dir_mode=0775,noperm,_netdev
+
+[Install]
+WantedBy=multi-user.target

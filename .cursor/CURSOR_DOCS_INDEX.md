@@ -17,6 +17,7 @@
 - `docs/FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md` — Scientific NLM vs MYCA Ollama compartments; no GGUF in `/models/nlm`
 - `docs/FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md` — Stage B ledger; `model_loaded=false` until Morgan weights
 - `docs/NLM_WEIGHTS_ON_188_SEP09_2026.md` — Ollama bind reverted; NAS incoming drop only; no 188 blob copy
+- `docs/VM188_NAS_MODEL_PROTECTION_SEP09_2026.md` — 188 compute only; NAS 8-bay/2×8TB (`df` 7.3T); Ollama on `models/myca`; fail-closed; UDM 27TB Protect-only
 
 ## ITDX26 connect (Sep 09, 2026)
 - `docs/ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md` — Live ship: local proofs, 188/189 hot data, Weka PASS + trial NOT_MET, blue-green 187

@@ -7,6 +7,7 @@
 - [FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md](FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md) — Scientific NLM on NAS `models/nlm` vs MYCA Ollama `models/myca`
 - [FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md](FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md) — Stage B forecast ledger; no stub 0.85 p
 - [NLM_WEIGHTS_ON_188_SEP09_2026.md](NLM_WEIGHTS_ON_188_SEP09_2026.md) — Ollama NLM adapter reverted; wait for Morgan `incoming/weights.pt`
+- [VM188_NAS_MODEL_PROTECTION_SEP09_2026.md](VM188_NAS_MODEL_PROTECTION_SEP09_2026.md) — 188 root fail-closed; NAS 8-bay 2×8TB (`df` 7.3T / 7.2T free); MYCA GGUF on `models/myca`; UDM 27TB Protect-only
 
 ## ITDX Google traffic wall (SEP09 2026)
 - [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
