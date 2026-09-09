@@ -30,7 +30,11 @@ from mycosoft_mas.agents.itdx_task8_agent import (
     SITUATION_SCHEMA_VERSION,
     mapped_role_probes,
 )
-from mycosoft_mas.core.routers.itdx_public_sources import gather_public_osint
+from mycosoft_mas.core.routers.itdx_public_sources import (
+    apply_google_osint,
+    gather_google_maps,
+    gather_public_osint,
+)
 from mycosoft_mas.nlm.inference.service import (
     NLM_STUB_CONFIDENCE,
     is_usable_nlm_confidence,
@@ -59,9 +63,27 @@ CHANNEL_KEYS = (
     "navigation",
 )
 
-# Wall clock for situation-assessment. Must return before Fusarium 8s abort.
-ASSESSMENT_WALL_S = 5.6
+# Google Directions / Distance Matrix need more than the old 4.8–5.6s
+# Fusarium abort budget. Other OSINT stays short. No invented scores.
+ASSESSMENT_WALL_S = 14.0
+GOOGLE_MAPS_WALL_S = 12.0
+OSINT_OTHER_WALL_S = 4.4
 PROBE_S = 1.2
+GOOGLE_TIMEOUT_DEFAULT = {
+    "google_directions": {
+        "ok": False,
+        "error": "timeout",
+        "reason": "google_maps_timeout",
+        "routes": [],
+        "source": "google-directions",
+    },
+    "google_traffic": {
+        "ok": False,
+        "error": "timeout",
+        "reason": "google_maps_timeout",
+        "source": "google-traffic",
+    },
+}
 
 MAS_PUBLIC_URL = os.getenv("MAS_API_URL", "http://192.168.0.188:8001").rstrip("/")
 MINDEX_PUBLIC_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
@@ -170,6 +192,23 @@ def _channel(
     return row
 
 
+def _google_channel_reason(osint: Dict[str, Any], traffic: Dict[str, Any], directions: Dict[str, Any]) -> str:
+    """Honest Google failure reason. Timeout is not REQUEST_DENIED."""
+    if not osint.get("google_key_present"):
+        return "google_maps_key_missing"
+    for block in (traffic, directions):
+        reason = block.get("reason")
+        if reason:
+            return str(reason)
+        status = block.get("google_status")
+        if status and status != "OK":
+            return str(status)
+        err = str(block.get("error") or "")
+        if "timeout" in err.lower() or "deadline" in err.lower():
+            return "google_maps_timeout"
+    return "google_maps_api_denied"
+
+
 def _channel_from_osint(block: Dict[str, Any], *, agent_id: Optional[str] = None) -> Dict[str, Any]:
     """Map a public-OSINT block onto the situation channel contract. Never invents p."""
     if not isinstance(block, dict):
@@ -243,6 +282,17 @@ def _empty_channels(*, note: str, error: Optional[str] = None) -> Dict[str, Any]
     return {
         key: _channel(status="NOT_SUPPLIED", note=note, error=error) for key in CHANNEL_KEYS
     }
+
+
+def _stamp_google_timeout_reasons(channels: Dict[str, Any]) -> Dict[str, Any]:
+    """Wall abort is a timeout, not REQUEST_DENIED. No invented p."""
+    out = dict(channels)
+    for key in ("traffic", "pathways", "navigation"):
+        row = dict(out.get(key) or {})
+        row["reason"] = "google_maps_timeout"
+        row["p"] = None
+        out[key] = row
+    return out
 
 
 def _fusion_block() -> Dict[str, Any]:
@@ -429,13 +479,22 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
     ) -> Dict[str, Any]:
         try:
             return await asyncio.wait_for(coro, timeout=timeout)
+        except asyncio.TimeoutError:
+            logger.warning("situation-assessment %s probe failed: timeout>%.1fs", name, timeout)
+            out = dict(default)
+            out["error"] = f"timeout>{timeout}s"
+            out.setdefault("reason", f"{name}_timeout")
+            return out
         except Exception as exc:
             logger.warning("situation-assessment %s probe failed: %s", name, exc)
             out = dict(default)
             out["error"] = str(exc)
             return out
 
-    nlm_data, earth2_data, physics, myca_data, avani_data, devices, osint = await asyncio.gather(
+    # Start Google first so Directions / Matrix are not cancelled by the
+    # short public-OSINT deadline. In-process only — no self-HTTP.
+    google_task = asyncio.create_task(gather_google_maps(ao))
+    nlm_data, earth2_data, physics, myca_data, avani_data, devices, osint, google = await asyncio.gather(
         _safe("nlm", _nlm_status_inprocess(), {"model_loaded": False, "qualification": "UNQUALIFIED"}),
         _safe("earth2", _earth2_status_inprocess(), {"available": False}),
         _safe("physics", _physics_remote(), {"ok": False, "available": False}),
@@ -445,9 +504,16 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
             _avani_evaluate_inprocess(place, clock, map_slice.get("origin")),
             {},
         ),
-        asyncio.to_thread(lambda: _devices_inprocess()),
-        _safe("osint", gather_public_osint(ao), {}, timeout=4.4),
+        _safe(
+            "devices",
+            asyncio.to_thread(_devices_inprocess),
+            {"ok": False, "devices": [], "device_count": 0},
+            timeout=PROBE_S,
+        ),
+        _safe("osint", gather_public_osint(ao), {}, timeout=OSINT_OTHER_WALL_S),
+        _safe("google", google_task, dict(GOOGLE_TIMEOUT_DEFAULT), timeout=GOOGLE_MAPS_WALL_S),
     )
+    osint = apply_google_osint(osint if isinstance(osint, dict) else {}, google if isinstance(google, dict) else {})
 
     model_loaded = bool(nlm_data.get("model_loaded"))
     nlm_predict = nlm_data.get("predict") if isinstance(nlm_data.get("predict"), dict) else {}
@@ -827,11 +893,7 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
 
     directions = osint.get("google_directions") if isinstance(osint.get("google_directions"), dict) else {}
     traffic = osint.get("google_traffic") if isinstance(osint.get("google_traffic"), dict) else {}
-    google_missing_reason = (
-        "google_maps_key_missing"
-        if not osint.get("google_key_present")
-        else (traffic.get("google_status") or directions.get("google_status") or "google_maps_api_denied")
-    )
+    google_missing_reason = _google_channel_reason(osint, traffic, directions)
     if traffic.get("ok"):
         channels["traffic"] = _channel(
             status="SUPPLIED",
@@ -1035,9 +1097,11 @@ async def run_situation_assessment(map_slice: Dict[str, Any]) -> Dict[str, Any]:
             },
             "myca": {"status": "unknown", "note": "assessment wall time exceeded"},
             "brain": {"used_as_task8": False},
-            "channels": _empty_channels(
-                note="Assessment wall time exceeded. Partial NOT_SUPPLIED. No invented p.",
-                error=f"timeout>{ASSESSMENT_WALL_S}s",
+            "channels": _stamp_google_timeout_reasons(
+                _empty_channels(
+                    note="Assessment wall time exceeded. Partial NOT_SUPPLIED. No invented p.",
+                    error=f"timeout>{ASSESSMENT_WALL_S}s",
+                )
             ),
             "fusion": _fusion_block(),
             "channel_order": list(CHANNEL_KEYS),

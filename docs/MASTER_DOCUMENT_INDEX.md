@@ -1,5 +1,8 @@
 # Master Document Index
 
+## ITDX Google traffic wall (SEP09 2026)
+- [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
+
 ## ITDX26 Fusarium live ship (SEP09 2026)
 - [ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md](ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md) — Local proofs + 188/189 hot data/math; Weka PASS / trial NOT_MET; add data without website rebuild; blue-green 187
 

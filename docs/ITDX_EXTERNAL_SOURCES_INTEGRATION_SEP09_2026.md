@@ -72,6 +72,32 @@ To flip those channels to SUPPLIED: on the **existing** GCP project, enable thes
 
 **GCP enable attempt (09 Sep 2026):** stopped. No `GCP_PROJECT` / `GOOGLE_CLOUD_PROJECT` in website `.env.local` or MAS `.credentials.local`. Local Cloud SDK: **not installed**, ADC file **missing**. 188: SSH ok, `gcloud` **not installed**. Directions / Distance Matrix / Geocoding re-probe (no key in stdout): still **`REQUEST_DENIED`** — “This API key is not authorized to use this service or API.” Blocker is **Google Cloud Console** (logged-in owner must enable those APIs / relax key API restrictions + billing). Not a missing-key problem. Do not commit or print the value.
 
+**Fusarium key hunt (09 Sep 2026, ~21:05 UTC) — after billing reopen + Morgan note that Directions/Matrix are on the newest Fusarium Google key, not Map Tiles/Gemini:**
+
+Searched (fingerprints only, values never printed): website + `website-itdx-codex-v13` `.env.local`, MAS `.credentials.local`, 188 `/home/mycosoft/mycosoft/mas/.credentials.maps.env` (root `0600`, mtime 18:37 UTC), Fusarium twins-host `.env.local` copies, other 14-day env/credential files under `CODE/`. No `FUSARIUM_*GOOGLE*` name exists on disk. Only two real `AIza` values:
+
+| sha256_12 | Names | Newest file mtime (UTC) | Directions / Distance Matrix |
+|---|---|---|---|
+| `da37efa21333` | tiles / Gemini / aliased `GOOGLE_MAPS_API_KEY` (local + **188 process env**) | website `.env.local` 2026-08-31; 188 maps.env 18:37 | HTTP 200 **`REQUEST_DENIED`** — API restriction (old tiles key) |
+| `377c33611a56` | MAS `.credentials.local` `GOOGLE_AI_API_KEY` only | 2026-09-09T18:36:45Z | HTTP 200 **`REQUEST_DENIED`** — **expired** |
+
+Did **not** invent a third key. Did **not** restart 188 (would reload the same tiles alias). Traffic / pathways stay NOT_SUPPLIED until the newest Fusarium Maps key is written to a gitignored file and copied onto 188 `.credentials.maps.env`. No 187 deploy. NLM left to `8f2910d5`.
+
+**Line 127 used (09 Sep 2026 ~21:24 UTC):** Duplicate empty placeholder was already gone. Kept line 127 `FUSARIUM_GOOGLE_MAPS_API_KEY` (len 39, AIza, sha256_12 `8655e95ff59e` — **not** tiles). Restored corrupted tiles line 126 (was len 78 concat) from website `.env.local` back to `da37efa21333`. Wrote 188 `.credentials.maps.env` from the Fusarium value; `mas-orchestrator` restarted once. Standalone Directions (Fort Stewart→Hunter) + Distance Matrix (Hunter|Hinesville) **OK**. Situation-assessment HTTP 200: traffic/pathways/navigation **NOT_SUPPLIED** (`timeout>4.8s` wall), not `REQUEST_DENIED`. No credentials commit. No 187. NLM left to `8f2910d5`.
+
+**Wall fix (09 Sep 2026):** Raised `ASSESSMENT_WALL_S` to 14s and run Google Directions/Matrix first with a 12s wall. See `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md`.
+
+**Paste repair (09 Sep 2026 ~21:14 UTC):** Morgan said the Fusarium paste was wrong. Re-read MAS `.credentials.local` (values never printed):
+
+| Var | Present | len | sha256_12 | AIza | Truncated |
+|---|---|---|---|---|---|
+| `FUSARIUM_GOOGLE_MAPS_API_KEY` | **False** (gone after bad paste) | — | — | — | — |
+| `GOOGLE_MAPS_API_KEY` | True | 39 | `da37efa21333` (tiles) | yes | no |
+| `NEXT_PUBLIC_GOOGLE_MAP_TILES_API_KEY` | True | 39 | `da37efa21333` | yes | no |
+| `GOOGLE_AI_API_KEY` | True | 39 | `377c33611a56` (expired) | yes | no |
+
+Website `.env.local` tiles still `da37efa21333` — no restore needed. 188 `.credentials.maps.env` still tiles-only (same hash); **not** overwritten with a Fusarium key. Empty `FUSARIUM_GOOGLE_MAPS_API_KEY=` placeholder added for re-paste. Cannot create a new GCP key: `gcloud` missing, ADC missing. No 188 restart. No 187. NLM left to `8f2910d5`.
+
 ---
 
 ## Public military OSINT (allowed)

@@ -39,6 +39,8 @@ PUBLIC_WEATHER_LAT = 31.8697
 PUBLIC_WEATHER_LON = -81.6072
 USER_AGENT = "Mycosoft-ITDX/1.0 (unclassified commercial exercise; +https://mycosoft.com)"
 PROBE_S = 2.0
+GOOGLE_PROBE_S = 12.0
+GOOGLE_MAPS_WALL_S = 12.0
 GOOGLE_DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json"
 GOOGLE_DISTANCE_URL = "https://maps.googleapis.com/maps/api/distancematrix/json"
 GOOGLE_PLACES_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
@@ -51,6 +53,7 @@ HUNTER_AAF_PUBLIC_NAME = "Hunter Army Airfield, Savannah, GA"
 FORT_STEWART_PUBLIC_NAME = "Fort Stewart, Georgia, USA"
 HINESVILLE_PUBLIC_NAME = "Hinesville, Georgia, USA"
 GOOGLE_KEY_NAMES = (
+    "FUSARIUM_GOOGLE_MAPS_API_KEY",
     "GOOGLE_MAPS_API_KEY",
     "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
     "GOOGLE_API_KEY",
@@ -616,6 +619,7 @@ async def fetch_google_directions(ao: Dict[str, Any]) -> Dict[str, Any]:
                     "traffic_model": "best_guess",
                     "key": key,
                 },
+                timeout=GOOGLE_PROBE_S,
             )
             for dest in destinations
         ],
@@ -650,6 +654,15 @@ async def fetch_google_directions(ao: Dict[str, Any]) -> Dict[str, Any]:
         "routes": routes_out,
         "retrieved_at": _utc_now(),
         "error": None if routes_out else last_error,
+        "reason": (
+            None
+            if routes_out
+            else (
+                "google_maps_timeout"
+                if last_error and "timeout" in str(last_error).lower()
+                else last_status
+            )
+        ),
         "note": "Public driving routes + live traffic duration. Cited Google. Not a military MGRS inject.",
     }
 
@@ -677,6 +690,7 @@ async def fetch_google_traffic(ao: Dict[str, Any]) -> Dict[str, Any]:
             "traffic_model": "best_guess",
             "key": key,
         },
+        timeout=GOOGLE_PROBE_S,
     )
     data = probe.get("data") if isinstance(probe.get("data"), dict) else {}
     rows = data.get("rows") if isinstance(data.get("rows"), list) else []
@@ -719,6 +733,15 @@ async def fetch_google_traffic(ao: Dict[str, Any]) -> Dict[str, Any]:
         "error": None
         if any(e.get("status") == "OK" for e in elements)
         else (data.get("error_message") or first.get("status") or probe.get("error")),
+        "reason": (
+            None
+            if any(e.get("status") == "OK" for e in elements)
+            else (
+                "google_maps_timeout"
+                if "timeout" in str(probe.get("error") or "").lower()
+                else data.get("status")
+            )
+        ),
         "note": "Live public-road traffic duration only. Cited Google. Not a weapons or officer score.",
     }
 
@@ -1116,11 +1139,91 @@ async def _await_named(jobs: Dict[str, Any], timeout: float) -> Dict[str, Any]:
     return done_map
 
 
+def apply_google_osint(osint: Dict[str, Any], google: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge Directions / Matrix into the OSINT pack. Never invents routes or p."""
+    out = dict(osint or {})
+    google = google if isinstance(google, dict) else {}
+    directions = (
+        google.get("google_directions")
+        if isinstance(google.get("google_directions"), dict)
+        else {"ok": False, "error": "timeout", "reason": "google_maps_timeout", "routes": []}
+    )
+    traffic = (
+        google.get("google_traffic")
+        if isinstance(google.get("google_traffic"), dict)
+        else {"ok": False, "error": "timeout", "reason": "google_maps_timeout"}
+    )
+    out["google_directions"] = directions
+    out["google_traffic"] = traffic
+    if "google_key_present" in google:
+        out["google_key_present"] = google.get("google_key_present")
+    if google.get("google_key_env_name"):
+        out["google_key_env_name"] = google.get("google_key_env_name")
+    nominatim = out.get("nominatim") if isinstance(out.get("nominatim"), dict) else {}
+    wikipedia = out.get("wikipedia") if isinstance(out.get("wikipedia"), dict) else {}
+    out["geojson"] = _geojson_from_osint(nominatim, wikipedia, directions)
+    return out
+
+
+async def gather_google_maps(ao: Dict[str, Any]) -> Dict[str, Any]:
+    """Directions + Distance Matrix in-process. Own 12s wall — not the short OSINT cut."""
+    import asyncio
+
+    key_name = _google_key_name()
+    if not _google_key_present():
+        return {
+            "google_directions": {
+                "ok": False,
+                "source": "google-directions",
+                "key_present": False,
+                "error": "GOOGLE_MAPS_API_KEY unset",
+                "reason": "google_maps_key_missing",
+                "routes": [],
+            },
+            "google_traffic": {
+                "ok": False,
+                "source": "google-traffic",
+                "key_present": False,
+                "error": "GOOGLE_MAPS_API_KEY unset",
+                "reason": "google_maps_key_missing",
+            },
+            "google_key_present": False,
+            "google_key_env_name": None,
+        }
+    dir_task = asyncio.create_task(fetch_google_directions(ao))
+    traffic_task = asyncio.create_task(fetch_google_traffic(ao))
+    _done, pending = await asyncio.wait({dir_task, traffic_task}, timeout=GOOGLE_MAPS_WALL_S)
+
+    def _take(task: asyncio.Task, name: str) -> Dict[str, Any]:
+        if task in pending:
+            task.cancel()
+            return {
+                "ok": False,
+                "source": name,
+                "error": f"timeout>{GOOGLE_MAPS_WALL_S}s",
+                "reason": "google_maps_timeout",
+                "key_present": True,
+            }
+        try:
+            result = task.result()
+            return result if isinstance(result, dict) else {"ok": False, "error": f"bad {name}", "reason": "google_maps_error"}
+        except Exception as exc:  # noqa: BLE001
+            err = str(exc)
+            reason = "google_maps_timeout" if "timeout" in err.lower() else "google_maps_error"
+            return {"ok": False, "source": name, "error": err, "reason": reason, "key_present": True}
+
+    return {
+        "google_directions": _take(dir_task, "google-directions"),
+        "google_traffic": _take(traffic_task, "google-traffic"),
+        "google_key_present": True,
+        "google_key_env_name": key_name,
+    }
+
+
 async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
-    """Parallel public + MINDEX + Google traffic/pathways for one AO slice.
+    """Parallel public + MINDEX. Google Maps is gathered separately (longer wall).
 
     Weather/biology stay in the first wave so extra OSINT cannot cancel Open-Meteo.
-    Google Directions (often REQUEST_DENIED) runs in a short second wave.
     """
     priority = {
         "weather": fetch_open_meteo(ao),
@@ -1132,8 +1235,6 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
         "pubchem": fetch_pubchem_fusaric(),
     }
     optional = {
-        "google_dir": fetch_google_directions(ao),
-        "google_traffic": fetch_google_traffic(ao),
         "gbif_species": fetch_gbif_species_match(),
         "air": fetch_open_meteo_air_quality(),
         "usgs": fetch_usgs_quakes(ao),
@@ -1150,8 +1251,8 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
     inat = done_map.get("inat")
     osm = {"ok": False, "source": "osm", "error": "deferred_for_latency", "places": []}
     nominatim = done_map.get("nominatim")
-    google_dir = done_map.get("google_dir")
-    google_traffic = done_map.get("google_traffic")
+    google_dir = {"ok": False, "source": "google-directions", "error": "gathered_separately"}
+    google_traffic = {"ok": False, "source": "google-traffic", "error": "gathered_separately"}
     road_limits = {"ok": False, "source": "osm-road-limits", "error": "deferred_for_latency", "limits": []}
     nws = {"ok": False, "source": "nws", "error": "deferred_for_latency"}
     wikipedia = done_map.get("wikipedia")
