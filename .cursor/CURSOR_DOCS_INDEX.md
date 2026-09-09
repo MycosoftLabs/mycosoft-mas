@@ -10,6 +10,9 @@
 ## ITDX Google traffic wall (Sep 09, 2026)
 - `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md` — 4.8s wall → 14s; Google Directions/Matrix 12s first/parallel; no invented p
 
+## ITDX work saved pending NLM weights (Sep 09, 2026)
+- `docs/ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md` — Local commits only; push/deploy NO until Morgan drops NAS weights
+
 ## FormSpace NLM (Sep 09, 2026)
 - `docs/FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md` — Scientific NLM vs MYCA Ollama compartments; no GGUF in `/models/nlm`
 - `docs/FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md` — Stage B ledger; `model_loaded=false` until Morgan weights

@@ -1,5 +1,8 @@
 # Master Document Index
 
+## ITDX work saved pending NLM weights (SEP09 2026)
+- [ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md](ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md) — Local SHAs only; push/deploy NO; wait for NAS `models/nlm/incoming` weights
+
 ## FormSpace NLM (SEP09 2026)
 - [FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md](FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md) — Scientific NLM on NAS `models/nlm` vs MYCA Ollama `models/myca`
 - [FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md](FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md) — Stage B forecast ledger; no stub 0.85 p
