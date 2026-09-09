@@ -161,6 +161,22 @@ Login as `morgan@mycosoft.org` on `https://mycosoft.com/fusarium/login` (**Conti
 
 ---
 
+## Closed 09 September 2026 (continue — PR 137)
+
+PR 136 already persisted `intention_service` + NLM stub helpers so 188 `git pull` keeps ITDX mounted. This follow-on **does not invent Fusarium p**.
+
+| Item | Outcome |
+|---|---|
+| NLM predict | Stub `predict()` now returns `confidence=None` + `confidence_usable=false`. Situation-assessment calls predict **only if already ready** (no auto-load). **SCORED/BOUND** only on a usable non-stub confidence. |
+| Chemistry / physics | PhysicsNeMo unset/down → **UNQUALIFIED** + reason. PhysicsNeMo health only → **SUPPLIED** `p=null`. Chemistry stays **UNQUALIFIED** unless PubChem identity rows (**SUPPLIED**, not an NLM p). |
+| Task 8 | IntentionAgent default score is `None` (not `1.0`). Seven-role stays **DEGRADED** (secretary unbound). Intention errors stay errors — not fake BOUND. |
+| Extra public data | First-wave OSINT adds PubChem fusaric acid, GBIF species match (`Fusarium oxysporum`), Open-Meteo air quality, USGS FDSN (empty bbox is honest). Keeps PR 136 cheap MINDEX `/api/mindex/taxa` + `/observations`. No `full_fungi_sync`. |
+| Google Directions | Key present on 188 (`google-maps.conf`). APIs stay **NOT_SUPPLIED** / `REQUEST_DENIED` unless Directions + Distance Matrix are enabled on the existing GCP project. No keys printed. |
+| Live UI | No website cutover. Public site was **200**. `/fusarium/login` **200** + owner Google button. Owner-gated ITDX APIs stay **401** unauth. Local :3010 not killed. |
+| RJ | **RJ Ricasata is CFO.** |
+
+---
+
 ## Related
 
 - [ITDX_VM_BACKENDS_SEP09_2026.md](ITDX_VM_BACKENDS_SEP09_2026.md)

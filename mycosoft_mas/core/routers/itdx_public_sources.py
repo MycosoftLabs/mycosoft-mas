@@ -22,7 +22,10 @@ logger = logging.getLogger(__name__)
 
 MINDEX_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_AQ_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 GBIF_OCCURRENCE_URL = "https://api.gbif.org/v1/occurrence/search"
+GBIF_SPECIES_MATCH_URL = "https://api.gbif.org/v1/species/match"
+USGS_QUAKES_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 INAT_OBS_URL = "https://api.inaturalist.org/v1/observations"
 OVERPASS_URL = os.getenv("OSM_OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
@@ -919,6 +922,94 @@ async def fetch_pubchem_fusaric() -> Dict[str, Any]:
     }
 
 
+async def fetch_gbif_species_match() -> Dict[str, Any]:
+    """Public GBIF backbone match for Fusarium oxysporum. Not a biology p."""
+    probe = await _get_json(
+        GBIF_SPECIES_MATCH_URL,
+        params={"name": "Fusarium oxysporum", "kingdom": "Fungi"},
+    )
+    data = probe.get("data") if isinstance(probe.get("data"), dict) else {}
+    usage_key = data.get("usageKey")
+    return {
+        "ok": bool(probe.get("ok") and usage_key),
+        "source": "gbif-species-match",
+        "citation": GBIF_SPECIES_MATCH_URL,
+        "retrieved_at": _utc_now(),
+        "scientificName": data.get("scientificName"),
+        "usageKey": usage_key,
+        "status": data.get("status"),
+        "error": None if usage_key else (probe.get("error") or "no_match"),
+        "note": "Public GBIF species match. Not a Fusarium biology p.",
+    }
+
+
+async def fetch_open_meteo_air_quality() -> Dict[str, Any]:
+    probe = await _get_json(
+        OPEN_METEO_AQ_URL,
+        params={
+            "latitude": PUBLIC_WEATHER_LAT,
+            "longitude": PUBLIC_WEATHER_LON,
+            "current": "us_aqi,pm2_5,ozone",
+            "timezone": "UTC",
+        },
+    )
+    data = probe.get("data") if isinstance(probe.get("data"), dict) else {}
+    current = data.get("current") if isinstance(data.get("current"), dict) else {}
+    return {
+        "ok": bool(probe.get("ok") and current),
+        "source": "open-meteo-air-quality",
+        "citation": OPEN_METEO_AQ_URL,
+        "retrieved_at": _utc_now(),
+        "lat": PUBLIC_WEATHER_LAT,
+        "lon": PUBLIC_WEATHER_LON,
+        "current": current,
+        "error": None if current else (probe.get("error") or "no current air quality"),
+        "note": "Public Open-Meteo air quality at the declared Fort Stewart point.",
+    }
+
+
+async def fetch_usgs_quakes(ao: Dict[str, Any]) -> Dict[str, Any]:
+    """Public USGS FDSN events in the AO bbox. Empty bbox is honest."""
+    west, south, east, north = _bbox(ao)
+    probe = await _get_json(
+        USGS_QUAKES_URL,
+        params={
+            "format": "geojson",
+            "starttime": "2024-01-01",
+            "minlatitude": south,
+            "maxlatitude": north,
+            "minlongitude": west,
+            "maxlongitude": east,
+            "limit": 5,
+        },
+    )
+    data = probe.get("data") if isinstance(probe.get("data"), dict) else {}
+    features = data.get("features") if isinstance(data.get("features"), list) else []
+    excerpt = []
+    for feat in features[:5]:
+        if not isinstance(feat, dict):
+            continue
+        props = feat.get("properties") if isinstance(feat.get("properties"), dict) else {}
+        excerpt.append(
+            {
+                "id": feat.get("id") or props.get("code"),
+                "mag": props.get("mag"),
+                "place": props.get("place"),
+                "time": props.get("time"),
+            }
+        )
+    return {
+        "ok": bool(probe.get("ok") and excerpt),
+        "source": "usgs-earthquake",
+        "citation": USGS_QUAKES_URL,
+        "retrieved_at": _utc_now(),
+        "count": len(excerpt),
+        "excerpt": excerpt,
+        "error": None if probe.get("ok") else probe.get("error"),
+        "note": "Public USGS FDSN. Empty bbox is not invented seismicity.",
+    }
+
+
 async def fetch_mycobrain() -> Dict[str, Any]:
     probe = await _get_json(MYCOBRAIN_HEALTH)
     data = probe.get("data") if isinstance(probe.get("data"), dict) else {}
@@ -1014,12 +1105,15 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
         "weather": fetch_open_meteo(ao),
         "gbif": fetch_gbif_occurrences(ao),
         "inat": fetch_inaturalist(ao),
-        "nws": fetch_nws_forecast(ao),
         "wikipedia": fetch_wikipedia_bases(),
         "nominatim": fetch_nominatim_places(),
         "google_dir": fetch_google_directions(ao),
         "google_traffic": fetch_google_traffic(ao),
         "mindex": fetch_mindex_slice(ao),
+        "pubchem": fetch_pubchem_fusaric(),
+        "gbif_species": fetch_gbif_species_match(),
+        "air": fetch_open_meteo_air_quality(),
+        "usgs": fetch_usgs_quakes(ao),
     }
     done_map: Dict[str, Any] = {}
     tasks = {name: asyncio.create_task(coro) for name, coro in jobs.items()}
@@ -1041,11 +1135,14 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
     google_dir = done_map.get("google_dir")
     google_traffic = done_map.get("google_traffic")
     road_limits = {"ok": False, "source": "osm-road-limits", "error": "deferred_for_latency", "limits": []}
-    nws = done_map.get("nws")
+    nws = {"ok": False, "source": "nws", "error": "deferred_for_latency"}
     wikipedia = done_map.get("wikipedia")
-    pubchem = {"ok": False, "source": "pubchem", "error": "deferred_for_latency"}
+    pubchem = done_map.get("pubchem")
     mycobrain = {"ok": False, "source": "mycobrain", "error": "deferred_for_latency"}
     mindex = done_map.get("mindex")
+    gbif_species = done_map.get("gbif_species")
+    air_quality = done_map.get("air")
+    usgs = done_map.get("usgs")
     hifld = {"ok": False, "source": "hifld", "error": "skipped_for_latency", "sites": []}
     opensky = {"ok": False, "source": "opensky", "error": "skipped_for_latency"}
     google_places = {"ok": False, "source": "google-places", "error": "skipped_for_latency", "places": []}
@@ -1084,6 +1181,9 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
         "open_meteo": _as_dict(weather, "open-meteo"),
         "nws": nws_d,
         "gbif": _as_dict(gbif, "gbif"),
+        "gbif_species": _as_dict(gbif_species, "gbif-species"),
+        "air_quality": _as_dict(air_quality, "air-quality"),
+        "usgs": _as_dict(usgs, "usgs"),
         "inaturalist": _as_dict(inat, "inaturalist"),
         "osm_military": _as_dict(osm, "osm"),
         "hifld": hifld_d,

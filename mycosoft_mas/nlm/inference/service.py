@@ -31,6 +31,7 @@ def nlm_text_is_stub(text: str) -> bool:
         "nlm stub",
         "model is not loaded",
         "error generating response",
+        "not yet fully trained",
     )
     return any(marker in lowered for marker in markers)
 
@@ -294,13 +295,16 @@ class NLMService:
                 text=response_text,
                 model="nlm",
                 query_type=request.query_type,
-                confidence=0.85,  # Placeholder - would come from model
+                confidence=None,
                 sources=sources if request.include_sources else [],
                 tokens_used=tokens_used,
                 latency_ms=latency_ms,
                 metadata={
                     "context_used": bool(context),
                     "rag_enabled": self._rag_enabled,
+                    "stub": True,
+                    "confidence_usable": False,
+                    "note": "Stub predict does not emit a usable confidence. 0.85 is rejected.",
                 },
             )
 
@@ -444,7 +448,7 @@ class NLMService:
                 model_version=self.config.model_version,
                 input_data=request.to_dict(),
                 prediction=response,
-                confidence=0.85,
+                confidence=None,
                 metadata={"query_type": request.query_type.value},
             )
         except Exception as e:

@@ -262,21 +262,70 @@ def _fusion_block() -> Dict[str, Any]:
     }
 
 
+async def _nlm_predict_inprocess(text: str, query_type: str = "ecology") -> Dict[str, Any]:
+    """In-process predict only if the model is already ready. Never auto-load a stub."""
+    from mycosoft_mas.nlm.inference.service import PredictionRequest, QueryType, get_nlm_service
+
+    service = get_nlm_service()
+    if not service.is_ready:
+        return {
+            "ok": False,
+            "status_code": 0,
+            "data": {
+                "error": "model_not_ready",
+                "text": "",
+                "confidence": None,
+                "metadata": {"stub": True, "confidence_usable": False},
+            },
+        }
+    try:
+        qt = QueryType(query_type)
+    except ValueError:
+        qt = QueryType.ECOLOGY
+    result = await service.predict(
+        PredictionRequest(text=text, query_type=qt, max_tokens=64, temperature=0.0)
+    )
+    return {"ok": True, "status_code": 200, "data": result.to_dict()}
+
+
 async def _nlm_status_inprocess() -> Dict[str, Any]:
     from mycosoft_mas.nlm.config import get_nlm_config
-    from mycosoft_mas.nlm.inference.service import get_nlm_service
+    from mycosoft_mas.nlm.inference.service import get_nlm_service, is_usable_nlm_confidence
 
     service = get_nlm_service()
     config = get_nlm_config()
     status = service.get_status()
+    predict: Dict[str, Any] = {
+        "ok": False,
+        "data": {"error": "model_not_ready", "confidence": None, "metadata": {"stub": True}},
+    }
+    if service.is_ready:
+        predict = await _nlm_predict_inprocess(
+            "Fort Stewart Fusarium ecology. Advisory only. Do not invent a probability.",
+            "ecology",
+        )
+    data = predict.get("data") if isinstance(predict.get("data"), dict) else {}
+    usable = bool(
+        predict.get("ok")
+        and is_usable_nlm_confidence(
+            data.get("confidence"),
+            str(data.get("text") or ""),
+            data.get("metadata") if isinstance(data.get("metadata"), dict) else {},
+        )
+    )
     return {
         "model_loaded": bool(service.is_ready),
         "status": status.get("status") or ("ready" if service.is_ready else "not_loaded"),
         "model_name": getattr(config, "model_name", "nlm"),
         "model_version": getattr(config, "model_version", "0.0.0"),
         "uptime_seconds": status.get("uptime_seconds", 0),
-        "qualification": "BOUND" if service.is_ready else "UNQUALIFIED",
+        "qualification": "BOUND" if usable else "UNQUALIFIED",
         "stub_confidence_rejected": True,
+        "predict": predict,
+        "note": (
+            "BOUND/SCORED only after a usable non-stub predict. "
+            "model_loaded=true alone is not Fusarium p. Stub 0.85 is rejected."
+        ),
     }
 
 
@@ -401,41 +450,57 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
     )
 
     model_loaded = bool(nlm_data.get("model_loaded"))
-    nlm_qualified = nlm_data.get("qualification") == "BOUND" and model_loaded
+    nlm_predict = nlm_data.get("predict") if isinstance(nlm_data.get("predict"), dict) else {}
+    nlm_ecology = _nlm_channel_from_predict(nlm_predict, agent_id="nlm", domain="ecology")
+    nlm_qualified = nlm_ecology.get("status") == "SCORED" and nlm_ecology.get("p") is not None
+    nlm_data["qualification"] = "BOUND" if nlm_qualified else "UNQUALIFIED"
 
     channels: Dict[str, Any] = {}
     nlm_unqual = _channel(
         status="UNQUALIFIED",
         agent_id="nlm",
         p=None,
+        reason="nlm_predict_unusable" if model_loaded else "nlm_not_ready",
         note=(
-            "NLM model_loaded=false or stub. Channel not scored. "
-            "Placeholder confidence is rejected (never used as p)."
+            "NLM channel not scored. BOUND/SCORED requires a usable non-stub predict. "
+            "model_loaded alone is not Fusarium p. Stub 0.85 is rejected."
         ),
-        live={k: nlm_data.get(k) for k in ("model_loaded", "status", "uptime_seconds", "qualification")},
+        live={
+            k: nlm_data.get(k)
+            for k in ("model_loaded", "status", "uptime_seconds", "qualification")
+        },
     )
-    # Never call NLM predict from this handler — predict auto-loads the stub
-    # and used to emit confidence=0.85. Fail closed while unqualified.
-    channels["physics"] = dict(nlm_unqual)
-    channels["physics"]["live"] = {
-        **channels["physics"]["live"],
-        "physicsnemo": physics,
-    }
-    if not physics.get("ok"):
+    if physics.get("ok"):
+        channels["physics"] = _channel(
+            status="SUPPLIED",
+            agent_id="physicsnemo",
+            p=None,
+            note=(
+                "PhysicsNeMo health reached. Not a labeled physics p. "
+                "NLM ecology predict is not reused as physics p."
+            ),
+            live={"physicsnemo": physics, "nlm": nlm_data.get("qualification")},
+            source_name="PhysicsNeMo",
+            reason="service_health_only",
+        )
+    else:
+        channels["physics"] = dict(nlm_unqual)
+        channels["physics"]["live"] = {
+            **channels["physics"]["live"],
+            "physicsnemo": physics,
+        }
+        channels["physics"]["reason"] = str(physics.get("error") or "physicsnemo_unset_or_down")
         channels["physics"]["note"] = (
-            "PhysicsNeMo not reached from MAS (remote probe). "
-            "NLM physics channel remains UNQUALIFIED. No invented p."
+            "PhysicsNeMo not reached from MAS (PHYSICSNEMO_API_URL unset or down). "
+            "No labeled NLM physics checkpoint. No invented p."
         )
     channels["biology"] = dict(nlm_unqual)
     channels["biology"]["agent_id"] = "mycology_bio"
     channels["chemistry"] = dict(nlm_unqual)
-    if nlm_qualified:
-        channels["biology"]["note"] = (
-            "NLM reports model_loaded but situation-assessment does not treat "
-            "stub predict as SCORED. p remains null until a labeled checkpoint "
-            "is ops-loaded."
-        )
-        channels["chemistry"]["note"] = channels["biology"]["note"]
+    channels["chemistry"]["note"] = (
+        "No labeled NLM chemistry checkpoint. PubChem may later mark SUPPLIED "
+        "(identity only). Ecology predict is not a chemistry p."
+    )
 
     channels["economics"] = _channel(
         status="NOT_SUPPLIED",
@@ -449,6 +514,7 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
     retrieved_at = osint.get("retrieved_at")
     open_meteo = osint.get("open_meteo") if isinstance(osint.get("open_meteo"), dict) else {}
     nws = osint.get("nws") if isinstance(osint.get("nws"), dict) else {}
+    air_quality = osint.get("air_quality") if isinstance(osint.get("air_quality"), dict) else {}
     if open_meteo.get("ok") and open_meteo.get("current"):
         channels["weather"] = _channel(
             status="SUPPLIED",
@@ -458,7 +524,12 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
                 "Public Open-Meteo current at 31.8697,-81.6072. "
                 "Not a calibrated weather p. Earth-2 is not required."
             ),
-            live={"open_meteo": open_meteo, "nws": nws, "earth2": earth2_data},
+            live={
+                "open_meteo": open_meteo,
+                "nws": nws,
+                "air_quality": air_quality,
+                "earth2": earth2_data,
+            },
             source_name="Open-Meteo",
             source_url=str(open_meteo.get("citation") or "https://api.open-meteo.com/v1/forecast"),
             retrieved_at=retrieved_at,
@@ -513,13 +584,20 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
     mindex = osint.get("mindex") if isinstance(osint.get("mindex"), dict) else {}
     gbif = osint.get("gbif") if isinstance(osint.get("gbif"), dict) else {}
     inat = osint.get("inaturalist") if isinstance(osint.get("inaturalist"), dict) else {}
-    if mindex.get("has_taxa") or mindex.get("has_observations") or gbif.get("ok") or inat.get("ok"):
+    gbif_species = osint.get("gbif_species") if isinstance(osint.get("gbif_species"), dict) else {}
+    if (
+        mindex.get("has_taxa")
+        or mindex.get("has_observations")
+        or gbif.get("ok")
+        or inat.get("ok")
+        or gbif_species.get("ok")
+    ):
         channels["biology"] = _channel(
             status="SUPPLIED",
             agent_id="mindex",
             p=None,
-            note="MINDEX and/or public GBIF/iNaturalist rows. Not a Fusarium biology p.",
-            live={"mindex": mindex, "gbif": gbif, "inaturalist": inat},
+            note="MINDEX and/or public GBIF/iNaturalist/species-match rows. Not a Fusarium biology p.",
+            live={"mindex": mindex, "gbif": gbif, "inaturalist": inat, "gbif_species": gbif_species},
             source_name="GBIF" if gbif.get("ok") else ("iNaturalist" if inat.get("ok") else "MINDEX"),
             source_url=str(
                 (gbif.get("citation") if gbif.get("ok") else None)
@@ -722,6 +800,7 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
             live={
                 "citations": citations,
                 "wikipedia": wikipedia,
+                "usgs": osint.get("usgs") if isinstance(osint.get("usgs"), dict) else {},
                 "google_key_present": osint.get("google_key_present"),
                 "official_injects": "NOT_SUPPLIED",
             },
@@ -894,6 +973,8 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
             "health": nlm_data,
             "qualification": "BOUND" if nlm_qualified else "UNQUALIFIED",
             "stub_confidence_rejected": True,
+            "ecology_predict_status": nlm_ecology.get("status"),
+            "ecology_p": nlm_ecology.get("p"),
         },
         "earth2": earth2_data,
         "public_osint": {
