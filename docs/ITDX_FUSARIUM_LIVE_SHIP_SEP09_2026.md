@@ -196,6 +196,21 @@ Orchestrator restarted (more than already-hot files). Skip-startup left ON. `fus
 | Origin `http://192.168.0.187:3000/api/health` | **200** — no blue-green |
 | Local :3010 | not killed |
 
+### Live prove after PR 138 on 188 (`22efb91c`)
+
+Weather-first OSINT wave pulled. Orchestrator restarted. Skip-startup ON.
+
+| Check | Result |
+|---|---|
+| weather | **SUPPLIED** `p=null` (Open-Meteo restored) |
+| chemistry | **SUPPLIED** `p=null` (PubChem) |
+| biology / information / equipment | **SUPPLIED** |
+| NLM | **UNQUALIFIED** `p=null` `model_loaded=false` |
+| physics | **UNQUALIFIED** PhysicsNeMo unset |
+| traffic / pathways / navigation | **NOT_SUPPLIED** `google_maps_api_denied` (`gcloud` missing — APIs not enabled) |
+| Task 8 | **DEGRADED**, COA proposer bound, secretary unbound |
+| 187 / public login | unchanged — no cutover |
+
 ---
 
 ## Related
