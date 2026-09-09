@@ -1,7 +1,7 @@
 # ITDX VM backends — 09 September 2026
 
 **Date:** 09 September 2026  
-**Status:** 188/189 are the live source of truth for Fusarium/ITDX. No 187 website cutover.  
+**Status:** 188/189 remain the live source of truth for Fusarium/ITDX data and math. Website UI cutover to slot **blue** is recorded in [ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md](ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md).  
 **Related:** `docs/ITDX_EXTERNAL_SOURCES_INTEGRATION_SEP09_2026.md`, `docs/MAS_MYCA_AVANI_FUSARIUM_ITDX_INTEGRATION_PLAN_SEP09_2026.md`  
 **CMMC:** Mycosoft is **pursuing** CMMC L2 — not compliant. **RJ Ricasata is CFO.**  
 **CUI:** This surface is outside the CUI boundary. No FOUO. Official injects stay NOT_SUPPLIED.

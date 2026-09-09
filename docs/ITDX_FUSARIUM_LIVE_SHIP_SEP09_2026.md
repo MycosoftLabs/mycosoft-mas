@@ -1,7 +1,7 @@
 # ITDX Fusarium Live Ship — 09 September 2026
 
 **Date:** 09 September 2026  
-**Status:** Local proofs green. Website ships from `WEBSITE/website-itdx-codex-v13`. Hot data/math stay on MAS 188 + MINDEX 189.  
+**Status:** LIVE on `mycosoft.com` (slot **blue**, image `manual-045eaa29637135c932829df36e862c832f3eb7d0`). Hot data/math stay on MAS 188 + MINDEX 189.  
 **Backends (source of truth):** [ITDX_VM_BACKENDS_SEP09_2026.md](ITDX_VM_BACKENDS_SEP09_2026.md)  
 **CMMC:** Mycosoft is **pursuing** CMMC L2 — not compliant. **RJ Ricasata is CFO.**  
 **CUI:** Outside the CUI boundary. No FOUO ingest. Official Army injects stay **NOT_SUPPLIED**.
@@ -82,14 +82,36 @@ Keep Fusarium pointing at **live MAS 188 + MINDEX 189**. Do **not** bake NLM wei
 
 ---
 
-## Blue-green (187)
+## GitHub
 
-- One deploy owner. Abort if another exclusive lock is held.
-- Active slot at prove time: **green** healthy. Idle **blue** unhealthy — rebuild blue only.
-- Do **not** stop primary until candidate `docker exec … curl http://localhost:3000` returns **HTTP 200**.
-- NAS required: `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`
-- After cutover: verify `http://192.168.0.187:3000` and public hosts **200**, then purge Cloudflare.
-- If public is 502: restore-only. No feature cutover.
+| Repo | PR | Merge SHA | Notes |
+|---|---|---|---|
+| `MycosoftLabs/website` | [#300](https://github.com/MycosoftLabs/website/pull/300) | `045eaa29637135c932829df36e862c832f3eb7d0` | Fusarium Intel Feed, Weka walkthrough, owner-gated APIs |
+| `MycosoftLabs/mycosoft-mas` | [#133](https://github.com/MycosoftLabs/mycosoft-mas/pull/133) | `ee094c75741fcf4f6295fc189d8ba7108e362a07` | situation-assessment + this doc |
+
+---
+
+## Blue-green (187) — done 09 Sep 2026 ~19:39 UTC
+
+- Instant Deploy [34392868545](https://github.com/MycosoftLabs/website/actions/runs/34392868545) built `Dockerfile.production` **no-cache** and pushed `ghcr.io/mycosoftlabs/website:manual-045eaa29637135c932829df36e862c832f3eb7d0`.
+- GH cutover hung: idle `mycosoft-website-blue` was kernel **D-state**; leftover compose name `a22d1420a982_mycosoft-website-blue` was **Created**. Primary **green** stayed healthy and kept serving.
+- Leftover Created container removed. D-state idle **renamed** (not stopped) to `mycosoft-website-blue-wedged-sep09`, then disconnected from `website_mycosoft-network` so `website-blue` DNS has one address.
+- New idle **blue** started with NAS `/opt/mycosoft/media/website/assets` → `/app/public/assets:ro`.
+- Candidate `docker exec` `/api/health` **3× 200**. Auth gate `/login?redirectTo=/natureos/mycobrain` (not `config_missing`).
+- Nginx flipped **green → blue**. Cloudflare `purge_everything` **OK**. Green left running as rollback window.
+
+### Live prove (after cutover)
+
+| Surface | Result |
+|---|---|
+| Origin `http://192.168.0.187:3000/api/health` | **200** |
+| `https://mycosoft.com/api/health` + `/fusarium/login` | **200** |
+| `https://sandbox.mycosoft.com/api/health` + `/fusarium/login` | **200** (brief 504 during purge/DNS isolate, then recovered) |
+| Unauth `/fusarium/itdx` and `/fusarium/earth-simulator` | **307** (origin + mycosoft.com) |
+| Unauth `/api/fusarium/itdx/situation` and `/weka-receipt` | **401** |
+| MAS 188 ITDX / NLM + MINDEX 189 | **200** (hot data; no 188 restart) |
+
+Login as `morgan@mycosoft.org` on `https://mycosoft.com/fusarium/login`, then open `/fusarium/itdx` and `/fusarium/earth-simulator`. Overlay stays **`live: false`**.
 
 ---
 
