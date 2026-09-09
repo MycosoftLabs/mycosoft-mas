@@ -60,7 +60,7 @@ CHANNEL_KEYS = (
 )
 
 # Wall clock for situation-assessment. Must return before Fusarium 8s abort.
-ASSESSMENT_WALL_S = 4.8
+ASSESSMENT_WALL_S = 5.6
 PROBE_S = 1.2
 
 MAS_PUBLIC_URL = os.getenv("MAS_API_URL", "http://192.168.0.188:8001").rstrip("/")
@@ -446,7 +446,7 @@ async def _run_situation_assessment_inner(map_slice: Dict[str, Any]) -> Dict[str
             {},
         ),
         asyncio.to_thread(lambda: _devices_inprocess()),
-        _safe("osint", gather_public_osint(ao), {}, timeout=3.6),
+        _safe("osint", gather_public_osint(ao), {}, timeout=4.4),
     )
 
     model_loaded = bool(nlm_data.get("model_loaded"))

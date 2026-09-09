@@ -1097,27 +1097,13 @@ def _geojson_from_osint(
     return {"type": "FeatureCollection", "features": features}
 
 
-async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
-    """Parallel public + MINDEX + Google traffic/pathways for one AO slice."""
+async def _await_named(jobs: Dict[str, Any], timeout: float) -> Dict[str, Any]:
+    """Wait for named coroutines. Cancel leftovers. Never invent a payload."""
     import asyncio
 
-    jobs = {
-        "weather": fetch_open_meteo(ao),
-        "gbif": fetch_gbif_occurrences(ao),
-        "inat": fetch_inaturalist(ao),
-        "wikipedia": fetch_wikipedia_bases(),
-        "nominatim": fetch_nominatim_places(),
-        "google_dir": fetch_google_directions(ao),
-        "google_traffic": fetch_google_traffic(ao),
-        "mindex": fetch_mindex_slice(ao),
-        "pubchem": fetch_pubchem_fusaric(),
-        "gbif_species": fetch_gbif_species_match(),
-        "air": fetch_open_meteo_air_quality(),
-        "usgs": fetch_usgs_quakes(ao),
-    }
     done_map: Dict[str, Any] = {}
     tasks = {name: asyncio.create_task(coro) for name, coro in jobs.items()}
-    done, pending = await asyncio.wait(tasks.values(), timeout=3.3)
+    _done, pending = await asyncio.wait(tasks.values(), timeout=timeout)
     for name, task in tasks.items():
         if task in pending:
             task.cancel()
@@ -1127,6 +1113,38 @@ async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
             done_map[name] = task.result()
         except Exception as exc:  # noqa: BLE001
             done_map[name] = {"ok": False, "error": str(exc), "source": name}
+    return done_map
+
+
+async def gather_public_osint(ao: Dict[str, Any]) -> Dict[str, Any]:
+    """Parallel public + MINDEX + Google traffic/pathways for one AO slice.
+
+    Weather/biology stay in the first wave so extra OSINT cannot cancel Open-Meteo.
+    Google Directions (often REQUEST_DENIED) runs in a short second wave.
+    """
+    priority = {
+        "weather": fetch_open_meteo(ao),
+        "gbif": fetch_gbif_occurrences(ao),
+        "inat": fetch_inaturalist(ao),
+        "wikipedia": fetch_wikipedia_bases(),
+        "nominatim": fetch_nominatim_places(),
+        "mindex": fetch_mindex_slice(ao),
+        "pubchem": fetch_pubchem_fusaric(),
+    }
+    optional = {
+        "google_dir": fetch_google_directions(ao),
+        "google_traffic": fetch_google_traffic(ao),
+        "gbif_species": fetch_gbif_species_match(),
+        "air": fetch_open_meteo_air_quality(),
+        "usgs": fetch_usgs_quakes(ao),
+    }
+    done_map = await _await_named(priority, 2.4)
+    weather_row = done_map.get("weather") if isinstance(done_map.get("weather"), dict) else {}
+    if not weather_row.get("ok"):
+        retry = await _await_named({"weather": fetch_open_meteo(ao)}, 1.0)
+        if isinstance(retry.get("weather"), dict):
+            done_map["weather"] = retry["weather"]
+    done_map.update(await _await_named(optional, 0.8))
     weather = done_map.get("weather")
     gbif = done_map.get("gbif")
     inat = done_map.get("inat")

@@ -191,3 +191,13 @@ def test_assessment_does_not_http_self():
     assert "in-process (no HTTP to 127.0.0.1:8001 / self)" in source
     assert "MAS_INTERNAL_URL" not in source
     assert "_get_json(" not in source
+
+
+def test_osint_keeps_weather_in_first_wave():
+    from mycosoft_mas.core.routers import itdx_api, itdx_public_sources
+
+    source = open(itdx_public_sources.__file__, encoding="utf-8").read()
+    assert "async def _await_named" in source
+    assert '"weather": fetch_open_meteo(ao)' in source
+    assert "priority = {" in source
+    assert itdx_api.ASSESSMENT_WALL_S >= 5.6
