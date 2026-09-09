@@ -1,5 +1,11 @@
 # Master Document Index
 
+## ITDX26 Fusarium live ship (SEP09 2026)
+- [ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md](ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md) — Local proofs + 188/189 hot data/math; Weka PASS / trial NOT_MET; add data without website rebuild; blue-green 187
+
+## ITDX26 VM backends (SEP09 2026)
+- [ITDX_VM_BACKENDS_SEP09_2026.md](ITDX_VM_BACKENDS_SEP09_2026.md) — 188/189 live prove; NLM BOUND; skip-startup on
+
 ## Internal program documentation (not public)
 - Maritime pursuit implementation plans, NIST mapping drafts, and superseded teaming drafts are kept **internal only** (local `docs/private/` / Google Drive). They are not published in this public repository index.
 - CUI **handling procedure** (marking examples / process): `docs/TACO_CUI_HANDLING_APR08_2026.md` (procedure document — not CUI content).
