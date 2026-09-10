@@ -11,6 +11,10 @@
 
 https://mycosoft.com/fusarium/earth-simulator — Google owner login (`morgan@mycosoft.org`).
 
+## Demo note (PC / iPad)
+
+First paint is **21–33s on iPad** (PC NatureOS ~14s). Let the globe settle before touching filters. Ships, satellites, weather radar, lightning, and Eagle Eye are **off at boot** — do **not** enable ships + sats + radar together. Hidden-tab pause and WebGL-lost restore are in this ship. Details: `docs/EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md`.
+
 ## What to click
 
 1. Sign in at `/fusarium/login` with Google owner.
@@ -31,15 +35,16 @@ https://mycosoft.com/fusarium/earth-simulator — Google owner login (`morgan@my
 | Droid path / coordination / triangulation / hypothesis tree | `GET /api/fusarium/movement/snapshot`. Live polyline only with ≥2 telemetry fixes. Coordination needs ≥2 live devices. Triangulation live only with ≥3 observers; otherwise `live: false` / `unqualified-proposal`. Path tree always **hypothesis**. |
 | Waypoints | **Propose-only.** `/api/devices/network/[id]/command` is ping/sensors. Receipt **NOT_SUPPLIED**. |
 | Website ITDX BFF | New `GET/POST /api/itdx/situation-assessment` fails closed to JSON (`live_cop: false`). Owner UI still uses `/api/fusarium/itdx/situation`. Direct MAS POST remains 200 synthetic advisory. |
+| Earth Sim demo stability | Heavy layers default-off (ships/sats/radar/lightning/Eagle Eye). Hidden-tab pause. WebGL-lost handler. ITDX replay only on Fusarium Earth Sim. |
 
 ## NLM / Weka / Hess
 
-Do **not** wait for NLM weights to load. Pointer: `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md`.
+Pointer: `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md`. Do **not** claim calibrated Fusarium forecasts.
 
 | Item | State |
 |---|---|
-| MAS `/api/nlm/health` | Honest `model_loaded: false`, `bound_to_ollama: false`, `forecast_qualified: false`. No stub `0.85 p`. |
-| Fusarium ecology `p` | `null` until a qualified forecast family is promoted. |
+| MAS `/api/nlm/health` | `model_loaded: true`, SHA `0c5fb815…`, dir `/mnt/mycosoft-nas/models/nlm/reference`, `bound_to_ollama: false`, `forecast_qualified: false` (synthetic reference). MAS [PR #146](https://github.com/MycosoftLabs/mycosoft-mas/pull/146) `69e9108e`. |
+| Fusarium ecology `p` | Stays `null`. Synthetic reference is not a qualified forecast family. |
 | Weka | Evaluation workbench around recorded NLM probabilities. Not required to operate NLM. Trial / field readiness **NOT MET**. |
 | ITDX Intel Feed | MAS `origin: SYNTHETIC_EXERCISE`, `live_cop: false`. Demo overlay ≠ live COP. |
 
@@ -47,7 +52,7 @@ Do **not** wait for NLM weights to load. Pointer: `docs/PERPLEXITY_DR_HESS_EMAIL
 
 **PASS:** 3010 worktree; ITDX Earth-Sim-only collapsed; no dock on overview/SOC; 1 live MAS device (`mycobrain-service-192-168-0-241`); catalog ≠ convoy; path/coord/tree contract; waypoints propose-only; OpenTopo; wind 200.
 
-**DEGRADED (shipped anyway):** NLM unloaded; website `/api/itdx/situation-assessment` previously aborted (alias added this ship); smoke NOT_SUPPLIED; MINDEX AQ/FIRMS empty (`upstream: unavailable`).
+**DEGRADED (shipped anyway):** NLM tensors loaded but **not forecast-qualified** (`p` null); website `/api/itdx/situation-assessment` previously aborted (alias added this ship); smoke NOT_SUPPLIED; MINDEX AQ/FIRMS empty (`upstream: unavailable`).
 
 ## Live vs hypothesis vs NOT_SUPPLIED
 
@@ -80,3 +85,4 @@ Related website worktree: `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website
 - Website `docs/FUSARIUM_DROID_PATH_C2_EARTH_SIM_SEP10_2026.md`
 - Website `docs/EARTH_SIM_AEROSOL_LAYERS_SEP10_2026.md`
 - Website `docs/FUSARIUM_OSINT_TOPO_DEVICES_TRACKING_SEP10_2026.md`
+- `docs/EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md`
