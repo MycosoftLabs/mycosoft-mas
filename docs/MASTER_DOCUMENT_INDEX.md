@@ -1,5 +1,10 @@
 # Master Document Index
 
+## ITDX + NLM E2E (SEP10 2026)
+- [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
+- [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
+- [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt
+
 ## ITDX Google traffic wall (SEP09 2026)
 - [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
 

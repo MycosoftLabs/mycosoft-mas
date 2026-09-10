@@ -7,6 +7,10 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
+## ITDX + NLM E2E (Sep 10, 2026)
+- `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — NAS reference copied; Fusarium p null; MINDEX/memory retain; forecast not promoted
+- `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + 21/21 oracles
+
 ## ITDX Google traffic wall (Sep 09, 2026)
 - `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md` — 4.8s wall → 14s; Google Directions/Matrix 12s first/parallel; no invented p
 

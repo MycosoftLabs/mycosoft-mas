@@ -99,10 +99,16 @@ class HealthResponse(BaseModel):
     """Health check response."""
 
     status: str = Field(..., description="Service status (healthy, degraded, unhealthy)")
-    model_loaded: bool = Field(..., description="Whether model is loaded")
+    model_loaded: bool = Field(..., description="Whether tensors are in-process")
     model_name: str = Field(..., description="Name of the model")
     model_version: str = Field(..., description="Model version")
     uptime_seconds: float = Field(..., ge=0, description="Service uptime")
+    forecast_qualified: bool = Field(default=False, description="Calibrated Fusarium forecast ready")
+    qualification_status: str = Field(default="unloaded", description="candidate/unqualified/unloaded")
+    training_origin: str = Field(default="none", description="synthetic or measured")
+    architecture_family: Optional[str] = Field(default=None)
+    weights_sha256: Optional[str] = Field(default=None)
+    bound_to_ollama: bool = Field(default=False)
 
 
 class ModelInfoResponse(BaseModel):
@@ -157,18 +163,32 @@ async def health_check() -> HealthResponse:
     """
     try:
         from mycosoft_mas.nlm.config import get_nlm_config
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
         from mycosoft_mas.nlm.inference.service import get_nlm_service
+
+        from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
 
         service = get_nlm_service()
         config = get_nlm_config()
         status = service.get_status()
+        probe = probe_scientific_nlm()
+        runtime = load_reference_runtime()
+        runtime_status = runtime.runtime_status()
+        loaded = bool(runtime.is_loaded or (probe.model_loaded and service.is_ready))
+        forecast = bool(probe.model_loaded and service.is_ready and not probe.is_legacy_reference)
 
         return HealthResponse(
-            status="healthy" if service.is_ready else "degraded",
-            model_loaded=service.is_ready,
+            status="healthy" if loaded else "degraded",
+            model_loaded=loaded,
             model_name=config.model_name,
             model_version=config.model_version,
             uptime_seconds=status.get("uptime_seconds", 0),
+            forecast_qualified=forecast,
+            qualification_status=runtime_status.get("qualification_status") or "unloaded",
+            training_origin=runtime_status.get("training_origin") or "none",
+            architecture_family=runtime_status.get("architecture_family"),
+            weights_sha256=runtime_status.get("weights_sha256"),
+            bound_to_ollama=False,
         )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -207,6 +227,16 @@ async def predict(request: PredictRequest) -> PredictResponse:
         )
 
         service = get_nlm_service()
+        from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
+        probe = probe_scientific_nlm()
+        runtime = load_reference_runtime()
+        if not probe.model_loaded and not runtime.is_loaded:
+            raise HTTPException(
+                status_code=503,
+                detail="Scientific NLM not loaded. Waiting for FormSpace forecast artifacts on NAS. Not Ollama.",
+            )
 
         # Map to service query type
         query_type_map = {
@@ -229,20 +259,42 @@ async def predict(request: PredictRequest) -> PredictResponse:
             include_sources=request.include_sources,
         )
 
-        # Get prediction
-        result = await service.predict(pred_request)
+        if probe.model_loaded:
+            result = await service.predict(pred_request)
+            return PredictResponse(
+                text=result.text,
+                model=result.model,
+                query_type=result.query_type.value,
+                confidence=result.confidence,
+                sources=result.sources,
+                tokens_used=result.tokens_used,
+                latency_ms=result.latency_ms,
+                metadata=result.metadata,
+            )
 
+        replay = runtime.replay()
         return PredictResponse(
-            text=result.text,
-            model=result.model,
-            query_type=result.query_type.value,
-            confidence=result.confidence,
-            sources=result.sources,
-            tokens_used=result.tokens_used,
-            latency_ms=result.latency_ms,
-            metadata=result.metadata,
+            text=(
+                "Archived FormSpace reference replay completed. "
+                "SYNTHETIC_TEST. Fusarium ecology p remains null. Not Ollama."
+            ),
+            model="formspace-environmental-reference/0.1.0",
+            query_type=request.query_type.value,
+            confidence=0.0,
+            sources=["NAS models/nlm/reference"],
+            tokens_used=0,
+            latency_ms=0.0,
+            metadata={
+                "stub": False,
+                "confidence_usable": False,
+                "forecast_qualified": False,
+                "training_origin": "SYNTHETIC_TEST",
+                "replay": replay,
+            },
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
@@ -322,17 +374,40 @@ async def load_model() -> Dict[str, Any]:
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
 
-        service = get_nlm_service()
-        success = await service.load_model()
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
 
-        if success:
+        from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+
+        service = get_nlm_service()
+        probe = probe_scientific_nlm()
+        runtime = load_reference_runtime()
+        if probe.model_loaded:
+            success = await service.load_model()
             return {
-                "status": "success",
-                "message": "NLM model loaded successfully",
+                "status": "success" if success else "waiting",
+                "message": "NLM forecast model loaded" if success else probe.reason,
+                "model_loaded": bool(success),
+                "forecast_qualified": bool(success),
                 "is_ready": service.is_ready,
             }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to load NLM model")
+        if runtime.is_loaded:
+            return {
+                "status": "success",
+                "message": runtime.reason,
+                "model_loaded": True,
+                "forecast_qualified": False,
+                "is_ready": False,
+                "model_dir": runtime.model_dir,
+                "qualification_status": "candidate",
+            }
+        return {
+            "status": "waiting",
+            "message": probe.reason,
+            "model_loaded": False,
+            "forecast_qualified": False,
+            "is_ready": False,
+            "model_dir": probe.model_dir,
+        }
 
     except HTTPException:
         raise
@@ -779,3 +854,143 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
     except Exception as e:
         logger.error(f"Environmental process failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class ForecastIssueRequest(BaseModel):
+    subject_id: str
+    episode_id: str
+    issued_at: str
+    input_cutoff_at: str
+    event_definition_id: str
+    chart_id: str
+    chart_version: str
+    forecast_id: Optional[str] = None
+    run_id: Optional[str] = None
+    horizon_seconds: List[int] = Field(default_factory=list)
+    input_observation_ids: List[str] = Field(default_factory=list)
+    root_evidence_ids: List[str] = Field(default_factory=list)
+    support_status: Optional[str] = None
+    reasons: List[str] = Field(default_factory=list)
+
+
+class ForecastPatchRequest(BaseModel):
+    late_label: Optional[Dict[str, Any]] = None
+    observation_id: Optional[str] = None
+
+
+@router.post("/observations")
+async def accept_observation(
+    envelope: Dict[str, Any],
+    cutoff: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Causal observation ingest. Four times required. No invented scores."""
+    from datetime import datetime, timezone
+
+    from mycosoft_mas.nlm.formspace.contracts import ObservationEnvelope
+    from mycosoft_mas.nlm.formspace.observation_pipeline import get_observation_pipeline
+
+    parsed = ObservationEnvelope.model_validate(envelope)
+    if cutoff:
+        cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
+    else:
+        cutoff_dt = parsed.available_at
+    if cutoff_dt.tzinfo is None:
+        cutoff_dt = cutoff_dt.replace(tzinfo=timezone.utc)
+    return get_observation_pipeline().process(parsed, cutoff_dt)
+
+
+@router.post("/forecasts")
+async def issue_forecast(request: ForecastIssueRequest) -> Dict[str, Any]:
+    """Issue an immutable forecast. Unsupported until real NLM artifacts load."""
+    from mycosoft_mas.nlm.formspace.contracts import ForecastEnvelope
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+    from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
+    probe = probe_scientific_nlm()
+    reasons = list(request.reasons)
+    if not probe.model_loaded:
+        reasons.append(probe.reason or "Scientific NLM weights absent")
+    payload = request.model_dump(exclude_none=True)
+    payload["support_status"] = "UNSUPPORTED" if not probe.model_loaded else (
+        request.support_status or "UNSUPPORTED"
+    )
+    payload["reasons"] = reasons
+    payload["hazard_probabilities"] = None
+    payload["cumulative_probabilities"] = None
+    envelope = ForecastEnvelope.model_validate(payload)
+    return get_forecast_ledger().persist(envelope)
+
+
+@router.get("/forecasts/{forecast_id}")
+async def get_forecast(forecast_id: str) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+
+    row = get_forecast_ledger().get(forecast_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="forecast not found")
+    return row
+
+
+@router.post("/forecasts/{forecast_id}/patch")
+async def refuse_forecast_patch(
+    forecast_id: str,
+    request: ForecastPatchRequest,
+) -> Dict[str, Any]:
+    """I03: late labels and observations cannot overwrite an issued forecast."""
+    from mycosoft_mas.nlm.formspace.forecast_ledger import get_forecast_ledger
+
+    return get_forecast_ledger().refuse_overwrite(
+        forecast_id,
+        request.model_dump(exclude_none=True),
+    )
+
+
+@router.get("/runtime")
+async def nlm_runtime() -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+    from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
+    runtime = load_reference_runtime()
+    probe = probe_scientific_nlm()
+    status = runtime.runtime_status()
+    status["forecast_probe"] = {
+        "model_loaded": probe.model_loaded,
+        "is_legacy_reference": probe.is_legacy_reference,
+        "reason": probe.reason,
+        "model_dir": probe.model_dir,
+    }
+    status["bound_to_ollama"] = False
+    return status
+
+
+@router.post("/decision-path")
+async def nlm_decision_path(body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.decision_path import run_decision_path
+    from mycosoft_mas.nlm.formspace.persist import persist_decision_bundle
+
+    path = await run_decision_path(body or {})
+    persist = await persist_decision_bundle(path)
+    path["retain"] = persist
+    return path
+
+
+@router.get("/weka-features")
+async def nlm_weka_features() -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+
+    runtime = load_reference_runtime()
+    return runtime.weka_features()
+
+
+@router.post("/retain")
+async def nlm_retain(body: Dict[str, Any]) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.persist import persist_decision_bundle
+
+    return await persist_decision_bundle(body)
+
+
+@router.get("/retain/{embedding_id}")
+async def nlm_retain_get(embedding_id: str) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.persist import get_mindex_record
+
+    return await get_mindex_record(embedding_id)

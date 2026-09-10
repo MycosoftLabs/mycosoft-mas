@@ -1,0 +1,205 @@
+{
+  "schema": "nlm-numerical-specification-checks/v1",
+  "scope": "Scalar arithmetic and parameter-count formulas only",
+  "does_not_establish": [
+    "full PyTorch model equivalence",
+    "successful training",
+    "scientific calibration",
+    "live integration",
+    "deployment qualification"
+  ],
+  "script_sha256": "50d42e95d972134cbfc971ace00a649e877fed6190129fef30a3246fff067b4f",
+  "passed": 21,
+  "total": 21,
+  "checks": [
+    {
+      "name": "delta_inverse_softplus_0.001",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.0010000000000000002,
+        "expected": 0.001,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "delta_inverse_softplus_0.01",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.009999999999999998,
+        "expected": 0.01,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "delta_inverse_softplus_0.1",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.1,
+        "expected": 0.1,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "native_block_parameter_count",
+      "status": "PASS",
+      "detail": {
+        "actual": 7816,
+        "expected": 7816,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "mamba1_shaped_block_parameter_count",
+      "status": "PASS",
+      "detail": {
+        "actual": 116480,
+        "expected": 116480,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "sequence_parameter_count",
+      "status": "PASS",
+      "detail": {
+        "actual": 16991,
+        "expected": 16991,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "known_negative_decay",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.8187307530779818,
+        "expected": 0.8187307530779818,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "native_scalar_update",
+      "status": "PASS",
+      "detail": {
+        "actual": 1.7874615061559638,
+        "expected": 1.7874615061559636,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "zoh_input_is_a_different_convention",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.1359519351915136,
+        "expected": 0.13595193519151366,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "scalar_streaming_chunk_equivalence",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.0,
+        "expected": 0,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "inverse_variance_fusion_mean",
+      "status": "PASS",
+      "detail": {
+        "actual": 25.4,
+        "expected": 25.4,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "inverse_variance_fusion_variance",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.8,
+        "expected": 0.8,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "correlation_changes_fusion_mean",
+      "status": "PASS",
+      "detail": {
+        "actual": 25.0,
+        "expected": 25,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "brier_correct_at_90_percent",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.009999999999999995,
+        "expected": 0.01,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "brier_wrong_at_90_percent",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.81,
+        "expected": 0.81,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "hazard_cumulative_probability",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.496,
+        "expected": 0.496,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "adamw_first_update",
+      "status": "PASS",
+      "detail": {
+        "actual": 0.09899900005000001,
+        "expected": 0.09899900005,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "conformal_order_statistic_n10_alpha01",
+      "status": "PASS",
+      "detail": {
+        "actual": 10,
+        "expected": 10,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "conformal_small_n_requires_infinite_threshold",
+      "status": "PASS",
+      "detail": {
+        "actual": 6,
+        "expected": 6,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "sample_size_90pct_precision_5pct",
+      "status": "PASS",
+      "detail": {
+        "actual": 139,
+        "expected": 139,
+        "tolerance": 1e-10
+      }
+    },
+    {
+      "name": "sample_size_worst_case_precision_5pct",
+      "status": "PASS",
+      "detail": {
+        "actual": 385,
+        "expected": 385,
+        "tolerance": 1e-10
+      }
+    }
+  ]
+}
