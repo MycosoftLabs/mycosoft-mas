@@ -1,5 +1,8 @@
 # Master Document Index
 
+## GitHub CI triage (SEP10 2026)
+- [GITHUB_CI_TRIAGE_SEP10_2026.md](GITHUB_CI_TRIAGE_SEP10_2026.md) — Red-check inventory: MAS FormSpace modules, MINDEX OpenAPI `/api/mindex` + SINE uuid[], Arraylake SSH opt-in, platform-infra has no GitHub remote
+
 ## Sourcery AI GitHub triage (SEP10 2026)
 - [SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md](SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md) — Sourcery AI (`sourcery-ai[bot]`) comments: 63 inline, dispositions, fixes, merge-time CI (no `SOURCERY_TOKEN`)
 
