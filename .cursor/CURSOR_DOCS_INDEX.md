@@ -7,6 +7,9 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
+## Sourcery AI GitHub triage (Sep 10, 2026)
+- `docs/SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md` — Sourcery bot comments triaged; valid fixes; merge CI; secret `SOURCERY_TOKEN` not present
+
 ## Earth Sim PC / iPad demo (Sep 10, 2026)
 - `docs/EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md` — NatureOS + Fusarium globe: PC/iPad matrix, default-off movers/weather, hidden-tab pause
 

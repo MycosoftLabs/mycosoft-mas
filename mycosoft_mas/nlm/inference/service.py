@@ -49,14 +49,17 @@ def is_usable_nlm_confidence(
         value = float(confidence)
     except (TypeError, ValueError):
         return False
-    if abs(value - NLM_STUB_CONFIDENCE) < 1e-9:
+    if not 0.0 < value <= 1.0:
         return False
-    if value <= 0.0:
+    if abs(value - NLM_STUB_CONFIDENCE) < 1e-9:
         return False
     if nlm_text_is_stub(str(text or "")):
         return False
-    if isinstance(metadata, dict) and metadata.get("stub"):
-        return False
+    if isinstance(metadata, dict):
+        if metadata.get("stub"):
+            return False
+        if metadata.get("confidence_usable") is False:
+            return False
     return True
 
 
