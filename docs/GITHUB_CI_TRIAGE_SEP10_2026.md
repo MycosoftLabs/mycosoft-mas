@@ -1,23 +1,24 @@
 # GitHub CI Triage — SEP10 2026
 
 **Date:** 10 September 2026  
-**Status:** Fixes pushed; bake/publish rules documented  
+**Status:** Code fixes merged; MINDEX and Arraylake bake green; `mas-ci` watching newest main  
 **Owner:** devops-engineer (gate hub = GitHub)  
 **Related:** `docs/MASTER_DOCUMENT_INDEX.md`, `.cursor/CURSOR_DOCS_INDEX.md`
 
-Morgan asked for a full red-check inventory across MAS, MINDEX, platform-infra, and the website shipping branch. Live `mycosoft-website` on 187 was not stopped. No second blue-green cutover.
+Morgan asked for a full red-check inventory across MAS, MINDEX, platform-infra, and the website shipping branch. Live `mycosoft-website` on 187 was not stopped. No second blue-green cutover. Instant Deploy `34510868160` (ITDX, not this lane) was left running.
 
 ## Inventory (now)
 
-| Repo | Workflow | Was | Root cause | Fix | Now |
-|------|----------|-----|------------|-----|-----|
-| `MycosoftLabs/mycosoft-mas` | `mas-ci` | failure (test-build, test 3.11) | PR #142/#143 imported `formspace.contracts` / `forecast_ledger` / `observation_pipeline` on main but those three modules were never in the GitHub tree | Ship the three modules (`fix/formspace-contracts-ci-sep10`) | Watch `mas-ci` on the merge SHA |
-| `MycosoftLabs/mycosoft-mas` | `Dependencies` | failure (tox on 3.13); 3.11/3.12 cancelled | Scheduled tox ran live VM integration (`No VMs reachable; run with SKIP_INTEGRATION=1`) | Job + tox `SKIP_INTEGRATION=1`; ignore the same integration files as `mas-ci` | Watch next `Dependencies` run |
-| `MycosoftLabs/mindex` | `platform-one-build` | failure (`Run unit tests`) | Workflow called `pytest --suppress-no-test-exit-code` without `pytest-custom-exit-code` | Treat pytest exit 5 (no tests collected) as success | Watch `platform-one-build` on the merge SHA |
-| `MycosoftLabs/mindex` | `Deploy MINDEX to VM 189` | success | n/a | none | green |
-| `MycosoftLabs/website` | `Mycosoft CI/CD`, `CI`, `Website CI` on `main` / ITDX PR #301 | success | n/a | none | green (ITDX `cursor/itdx-codex-v13-connect-20260909` merged) |
-| `MycosoftLabs/website` | `Arraylake field bake` | failure (8+ scheduled runs) | Bake succeeded; `setup-ssh` timed out (`UNKNOWN:65535` / Cloudflare Access). Same tunnel path as blue/green. | NAS publish now opt-in via `ARRAYLAKE_PUBLISH_SSH=true`. Bake + artifact remain the gate. | Bake should go green; publish **blocked** until tunnel/Access is fixed |
-| platform-infra (local `CODE/platform-infra`) | none | n/a | **No GitHub remote, no `.github/workflows`.** Morgan’s “platform-infra” red check is MINDEX `platform-one-build`. Folder lives in the CODE monorepo without an origin. | Documented; no GitHub CI to repair | no GitHub workflow |
+| Repo | Workflow | Was | Root cause | Fix SHA / PR | Now |
+|------|----------|-----|------------|--------------|-----|
+| `MycosoftLabs/mycosoft-mas` | `mas-ci` | failure on `acf425f62` (collection error in `tests/test_nlm_reference_runtime_sep10.py`) | PR #142 imported `formspace.contracts` / `forecast_ledger` / `observation_pipeline` without those files on GitHub `main` | [#145](https://github.com/MycosoftLabs/mycosoft-mas/pull/145) merge `c3f06f9fd` (rebase commit `d41fd01fc`) | FormSpace files are on `main`. Later Fusarium docs merges cancelled earlier `mas-ci` via concurrency. Newest run [`34510948289`](https://github.com/MycosoftLabs/mycosoft-mas/actions/runs/34510948289) on `a1dd0efd3` (#148) is the gate. |
+| `MycosoftLabs/mycosoft-mas` | `Dependencies` | failure (tox 3.13 hit live VM integration: `SKIP_INTEGRATION=1`) | Scheduled/push tox did not set `SKIP_INTEGRATION` or ignore the same integration files as `mas-ci` | Same #145 (`dependencies.yml` + `tox.ini`) | In progress on #145 head `d41fd01fc` (run `34510514070`). Next `main` schedule/push should inherit the env. |
+| `MycosoftLabs/mindex` | `platform-one-build` | failure `34505403818` (`--suppress-no-test-exit-code` unknown) then exit 1 after #13 | (1) flag needs `pytest-custom-exit-code`; (2) once pytest ran: OpenAPI included `/api/biobank/*`; SINE test still expected `{uuid}` literals | [#13](https://github.com/MycosoftLabs/mindex/pull/13) `87364ee07` (exit 5); [#14](https://github.com/MycosoftLabs/mindex/pull/14) `9d657a4f1` (prefix + uuid[] lists) | **Green** [`34510905929`](https://github.com/MycosoftLabs/mindex/actions/runs/34510905929) |
+| `MycosoftLabs/mindex` | `Deploy MINDEX to VM 189` | success | n/a | none (deployed #14 API prefix change) | **Green** `34510905884` |
+| `MycosoftLabs/website` | `Mycosoft CI/CD` / `CI` / `Website CI` | ITDX PR #301/#302 green; later main pending | n/a for the original red | ITDX already merged; dirty local website main not reset | Latest `main` CI/CD `34510781821` on `a077848b` pending (runner queue). Not the original failure. |
+| `MycosoftLabs/website` | `Arraylake field bake` | failure (8+ scheduled; SSH `UNKNOWN:65535` / Access) | Bake OK; Cloudflare Tunnel SSH failed and failed the job. Same tunnel as blue/green. | [#303](https://github.com/MycosoftLabs/website/pull/303) merge `e58cea4d7` — NAS publish only if `ARRAYLAKE_PUBLISH_SSH=true` | **Green** [`34510927475`](https://github.com/MycosoftLabs/website/actions/runs/34510927475). SSH skipped. Publish **blocked** until tunnel/Access + variable. |
+| `MycosoftLabs/website` | `CREP — weekly SD+TJ coverage bake` | failure `34357895934` (9 Sep) | `peter-evans/create-pull-request` dirty tree (`lib/crep/fly-to-panels.ts`) after harvest | none this pass (weekly; not red-now) | **Blocked** next weekly; harvest itself wrote GeoJSON | 
+| platform-infra (`CODE/platform-infra`) | none | n/a | **No GitHub remote, no `.github/workflows`.** The “platform-infra” red check is MINDEX `platform-one-build`. | Documented | no GitHub workflow |
 
 ## Rules honored
 
@@ -36,6 +37,8 @@ gh run list --repo MycosoftLabs/website --workflow "Arraylake field bake" --limi
 
 ## Follow-up (blocked, not a code skip)
 
-1. **Arraylake NAS publish:** Cloudflare Tunnel SSH from GitHub Actions fails (`Connection to UNKNOWN port 65535`). Fix `PRODUCTION_HOST` / Access service token (repo or `production` environment), then set Actions variable `ARRAYLAKE_PUBLISH_SSH=true`. Do not restart the live website container for this.
-2. **platform-infra:** If it needs GitHub CI, add a remote and workflows later. It is not a MycosoftLabs repo today.
-3. **Website bot PRs** (`bot/inat-nyc-dc-hourly`, `bot/eagle-cameras-nightly`) sit at `action_required` (environment approval). Not test failures.
+1. **`mas-ci` on newest `main`:** watch run `34510948289` until green. Earlier #145/#146/#147 runs were cancelled by concurrency, not by a new collection error.
+2. **Arraylake NAS publish:** Cloudflare Tunnel SSH from GitHub Actions fails (`UNKNOWN` port 65535). Fix `PRODUCTION_HOST` / Access service token, then set `ARRAYLAKE_PUBLISH_SSH=true`. Do not restart the live website container for this.
+3. **CREP weekly SD+TJ bake:** next weekly needs a clean `create-pull-request` (add only `public/data/crep/sdtj-*`).
+4. **platform-infra:** add a remote and workflows only if Morgan wants GitHub CI there. Not a MycosoftLabs repo today.
+5. **Website bot PRs** (`bot/inat-nyc-dc-hourly`, `bot/eagle-cameras-nightly`) sit at `action_required` (environment approval). Not test failures.
