@@ -116,7 +116,7 @@ async def remember_layers(
     if hasattr(coordinator, "record_episode"):
         episode_id = await coordinator.record_episode(
             agent_id=agent_id,
-            event_type="nlm_decision",
+            event_type="decision",
             description=str(content.get("summary") or "NLM decision/assumption"),
             participants=["nlm", "myca", "avani"],
             context=content,
@@ -153,14 +153,29 @@ async def recall_decision(query: str, agent_id: str = "nlm-itdx") -> Dict[str, A
 
 
 async def persist_decision_bundle(payload: Dict[str, Any]) -> Dict[str, Any]:
-    mindex = await persist_mindex_record("decision_trace", payload)
-    memory = await remember_layers(
-        {
-            "summary": payload.get("summary") or "NLM decision path",
-            "mindex_embedding_id": mindex.get("embedding_id"),
-            "p": None,
-            "forecast_qualified": False,
-            "tasks": payload.get("tasks") or [],
+    mindex: Dict[str, Any]
+    try:
+        mindex = await persist_mindex_record("decision_trace", payload)
+    except Exception as exc:
+        mindex = {
+            "ok": False,
+            "reason": f"MINDEX retain unavailable: {exc}",
+            "embedding_id": None,
         }
-    )
-    return {"ok": True, "mindex": mindex, "memory": memory}
+    try:
+        memory = await remember_layers(
+            {
+                "summary": payload.get("summary") or "NLM decision path",
+                "mindex_embedding_id": mindex.get("embedding_id"),
+                "p": None,
+                "forecast_qualified": False,
+                "tasks": payload.get("tasks") or [],
+            }
+        )
+    except Exception as exc:
+        memory = {"ok": False, "reason": str(exc), "layers": {}}
+    return {
+        "ok": bool(mindex.get("ok") and memory.get("ok")),
+        "mindex": mindex,
+        "memory": memory,
+    }

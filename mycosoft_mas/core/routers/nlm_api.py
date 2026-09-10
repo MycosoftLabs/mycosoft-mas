@@ -109,6 +109,8 @@ class HealthResponse(BaseModel):
     architecture_family: Optional[str] = Field(default=None)
     weights_sha256: Optional[str] = Field(default=None)
     bound_to_ollama: bool = Field(default=False)
+    model_dir: Optional[str] = Field(default=None, description="NAS path tensors were loaded from")
+    load_reason: Optional[str] = Field(default=None)
 
 
 class ModelInfoResponse(BaseModel):
@@ -174,7 +176,7 @@ async def health_check() -> HealthResponse:
         probe = probe_scientific_nlm()
         runtime = load_reference_runtime()
         runtime_status = runtime.runtime_status()
-        loaded = bool(runtime.is_loaded or (probe.model_loaded and service.is_ready))
+        loaded = bool(runtime.is_loaded)
         forecast = bool(probe.model_loaded and service.is_ready and not probe.is_legacy_reference)
 
         return HealthResponse(
@@ -189,6 +191,8 @@ async def health_check() -> HealthResponse:
             architecture_family=runtime_status.get("architecture_family"),
             weights_sha256=runtime_status.get("weights_sha256"),
             bound_to_ollama=False,
+            model_dir=runtime_status.get("model_dir") or None,
+            load_reason=runtime_status.get("reason"),
         )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -969,7 +973,10 @@ async def nlm_decision_path(body: Optional[Dict[str, Any]] = None) -> Dict[str, 
     from mycosoft_mas.nlm.formspace.persist import persist_decision_bundle
 
     path = await run_decision_path(body or {})
-    persist = await persist_decision_bundle(path)
+    try:
+        persist = await persist_decision_bundle(path)
+    except Exception as exc:
+        persist = {"ok": False, "reason": str(exc)}
     path["retain"] = persist
     return path
 

@@ -13,9 +13,8 @@
 - [DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md](DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md) — Packet email skeleton (do not send as-is)
 
 ## ITDX + NLM E2E (SEP10 2026)
-- [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Fusarium Earth Sim / C2 / aerosol E2E: worktree 3010, no fake convoy, NLM unloaded, ITDX BFF abort
-- [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
-- [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
+- [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live `model_loaded=true`; MINDEX embedding 3; 6-layer memory; forecast not promoted
+- [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE; live health + SHA `0c5fb815…`; no 0.85 p
 - [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt
 
 ## ITDX work saved pending NLM weights (SEP09 2026)
