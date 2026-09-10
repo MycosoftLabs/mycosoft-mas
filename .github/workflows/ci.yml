@@ -1,4 +1,6 @@
 name: mas-ci
+# Sourcery AI GitHub App (sourcery-ai[bot]) already reviews MycosoftLabs PRs.
+# Do not add sourcery-ai/action@v1 here: repo secret SOURCERY_TOKEN is not set.
 
 on:
   push:

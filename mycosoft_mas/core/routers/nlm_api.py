@@ -857,7 +857,7 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
         }
     except Exception as e:
         logger.error(f"Environmental process failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Environmental process failed")
 
 
 class ForecastIssueRequest(BaseModel):
@@ -895,7 +895,12 @@ async def accept_observation(
 
     parsed = ObservationEnvelope.model_validate(envelope)
     if cutoff:
-        cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
+        try:
+            cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422, detail="Invalid cutoff timestamp"
+            ) from exc
     else:
         cutoff_dt = parsed.available_at
     if cutoff_dt.tzinfo is None:

@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Sourcery AI GitHub triage (SEP10 2026)
+- [SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md](SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md) — Sourcery AI (`sourcery-ai[bot]`) comments: 63 inline, dispositions, fixes, merge-time CI (no `SOURCERY_TOKEN`)
+
 ## Earth Sim PC / iPad demo stability (SEP10 2026)
 - [EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md](EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md) — NatureOS + Fusarium Earth Sim: PC/iPad matrix, default-off heavy layers, hidden-tab pause, no 187 deploy
 

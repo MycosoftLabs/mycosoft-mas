@@ -91,6 +91,7 @@ async def create_incident_api(body: IncidentCreate):
                     "event": "reported",
                     "actor": body.reporter_name,
                     "actor_id": body.reporter_id,
+                    "at": datetime.now(timezone.utc).isoformat(),
                 }
             )
         row = await soc_repo.create_incident(

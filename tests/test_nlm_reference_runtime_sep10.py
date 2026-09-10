@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from mycosoft_mas.nlm.formspace.native_ssm import (
     inverse_variance_fusion,
     native_scan,
@@ -38,6 +40,9 @@ def test_inverse_variance_fusion() -> None:
 def test_stub_confidence_never_usable() -> None:
     assert is_usable_nlm_confidence(0.85, "ok", {}) is False
     assert is_usable_nlm_confidence(0.0, "Archived FormSpace reference replay completed.", {}) is False
+    assert is_usable_nlm_confidence(1.5, "ok", {}) is False
+    assert is_usable_nlm_confidence(0.7, "ok", {"confidence_usable": False}) is False
+    assert is_usable_nlm_confidence(0.7, "ok", {}) is True
 
 
 def test_legacy_probe_stays_forecast_unloaded(tmp_path: Path) -> None:
@@ -54,7 +59,7 @@ def test_legacy_probe_stays_forecast_unloaded(tmp_path: Path) -> None:
 
 def test_reference_runtime_from_packet() -> None:
     if not (PACKET_REF / "reference_trained_weights.npz").is_file():
-        return
+        pytest.skip("archived FormSpace packet not present on this runner")
     from mycosoft_mas.nlm.formspace.reference_runtime import ReferenceRuntime
 
     runtime = ReferenceRuntime()
