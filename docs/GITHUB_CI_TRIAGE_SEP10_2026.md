@@ -1,7 +1,7 @@
 # GitHub CI Triage — SEP10 2026
 
 **Date:** 10 September 2026  
-**Status:** Code fixes merged; MINDEX and Arraylake bake green; `mas-ci` watching newest main  
+**Status:** Code fixes merged. MINDEX + Arraylake bake green. `mas-ci` collection error fixed (3.11 tests passed on `a1dd0efd3`); full-matrix runs keep getting cancelled by later `main` docs merges.  
 **Owner:** devops-engineer (gate hub = GitHub)  
 **Related:** `docs/MASTER_DOCUMENT_INDEX.md`, `.cursor/CURSOR_DOCS_INDEX.md`
 
@@ -11,8 +11,8 @@ Morgan asked for a full red-check inventory across MAS, MINDEX, platform-infra, 
 
 | Repo | Workflow | Was | Root cause | Fix SHA / PR | Now |
 |------|----------|-----|------------|--------------|-----|
-| `MycosoftLabs/mycosoft-mas` | `mas-ci` | failure on `acf425f62` (collection error in `tests/test_nlm_reference_runtime_sep10.py`) | PR #142 imported `formspace.contracts` / `forecast_ledger` / `observation_pipeline` without those files on GitHub `main` | [#145](https://github.com/MycosoftLabs/mycosoft-mas/pull/145) merge `c3f06f9fd` (rebase commit `d41fd01fc`) | FormSpace files are on `main`. Later Fusarium docs merges cancelled earlier `mas-ci` via concurrency. Newest run [`34510948289`](https://github.com/MycosoftLabs/mycosoft-mas/actions/runs/34510948289) on `a1dd0efd3` (#148) is the gate. |
-| `MycosoftLabs/mycosoft-mas` | `Dependencies` | failure (tox 3.13 hit live VM integration: `SKIP_INTEGRATION=1`) | Scheduled/push tox did not set `SKIP_INTEGRATION` or ignore the same integration files as `mas-ci` | Same #145 (`dependencies.yml` + `tox.ini`) | In progress on #145 head `d41fd01fc` (run `34510514070`). Next `main` schedule/push should inherit the env. |
+| `MycosoftLabs/mycosoft-mas` | `mas-ci` | failure on `acf425f62` (collection error in `tests/test_nlm_reference_runtime_sep10.py`) | PR #142 imported `formspace.contracts` / `forecast_ledger` / `observation_pipeline` without those files on GitHub `main` | [#145](https://github.com/MycosoftLabs/mycosoft-mas/pull/145) merge `c3f06f9fd` (rebase commit `d41fd01fc`) | **Collection error fixed.** Run [`34510948289`](https://github.com/MycosoftLabs/mycosoft-mas/actions/runs/34510948289) `test (3.11)` **passed** (including Run tests) on `a1dd0efd3`. 3.12/3.13/test-build cancelled when #150/#151 hit `main`. Newest run [`34513444580`](https://github.com/MycosoftLabs/mycosoft-mas/actions/runs/34513444580) on `ebf5e4afa` (#151) is the remaining matrix. |
+| `MycosoftLabs/mycosoft-mas` | `Dependencies` | failure (tox 3.13 hit live VM integration: `No VMs reachable`) | Scheduled tox ran live VM integration | Same #145 (`SKIP_INTEGRATION=1` + tox ignores) | **VM skip works** (tests ran). Run `34510514070` then failed at `pipdeptree --warn fail` (torch/CUDA extra tree). **Blocked flake**, not the original integration miss. |
 | `MycosoftLabs/mindex` | `platform-one-build` | failure `34505403818` (`--suppress-no-test-exit-code` unknown) then exit 1 after #13 | (1) flag needs `pytest-custom-exit-code`; (2) once pytest ran: OpenAPI included `/api/biobank/*`; SINE test still expected `{uuid}` literals | [#13](https://github.com/MycosoftLabs/mindex/pull/13) `87364ee07` (exit 5); [#14](https://github.com/MycosoftLabs/mindex/pull/14) `9d657a4f1` (prefix + uuid[] lists) | **Green** [`34510905929`](https://github.com/MycosoftLabs/mindex/actions/runs/34510905929) |
 | `MycosoftLabs/mindex` | `Deploy MINDEX to VM 189` | success | n/a | none (deployed #14 API prefix change) | **Green** `34510905884` |
 | `MycosoftLabs/website` | `Mycosoft CI/CD` / `CI` / `Website CI` | ITDX PR #301/#302 green; later main pending | n/a for the original red | ITDX already merged; dirty local website main not reset | Latest `main` CI/CD `34510781821` on `a077848b` pending (runner queue). Not the original failure. |
