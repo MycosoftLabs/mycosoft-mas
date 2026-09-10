@@ -93,9 +93,7 @@ class SeasonUpdateRequest(BaseModel):
 # --- Endpoints ---
 
 
-@router.get("/health")
-async def avani_health():
-    """Avani system health check."""
+def _avani_status_payload() -> Dict[str, Any]:
     engine = get_season_engine()
     gov = get_governor()
     return {
@@ -105,6 +103,18 @@ async def avani_health():
         "is_operational": engine.is_operational,
         "stats": gov.get_stats(),
     }
+
+
+@router.get("/health")
+async def avani_health():
+    """Avani system health check."""
+    return _avani_status_payload()
+
+
+@router.get("/status")
+async def avani_status():
+    """Alias for /health. Fusarium/NLM decision-path probes this path."""
+    return _avani_status_payload()
 
 
 @router.get("/season")
