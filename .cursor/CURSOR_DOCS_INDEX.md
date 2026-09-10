@@ -7,8 +7,8 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
-## GitHub CI triage (Sep 10, 2026)
-- `docs/GITHUB_CI_TRIAGE_SEP10_2026.md` — MAS/MINDEX/website/platform-infra red-check inventory and fixes
+## Earth Sim PC / iPad demo (Sep 10, 2026)
+- `docs/EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md` — NatureOS + Fusarium globe: PC/iPad matrix, default-off movers/weather, hidden-tab pause
 
 ## Fusarium ITDX live ship (Sep 10, 2026)
 - `docs/FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md` — Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer, live vs hypothesis vs NOT_SUPPLIED
@@ -18,8 +18,8 @@
 - `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md` — Paste-ready Perplexity prompt for Hess emails and attachments
 
 ## ITDX + NLM E2E (Sep 10, 2026)
-- `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — Live `model_loaded=true` on 188; MINDEX id 3; 6-layer memory; forecast not promoted
-- `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + live health JSON + SHA `0c5fb815…`
+- `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — NAS reference copied; Fusarium p null; MINDEX/memory retain; forecast not promoted
+- `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + 21/21 oracles
 
 ## ITDX Google traffic wall (Sep 09, 2026)
 - `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md` — 4.8s wall → 14s; Google Directions/Matrix 12s first/parallel; no invented p
