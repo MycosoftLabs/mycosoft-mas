@@ -19,34 +19,30 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Stub predict used to emit this number. Never treat it as Fusarium p.
+# Hard-reject the old unused placeholder. Never Fusarium ecology p.
 NLM_STUB_CONFIDENCE = 0.85
+_STUB_TEXT_MARKERS = (
+    "placeholder",
+    "stub",
+    "not loaded",
+    "waiting for formspace",
+    "scientific nlm is not loaded",
+    "fallback",
+)
 
 
 def nlm_text_is_stub(text: str) -> bool:
-    lowered = (text or "").lower()
-    markers = (
-        "placeholder",
-        "would come from model",
-        "nlm stub",
-        "model is not loaded",
-        "error generating response",
-        "not yet fully trained",
-    )
-    return any(marker in lowered for marker in markers)
+    """True when predict text is a loader/placeholder, not a scientific score."""
+    lowered = (text or "").strip().lower()
+    return any(marker in lowered for marker in _STUB_TEXT_MARKERS)
 
 
 def is_usable_nlm_confidence(
     confidence: Any,
-    text: str = "",
+    text: str,
     metadata: Optional[Dict[str, Any]] = None,
 ) -> bool:
-    """False for None, stub 0.85, or metadata.confidence_usable=False."""
-    meta = metadata or {}
-    if meta.get("stub") or meta.get("confidence_usable") is False:
-        return False
-    if nlm_text_is_stub(text):
-        return False
+    """Reject missing, stub 0.85, stub text, and explicit stub metadata."""
     if confidence is None:
         return False
     try:
@@ -55,7 +51,13 @@ def is_usable_nlm_confidence(
         return False
     if abs(value - NLM_STUB_CONFIDENCE) < 1e-9:
         return False
-    return 0.0 <= value <= 1.0
+    if value <= 0.0:
+        return False
+    if nlm_text_is_stub(str(text or "")):
+        return False
+    if isinstance(metadata, dict) and metadata.get("stub"):
+        return False
+    return True
 
 
 class QueryType(str, Enum):
@@ -199,30 +201,43 @@ class NLMService:
             return True
 
         try:
+            from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+
             from ..models import NLMBaseModel, NLMEmbeddingModel
 
-            logger.info("Loading NLM model...")
+            probe = probe_scientific_nlm()
+            if not probe.model_loaded:
+                from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
 
-            # Load main model
+                runtime = load_reference_runtime()
+                logger.info("NLM forecast stays unloaded: %s", probe.reason)
+                self._is_ready = False
+                if runtime.is_loaded:
+                    logger.info("Reference replay available at %s", runtime.model_dir)
+                return False
+
+            logger.info("Loading scientific NLM from %s", probe.model_dir)
             self._model = NLMBaseModel(
-                model_path=self.config.model_dir,
+                model_path=probe.model_dir,
                 device=self.config.inference.device,
             )
-            await self._model.load()
+            loaded = await self._model.load()
+            if not loaded:
+                self._is_ready = False
+                return False
 
-            # Load embedding model for RAG
             if self._rag_enabled:
                 self._embedding_model = NLMEmbeddingModel()
                 await self._embedding_model.load()
 
             self._is_ready = True
             self._started_at = datetime.now()
-
-            logger.info("NLM service ready")
+            logger.info("NLM service ready from scientific artifacts")
             return True
 
         except Exception as e:
             logger.error(f"Failed to load NLM model: {e}")
+            self._is_ready = False
             return False
 
     async def unload_model(self) -> None:
@@ -255,7 +270,16 @@ class NLMService:
         start_time = time.time()
 
         if not self._is_ready:
-            await self.load_model()
+            loaded = await self.load_model()
+            if not loaded:
+                return PredictionResult(
+                    text="Scientific NLM is not loaded. Waiting for FormSpace forecast artifacts on NAS.",
+                    model="nlm",
+                    query_type=request.query_type,
+                    confidence=0.0,
+                    latency_ms=0.0,
+                    metadata={"model_loaded": False, "error": "weights_absent"},
+                )
 
         try:
             # Get context via RAG if enabled
@@ -295,16 +319,13 @@ class NLMService:
                 text=response_text,
                 model="nlm",
                 query_type=request.query_type,
-                confidence=None,
+                confidence=0.0,
                 sources=sources if request.include_sources else [],
                 tokens_used=tokens_used,
                 latency_ms=latency_ms,
                 metadata={
                     "context_used": bool(context),
                     "rag_enabled": self._rag_enabled,
-                    "stub": True,
-                    "confidence_usable": False,
-                    "note": "Stub predict does not emit a usable confidence. 0.85 is rejected.",
                 },
             )
 
@@ -448,7 +469,7 @@ class NLMService:
                 model_version=self.config.model_version,
                 input_data=request.to_dict(),
                 prediction=response,
-                confidence=None,
+                confidence=0.0,
                 metadata={"query_type": request.query_type.value},
             )
         except Exception as e:
