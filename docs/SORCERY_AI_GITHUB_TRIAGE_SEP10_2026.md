@@ -58,6 +58,12 @@ Primary checkouts were dirty. **Never reset.** Fixes landed on:
 
 Did **not** edit dirty website main or the ITDX website worktree. Did **not** blue-green 187. Did **not** touch orchestrator / soul / `mycosoft_mas/security/` / constitution / identity.
 
+| Repo | PR | SHA |
+|---|---|---|
+| MAS | https://github.com/MycosoftLabs/mycosoft-mas/pull/150 | `db63b19fa` |
+| MINDEX | https://github.com/MycosoftLabs/mindex/pull/15 | `3e5ea26` |
+| Website | https://github.com/MycosoftLabs/website/pull/305 | `37885253` |
+
 ### MAS
 
 - `is_usable_nlm_confidence`: restore `0.0 < value <= 1.0`; reject `confidence_usable is False`; **keep** rejecting exactly `0.85`.
