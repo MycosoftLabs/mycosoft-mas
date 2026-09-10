@@ -7,6 +7,9 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
+## GitHub CI triage (Sep 10, 2026)
+- `docs/GITHUB_CI_TRIAGE_SEP10_2026.md` — MAS/MINDEX/website/platform-infra red-check inventory and fixes
+
 ## Fusarium ITDX live ship (Sep 10, 2026)
 - `docs/FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md` — Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer, live vs hypothesis vs NOT_SUPPLIED
 - `docs/FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md` — 3010 E2E: no fake tracks; NLM/smoke/AQ degraded

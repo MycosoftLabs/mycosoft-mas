@@ -1,5 +1,8 @@
 # Master Document Index
 
+## GitHub CI triage (SEP10 2026)
+- [GITHUB_CI_TRIAGE_SEP10_2026.md](GITHUB_CI_TRIAGE_SEP10_2026.md) — Red-check inventory: MAS `mas-ci` missing FormSpace modules, MINDEX `platform-one-build` pytest flag, Arraylake tunnel SSH blocked, platform-infra has no GitHub remote
+
 ## Fusarium ITDX live ship (SEP10 2026)
 - [FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md](FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md) — **Live ship**: Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer
 - [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Browser/BFF E2E: no fake live tracks; NLM/smoke/AQ degraded
