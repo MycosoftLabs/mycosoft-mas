@@ -7,12 +7,28 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
+## Fusarium ITDX live ship (Sep 10, 2026)
+- `docs/FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md` — Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer, live vs hypothesis vs NOT_SUPPLIED
+- `docs/FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md` — 3010 E2E: no fake tracks; NLM/smoke/AQ degraded
+
+## Dr. Hess / Weka / Perplexity (Sep 10, 2026)
+- `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md` — Paste-ready Perplexity prompt for Hess emails and attachments
+
 ## ITDX + NLM E2E (Sep 10, 2026)
 - `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — NAS reference copied; Fusarium p null; MINDEX/memory retain; forecast not promoted
 - `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + 21/21 oracles
 
 ## ITDX Google traffic wall (Sep 09, 2026)
 - `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md` — 4.8s wall → 14s; Google Directions/Matrix 12s first/parallel; no invented p
+
+## ITDX work saved pending NLM weights (Sep 09, 2026)
+- `docs/ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md` — Local commits only; push/deploy NO until Morgan drops NAS weights
+
+## FormSpace NLM (Sep 09, 2026)
+- `docs/FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md` — Scientific NLM vs MYCA Ollama compartments; no GGUF in `/models/nlm`
+- `docs/FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md` — Stage B ledger; `model_loaded=false` until Morgan weights
+- `docs/NLM_WEIGHTS_ON_188_SEP09_2026.md` — Ollama bind reverted; NAS incoming drop only; no 188 blob copy
+- `docs/VM188_NAS_MODEL_PROTECTION_SEP09_2026.md` — 188 compute only; NAS 8-bay/2×8TB (`df` 7.3T); Ollama on `models/myca`; fail-closed; UDM 27TB Protect-only
 
 ## ITDX26 connect (Sep 09, 2026)
 - `docs/ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md` — Live ship: local proofs, 188/189 hot data, Weka PASS + trial NOT_MET, blue-green 187

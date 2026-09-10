@@ -1,9 +1,28 @@
 # Master Document Index
 
+## Fusarium ITDX live ship (SEP10 2026)
+- [FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md](FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md) — **Live ship**: Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer
+- [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Browser/BFF E2E: no fake live tracks; NLM/smoke/AQ degraded
+
+## Dr. Hess / Weka / Perplexity (SEP10 2026)
+- [PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md](PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md) — **Paste-ready Perplexity prompt**: Hess emails + attachments; Morgan uploads white papers, NLM math, WEKA packet, modified email note. Attachments win on numbers; this prompt wins on claims.
+- [WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md](WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md) — Official Weka operator runbook (dated MAS copy)
+- [DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md](DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md) — Packet email skeleton (do not send as-is)
+
 ## ITDX + NLM E2E (SEP10 2026)
+- [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Fusarium Earth Sim / C2 / aerosol E2E: worktree 3010, no fake convoy, NLM unloaded, ITDX BFF abort
 - [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
 - [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
 - [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt
+
+## ITDX work saved pending NLM weights (SEP09 2026)
+- [ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md](ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md) — Local SHAs only; push/deploy NO; wait for NAS `models/nlm/incoming` weights
+
+## FormSpace NLM (SEP09 2026)
+- [FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md](FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md) — Scientific NLM on NAS `models/nlm` vs MYCA Ollama `models/myca`
+- [FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md](FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md) — Stage B forecast ledger; no stub 0.85 p
+- [NLM_WEIGHTS_ON_188_SEP09_2026.md](NLM_WEIGHTS_ON_188_SEP09_2026.md) — Ollama NLM adapter reverted; wait for Morgan `incoming/weights.pt`
+- [VM188_NAS_MODEL_PROTECTION_SEP09_2026.md](VM188_NAS_MODEL_PROTECTION_SEP09_2026.md) — 188 root fail-closed; NAS 8-bay 2×8TB (`df` 7.3T / 7.2T free); MYCA GGUF on `models/myca`; UDM 27TB Protect-only
 
 ## ITDX Google traffic wall (SEP09 2026)
 - [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
