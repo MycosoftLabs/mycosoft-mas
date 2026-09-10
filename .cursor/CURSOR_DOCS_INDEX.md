@@ -18,8 +18,8 @@
 - `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md` — Paste-ready Perplexity prompt for Hess emails and attachments
 
 ## ITDX + NLM E2E (Sep 10, 2026)
-- `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — NAS reference copied; Fusarium p null; MINDEX/memory retain; forecast not promoted
-- `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + 21/21 oracles
+- `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — Live `model_loaded=true` on 188; MINDEX id 3; 6-layer memory; forecast not promoted
+- `docs/NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md` — START_HERE + live health JSON + SHA `0c5fb815…`
 
 ## ITDX Google traffic wall (Sep 09, 2026)
 - `docs/ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md` — 4.8s wall → 14s; Google Directions/Matrix 12s first/parallel; no invented p

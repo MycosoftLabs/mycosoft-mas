@@ -10,6 +10,7 @@ from mycosoft_mas.nlm.formspace.native_ssm import (
 )
 from mycosoft_mas.nlm.formspace.scientific_loader import (
     LEGACY_MODEL_JSON_SHA256,
+    LEGACY_WEIGHTS_SHA256,
     probe_scientific_nlm,
 )
 from mycosoft_mas.nlm.inference.service import is_usable_nlm_confidence
@@ -79,3 +80,17 @@ def test_decision_path_p_null() -> None:
     assert path["live"] is False
     assert path["forecast_qualified"] is False
     assert any(task["status"] == "NOT_SUPPLIED" for task in path["tasks"])
+
+
+def test_health_model_loaded_follows_tensors() -> None:
+    from mycosoft_mas.nlm.formspace.reference_runtime import ReferenceRuntime
+
+    if not (PACKET_REF / "reference_trained_weights.npz").is_file():
+        return
+    runtime = ReferenceRuntime()
+    assert runtime.load(str(PACKET_REF)) is True
+    assert runtime.is_loaded is True
+    status = runtime.runtime_status()
+    assert status["model_loaded"] is True
+    assert status["forecast_qualified"] is False
+    assert status["weights_sha256"] == LEGACY_WEIGHTS_SHA256
