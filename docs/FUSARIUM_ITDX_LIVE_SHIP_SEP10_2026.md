@@ -64,7 +64,12 @@ Pointer: `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md`. Do **
 
 ## SHAs / PRs
 
-Filled at merge time in the closeout block below.
+| Item | SHA / PR |
+|---|---|
+| Website ITDX / movement / aerosol | [PR #302](https://github.com/MycosoftLabs/website/pull/302) `0eb13eb1` |
+| Website iPad default-off heavy layers | [PR #304](https://github.com/MycosoftLabs/website/pull/304) `a077848b` |
+| MAS live-ship + iPad demo note | [PR #144](https://github.com/MycosoftLabs/mycosoft-mas/pull/144) `881b28de`; [PR #147](https://github.com/MycosoftLabs/mycosoft-mas/pull/147) `1ab12bd2` |
+| NLM reference tensors on 188 | [PR #146](https://github.com/MycosoftLabs/mycosoft-mas/pull/146) `69e9108e` — loaded, not forecast-qualified |
 
 Related website worktree: `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website-itdx-codex-v13` (never reset dirty `WEBSITE/website` main / Launchpad WIP).
 
