@@ -1,5 +1,10 @@
 # Master Document Index
 
+## ITDX + NLM E2E (SEP10 2026)
+- [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
+- [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
+- [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt
+
 ## ITDX work saved pending NLM weights (SEP09 2026)
 - [ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md](ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md) — Local SHAs only; push/deploy NO; wait for NAS `models/nlm/incoming` weights
 

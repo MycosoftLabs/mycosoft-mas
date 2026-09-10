@@ -63,8 +63,12 @@ def _candidate_dirs() -> List[Path]:
         [
             home,
             home / "incoming",
+            home / "reference",
+            home / "archived",
             Path(DEFAULT_NLM_HOME),
             Path(DEFAULT_NLM_HOME) / "incoming",
+            Path(DEFAULT_NLM_HOME) / "reference",
+            Path(DEFAULT_NLM_HOME) / "archived",
         ]
     )
     seen = set()

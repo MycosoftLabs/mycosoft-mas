@@ -207,8 +207,13 @@ class NLMService:
 
             probe = probe_scientific_nlm()
             if not probe.model_loaded:
-                logger.info("NLM stays unloaded: %s", probe.reason)
+                from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+
+                runtime = load_reference_runtime()
+                logger.info("NLM forecast stays unloaded: %s", probe.reason)
                 self._is_ready = False
+                if runtime.is_loaded:
+                    logger.info("Reference replay available at %s", runtime.model_dir)
                 return False
 
             logger.info("Loading scientific NLM from %s", probe.model_dir)
