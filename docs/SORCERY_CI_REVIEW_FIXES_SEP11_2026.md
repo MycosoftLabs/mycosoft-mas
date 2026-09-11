@@ -50,12 +50,14 @@ Protected files not edited: `orchestrator.py`, `orchestrator_service.py`, guardi
 
 ## SHAs
 
-Recorded after push. See PR comments for the live SHAs.
+| Repo | Branch | SHA | Base |
+|---|---|---|---|
+| MycosoftLabs/mycosoft-mas | `fix/sorcery-ci-review-sep11` | `9ce897549` | `5561e893` (main #153) |
+| MycosoftLabs/website | `fix/sorcery-ci-review-sep11` | see website PR | `2a46b851` (main #319) |
 
-| Repo | Branch | Base |
-|---|---|---|
-| MycosoftLabs/mycosoft-mas | `fix/sorcery-ci-review-sep11` | `5561e893` |
-| MycosoftLabs/website | `fix/sorcery-ci-review-sep11` | `2a46b851` |
+MAS extra: `get_training_config` / export 500s return `training_config_unavailable` / `nlm_export_unavailable` (no `str(e)`). Console honesty test now calls `training_console()`. Drift script local verify: 99 + 13 JSON, `ok: true`.
+
+Website: NLM panel is live if `model_loaded` or on-disk weight count > 0 (MAS-up alone is degraded). Field timer no-ops when already running. Arraylake skip warning no longer claims an artifact was uploaded. `situation-assessment` left unauthenticated — synthetic exercise BFF (`live_cop: false`). PRs: MAS #154, website #320.
 
 ## Verify
 
