@@ -8,6 +8,7 @@
 
 
 ## NLM model-training app (Sep 11, 2026)
+- `docs/NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md` — MAS NLM service + `/api/nlm/weights`; Fusarium/NatureOS same bind; Instant Deploy left to ba065cf1
 - `docs/NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md` — Live `/natureos/model-training` plugged to MAS NLM + MINDEX; skip-startup is not MAS degraded; no Ollama bind; no stub 0.85 p
 
 ## GitHub CI triage (Sep 10, 2026)

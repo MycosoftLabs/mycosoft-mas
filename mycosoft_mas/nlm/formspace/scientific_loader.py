@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 # Frozen ITDX v1.4 synthetic reference (preserve; do not overwrite).
 LEGACY_MODEL_JSON_SHA256 = "1d3fe486d94507600f5c82e2be527ac9be42ff9a8a59586e7f158397a1a3b792"
@@ -51,6 +53,7 @@ FORBIDDEN_SUBTREES = (
     "/mnt/mycosoft-nas/models/myca",
     "/usr/share/ollama",
 )
+WEIGHT_SUFFIXES = {".pt", ".npz", ".bin", ".safetensors", ".pth", ".ckpt"}
 
 
 def _candidate_dirs() -> List[Path]:
@@ -178,3 +181,108 @@ def probe_scientific_nlm(model_dir: Optional[str] = None) -> ScientificNLMProbe:
         reason="No scientific forecast NLM weights yet. /api/nlm stays unloaded. Not Ollama.",
         notes=notes,
     )
+
+
+def _sha256_file(path: Path) -> Optional[str]:
+    try:
+        digest = hashlib.sha256()
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    except OSError:
+        return None
+
+
+def _artifact_role(path: Path) -> str:
+    blob = str(path).replace("\\", "/").lower()
+    if "/reference/" in blob or blob.endswith("/reference"):
+        return "reference"
+    if "/incoming/" in blob:
+        return "incoming"
+    if "/archived/" in blob:
+        return "archived"
+    if "/data/" in blob:
+        return "data"
+    return "local"
+
+
+def nlm_home() -> Path:
+    return Path(os.getenv("NLM_HOME", DEFAULT_NLM_HOME))
+
+
+def inventory_nlm_weights() -> Dict[str, Any]:
+    """List every on-disk NLM artifact. Never GGUF/Ollama. Never invent forecast qualification."""
+    home = nlm_home()
+    roots = [
+        home,
+        home / "reference",
+        home / "incoming",
+        home / "archived",
+        home / "data",
+    ]
+    env_dir = os.getenv("NLM_MODEL_DIR", "").strip()
+    if env_dir:
+        roots.append(Path(env_dir))
+
+    artifacts: List[Dict[str, Any]] = []
+    seen = set()
+    notes: List[str] = []
+    for root in roots:
+        if _looks_like_chat(root, ""):
+            notes.append(f"ignored chat/GGUF path {root}")
+            continue
+        if not root.exists():
+            continue
+        try:
+            for path in root.rglob("*"):
+                if not path.is_file():
+                    continue
+                if _looks_like_chat(path, ""):
+                    notes.append(f"ignored chat/GGUF file {path}")
+                    continue
+                suffix = path.suffix.lower()
+                if suffix not in WEIGHT_SUFFIXES and path.name != "model.json":
+                    continue
+                try:
+                    key = str(path.resolve())
+                except OSError:
+                    key = str(path)
+                if key in seen:
+                    continue
+                seen.add(key)
+                stat = path.stat()
+                sha = _sha256_file(path) if suffix in WEIGHT_SUFFIXES else None
+                artifacts.append(
+                    {
+                        "name": path.name,
+                        "path": str(path),
+                        "role": _artifact_role(path),
+                        "kind": "weights" if suffix in WEIGHT_SUFFIXES else "metadata",
+                        "bytes": stat.st_size,
+                        "modified_at": datetime.fromtimestamp(
+                            stat.st_mtime, tz=timezone.utc
+                        ).isoformat(),
+                        "sha256": sha,
+                        "is_legacy_reference": sha == LEGACY_WEIGHTS_SHA256,
+                        "forecast_qualified": False,
+                        "bound_to_ollama": False,
+                    }
+                )
+        except OSError as exc:
+            notes.append(f"scan failed under {root}: {exc}")
+
+    artifacts.sort(key=lambda row: row.get("modified_at") or "", reverse=True)
+    return {
+        "home": str(home),
+        "count": len(artifacts),
+        "weights": artifacts,
+        "bound_to_ollama": False,
+        "forecast_qualified": False,
+        "forecast_p": None,
+        "notes": notes,
+        "note": (
+            "On-disk NLM artifacts only. No HuggingFace/Ollama pulls. "
+            "Legacy reference is not a calibrated forecast. p stays null."
+        ),
+    }

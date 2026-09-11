@@ -26,6 +26,8 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/nlm/health` | GET | Live NLM health. `bound_to_ollama: false`. |
+| `/api/nlm/weights` | GET | On-disk NLM artifact inventory. No Ollama/GGUF. `forecast_qualified: false`. |
+| `/api/nlm/runtime` | GET | Reference runtime + same weight list Fusarium/NatureOS consume. |
 | `/api/nlm/training/health` | GET | Training router liveness. `jobs_available: false` on 188 fail-closed. |
 | `/api/nlm/training/console` | GET | Honest training-app payload: MAS `ui_status=online`, NLM, MINDEX taxa/compounds/stats, checkpoints. |
 | `/api/nlm/training/checkpoints` | GET | Memory + disk checkpoints. Empty is honest. |

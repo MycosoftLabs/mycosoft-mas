@@ -24,7 +24,7 @@ class NLMBridge:
     def __init__(self, os_ref):
         self._os = os_ref
         self._session: Optional[aiohttp.ClientSession] = None
-        self._nlm_url = os.getenv("NLM_API_URL", "http://192.168.0.188:8200").rstrip("/")
+        self._nlm_url = os.getenv("NLM_API_URL", "http://192.168.0.188:8001").rstrip("/")
 
     async def initialize(self):
         self._session = aiohttp.ClientSession()
@@ -40,7 +40,7 @@ class NLMBridge:
 
         try:
             async with self._session.get(
-                f"{self._nlm_url}/health",
+                f"{self._nlm_url}/api/nlm/health",
                 timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 if resp.status == 200:

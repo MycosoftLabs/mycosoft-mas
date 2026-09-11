@@ -62,7 +62,7 @@ SYSTEM_CONFIGS = {
     },
     "NLM": {
         "type": SystemType.NLM,
-        "url": os.getenv("NLM_URL", "http://192.168.0.188:8200"),
+        "url": os.getenv("NLM_URL", "http://192.168.0.188:8001"),
         "openapi_path": "/openapi.json",
         "description": "Nature Learning Model Service",
     },

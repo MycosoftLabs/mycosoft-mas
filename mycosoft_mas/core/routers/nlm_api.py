@@ -19,6 +19,7 @@ Endpoints:
 """
 
 import logging
+import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +29,20 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nlm", tags=["nlm"])
+
+
+def _external_nlm_base() -> Optional[str]:
+    """Proxy only a distinct standalone NLM. Never loop back to this MAS or obsolete :8200."""
+    raw = os.getenv("NLM_API_URL", "").strip().rstrip("/")
+    if not raw:
+        return None
+    lowered = raw.lower()
+    if any(
+        token in lowered
+        for token in (":8200", ":8001", "127.0.0.1", "localhost", "192.168.0.188")
+    ):
+        return None
+    return raw
 
 
 # ============================================================================
@@ -655,7 +670,7 @@ async def api_predict_fruiting(req: FruitingPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _external_nlm_base()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -708,7 +723,7 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _external_nlm_base()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -771,7 +786,7 @@ async def api_predict_sensors(req: SensorPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _external_nlm_base()
         if nlm_url:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.post(
@@ -809,7 +824,7 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _external_nlm_base()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -954,21 +969,50 @@ async def refuse_forecast_patch(
     )
 
 
+@router.get("/weights")
+async def nlm_weights() -> Dict[str, Any]:
+    """Inventory every on-disk NLM artifact. Same service Fusarium and NatureOS consume."""
+    from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+    from mycosoft_mas.nlm.formspace.scientific_loader import inventory_nlm_weights
+
+    inventory = inventory_nlm_weights()
+    runtime = load_reference_runtime()
+    loaded_sha = runtime.weights_sha256
+    for row in inventory.get("weights") or []:
+        row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
+    inventory["loaded_sha256"] = loaded_sha
+    inventory["model_dir"] = runtime.model_dir
+    inventory["model_loaded"] = bool(runtime.is_loaded)
+    inventory["service"] = "mas-nlm"
+    return inventory
+
+
 @router.get("/runtime")
 async def nlm_runtime() -> Dict[str, Any]:
     from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
-    from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+    from mycosoft_mas.nlm.formspace.scientific_loader import (
+        inventory_nlm_weights,
+        probe_scientific_nlm,
+    )
 
     runtime = load_reference_runtime()
     probe = probe_scientific_nlm()
+    inventory = inventory_nlm_weights()
     status = runtime.runtime_status()
+    loaded_sha = status.get("weights_sha256")
+    for row in inventory.get("weights") or []:
+        row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
     status["forecast_probe"] = {
         "model_loaded": probe.model_loaded,
         "is_legacy_reference": probe.is_legacy_reference,
         "reason": probe.reason,
         "model_dir": probe.model_dir,
     }
+    status["weights"] = inventory.get("weights") or []
+    status["weight_count"] = inventory.get("count") or 0
     status["bound_to_ollama"] = False
+    status["forecast_p"] = None
+    status["service"] = "mas-nlm"
     return status
 
 
