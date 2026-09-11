@@ -7,6 +7,9 @@
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
 
+## Sorcery / CI review fixes (Sep 11, 2026)
+- `docs/SORCERY_CI_REVIEW_FIXES_SEP11_2026.md` — Bugbot/security + myca-ci missing drift script; Instant Deploy not raced
+
 ## NLM model-training app (Sep 11, 2026)
 - `docs/NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md` — MAS NLM service + `/api/nlm/weights`; Fusarium/NatureOS same bind; Instant Deploy left to ba065cf1
 - `docs/NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md` — Live `/natureos/model-training` plugged to MAS NLM + MINDEX; skip-startup is not MAS degraded; no Ollama bind; no stub 0.85 p

@@ -14,9 +14,10 @@ and delegates actual compute to a GPU Legion (default: voice at GPU_VOICE_IP / 1
 """
 
 import asyncio
-import json
+import hashlib
 import logging
 import os
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -211,40 +212,85 @@ def _normalize_items(payload: Any) -> List[Dict[str, Any]]:
     return []
 
 
-def _disk_checkpoints() -> List[Dict[str, Any]]:
-    found: List[Dict[str, Any]] = []
-    from mycosoft_mas.nlm.formspace.scientific_loader import DEFAULT_NLM_HOME
+_DISK_CHECKPOINT_TTL = 60.0
+_DISK_CHECKPOINT_CACHE: Dict[str, Any] = {"at": 0.0, "value": None}
 
-    roots = {
-        Path(NLM_CHECKPOINT_DIR),
-        Path(NLM_MODEL_DIR),
-        Path(os.getenv("NLM_HOME", DEFAULT_NLM_HOME)),
-        Path(DEFAULT_NLM_HOME),
-        Path(DEFAULT_NLM_HOME) / "reference",
-    }
+
+def _checkpoint_id_for(path: Path) -> str:
+    digest = hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
+    return f"disk-{path.stem}-{digest}"
+
+
+def _disk_checkpoints() -> List[Dict[str, Any]]:
+    now = time.monotonic()
+    cached = _DISK_CHECKPOINT_CACHE.get("value")
+    cached_at = float(_DISK_CHECKPOINT_CACHE.get("at") or 0.0)
+    if cached is not None and now - cached_at < _DISK_CHECKPOINT_TTL:
+        return list(cached)
+
+    from mycosoft_mas.nlm.formspace.scientific_loader import (
+        DEFAULT_NLM_HOME,
+        _unique_scan_roots,
+        _public_relpath,
+        nlm_home,
+    )
+
+    roots = _unique_scan_roots(
+        [
+            Path(NLM_CHECKPOINT_DIR),
+            Path(NLM_MODEL_DIR),
+            nlm_home(),
+            Path(DEFAULT_NLM_HOME),
+        ]
+    )
     suffixes = {".pt", ".bin", ".safetensors", ".ckpt", ".pth", ".npz"}
+    found: List[Dict[str, Any]] = []
+    seen = set()
+    walked = 0
+    home = nlm_home()
     for root in roots:
         try:
             if not root.exists():
                 continue
             for path in root.rglob("*"):
+                walked += 1
+                if walked > 200:
+                    break
                 if not path.is_file() or path.suffix.lower() not in suffixes:
                     continue
+                try:
+                    key = str(path.resolve())
+                except OSError:
+                    key = str(path)
+                if key in seen:
+                    continue
+                seen.add(key)
                 stat = path.stat()
+                checkpoint_id = _checkpoint_id_for(path)
                 found.append(
                     {
-                        "id": path.stem,
-                        "checkpoint_id": path.stem,
-                        "path": str(path),
+                        "id": checkpoint_id,
+                        "checkpoint_id": checkpoint_id,
+                        "name": path.name,
+                        "path": _public_relpath(home, path),
                         "bytes": stat.st_size,
                         "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                         "source": "disk",
                     }
                 )
+            if walked > 200:
+                break
         except OSError as exc:
-            logger.warning("Checkpoint scan failed under %s: %s", root, exc)
+            logger.warning("Checkpoint scan failed under %s: %s", root.name, exc)
     found.sort(key=lambda row: row.get("modified_at") or "", reverse=True)
-    return found[:50]
+    limited = found[:50]
+    _DISK_CHECKPOINT_CACHE["at"] = now
+    _DISK_CHECKPOINT_CACHE["value"] = limited
+    return list(limited)
+
+
+def _checkpoint_catalog() -> List[Dict[str, Any]]:
+    return list(_checkpoints) + _disk_checkpoints()
 
 
 def _training_capacity() -> Dict[str, Any]:
@@ -294,7 +340,7 @@ async def _nlm_live_status() -> Dict[str, Any]:
             "training_origin": runtime_status.get("training_origin") or "none",
             "architecture_family": runtime_status.get("architecture_family"),
             "weights_sha256": runtime_status.get("weights_sha256"),
-            "model_dir": runtime_status.get("model_dir") or getattr(config, "model_dir", None),
+            "model_dir": "nlm-home",
         }
     except Exception as exc:
         logger.warning("NLM live status failed: %s", exc)
@@ -304,7 +350,7 @@ async def _nlm_live_status() -> Dict[str, Any]:
             "bound_to_ollama": False,
             "forecast_qualified": False,
             "forecast_p": None,
-            "error": str(exc),
+            "error": "nlm_status_unavailable",
         }
 
 
@@ -319,7 +365,7 @@ async def get_training_config() -> Dict[str, Any]:
         return config.to_dict()
     except Exception as e:
         logger.error(f"Failed to get training config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="training_config_unavailable")
 
 
 @router.get("/runs")
@@ -336,7 +382,7 @@ async def list_training_runs() -> Dict[str, Any]:
 async def list_checkpoints() -> Dict[str, Any]:
     """List in-memory plus on-disk checkpoints. Empty disk is honest, not fake."""
     disk = _disk_checkpoints()
-    combined = list(_checkpoints) + disk
+    combined = _checkpoint_catalog()
     return {
         "checkpoints": combined,
         "count": len(combined),
@@ -376,7 +422,7 @@ async def training_console() -> Dict[str, Any]:
     taxa = _normalize_items(taxa_payload)
     compounds = _normalize_items(compounds_payload)
     stats_dict = stats if isinstance(stats, dict) else {}
-    checkpoints = list(_checkpoints) + _disk_checkpoints()
+    checkpoints = _checkpoint_catalog()
     try:
         from mycosoft_mas.nlm.formspace.scientific_loader import inventory_nlm_weights
 
@@ -392,7 +438,7 @@ async def training_console() -> Dict[str, Any]:
             "bound_to_ollama": False,
             "forecast_qualified": False,
             "forecast_p": None,
-            "error": str(exc),
+            "error": "weight_inventory_unavailable",
         }
 
     return {
@@ -418,7 +464,7 @@ async def training_console() -> Dict[str, Any]:
             "compound_count": (
                 stats_dict.get("compound_count")
                 if stats_dict.get("compound_count") is not None
-                else len(compounds)
+                else stats_dict.get("total_compounds")
             ),
         },
         "training": {
@@ -653,7 +699,7 @@ async def save_checkpoint(req: CheckpointRequest) -> Dict[str, Any]:
 async def load_checkpoint(req: LoadCheckpointRequest) -> Dict[str, Any]:
     """Load a saved checkpoint for continued training or inference."""
     checkpoint = None
-    for cp in _checkpoints:
+    for cp in _checkpoint_catalog():
         if cp.get("id") == req.checkpoint_id or cp.get("checkpoint_id") == req.checkpoint_id:
             checkpoint = cp
             break
@@ -727,4 +773,4 @@ async def export_model(req: ExportRequest) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Export failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="nlm_export_unavailable")
