@@ -213,8 +213,16 @@ def _normalize_items(payload: Any) -> List[Dict[str, Any]]:
 
 def _disk_checkpoints() -> List[Dict[str, Any]]:
     found: List[Dict[str, Any]] = []
-    roots = {Path(NLM_CHECKPOINT_DIR), Path(NLM_MODEL_DIR)}
-    suffixes = {".pt", ".bin", ".safetensors", ".ckpt", ".gguf", ".pth"}
+    from mycosoft_mas.nlm.formspace.scientific_loader import DEFAULT_NLM_HOME
+
+    roots = {
+        Path(NLM_CHECKPOINT_DIR),
+        Path(NLM_MODEL_DIR),
+        Path(os.getenv("NLM_HOME", DEFAULT_NLM_HOME)),
+        Path(DEFAULT_NLM_HOME),
+        Path(DEFAULT_NLM_HOME) / "reference",
+    }
+    suffixes = {".pt", ".bin", ".safetensors", ".ckpt", ".pth", ".npz"}
     for root in roots:
         try:
             if not root.exists():
@@ -369,6 +377,23 @@ async def training_console() -> Dict[str, Any]:
     compounds = _normalize_items(compounds_payload)
     stats_dict = stats if isinstance(stats, dict) else {}
     checkpoints = list(_checkpoints) + _disk_checkpoints()
+    try:
+        from mycosoft_mas.nlm.formspace.scientific_loader import inventory_nlm_weights
+
+        weight_inventory = inventory_nlm_weights()
+        loaded_sha = nlm.get("weights_sha256")
+        for row in weight_inventory.get("weights") or []:
+            row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
+    except Exception as exc:
+        logger.warning("NLM weight inventory failed: %s", exc)
+        weight_inventory = {
+            "weights": [],
+            "count": 0,
+            "bound_to_ollama": False,
+            "forecast_qualified": False,
+            "forecast_p": None,
+            "error": str(exc),
+        }
 
     return {
         "mas": {
@@ -404,6 +429,9 @@ async def training_console() -> Dict[str, Any]:
             "run_count": len(_training_runs),
         },
         "checkpoints": checkpoints,
+        "weights": weight_inventory.get("weights") or [],
+        "weight_count": weight_inventory.get("count") or 0,
+        "weight_home": weight_inventory.get("home"),
         "bound_to_ollama": False,
         "forecast_qualified": False,
         "forecast_p": None,

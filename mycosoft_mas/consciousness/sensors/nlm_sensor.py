@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# NLM API base URL - MAS VM or local
-NLM_API_BASE = os.getenv("NLM_API_URL", "http://192.168.0.188:8200")
-LOCAL_NLM = "http://localhost:8200"
+# NLM lives on MAS 8001. Never bind to Ollama or the obsolete :8200 stub.
+NLM_API_BASE = os.getenv("NLM_API_URL", "http://192.168.0.188:8001")
+LOCAL_NLM = "http://127.0.0.1:8001"
 
 # MycoBrain for env data input
 MYCOBRAIN_API = "http://192.168.0.188:8001/api/mycobrain"
@@ -56,25 +56,15 @@ class NLMSensor(BaseSensor):
         try:
             self._client = httpx.AsyncClient(timeout=10.0)
 
-            # Try MAS NLM endpoint
-            try:
-                response = await self._client.get(f"{NLM_API_BASE}/health")
-                if response.status_code == 200:
-                    self._nlm_base = NLM_API_BASE
-                    self._mark_connected()
-                    return True
-            except Exception:
-                pass
-
-            # Try local NLM
-            try:
-                response = await self._client.get(f"{LOCAL_NLM}/health")
-                if response.status_code == 200:
-                    self._nlm_base = LOCAL_NLM
-                    self._mark_connected()
-                    return True
-            except Exception:
-                pass
+            for base in (NLM_API_BASE, LOCAL_NLM):
+                try:
+                    response = await self._client.get(f"{base.rstrip('/')}/api/nlm/health")
+                    if response.status_code == 200:
+                        self._nlm_base = base.rstrip("/")
+                        self._mark_connected()
+                        return True
+                except Exception:
+                    continue
 
             self._mark_error("Could not connect to NLM API")
             return False
@@ -207,7 +197,7 @@ class NLMSensor(BaseSensor):
                 **kwargs,
             }
             response = await self._client.post(
-                f"{self._nlm_base}/api/environmental/process",
+                f"{self._nlm_base}/api/nlm/environmental/process",
                 json=payload,
             )
             if response.status_code == 200:

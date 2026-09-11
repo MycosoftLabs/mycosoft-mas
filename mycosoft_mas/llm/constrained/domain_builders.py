@@ -675,9 +675,9 @@ async def build_nlm_index() -> Dict[str, STATICIndex]:
     try:
         import httpx
 
-        nlm_base = os.getenv("NLM_API_URL", "http://192.168.0.188:8200")
+        nlm_base = os.getenv("NLM_API_URL", "http://192.168.0.188:8001")
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{nlm_base}/health")
+            resp = await client.get(f"{nlm_base.rstrip('/')}/api/nlm/health")
             if resp.status_code == 200:
                 data = resp.json()
                 if data.get("models"):
