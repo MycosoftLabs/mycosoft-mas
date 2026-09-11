@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Sorcery / CI review fixes (SEP11 2026)
+- [SORCERY_CI_REVIEW_FIXES_SEP11_2026.md](SORCERY_CI_REVIEW_FIXES_SEP11_2026.md) — Sourcery rate-limit, Bugbot/security on #318/#319/#152/#153, restore myca workflow-drift script
+
 ## NLM model-training app (SEP11 2026)
 - [NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md](NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md) — MAS `/api/nlm` service + on-disk weight inventory; Fusarium/NatureOS same bind
 - [NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md](NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md) — Live NatureOS training console: MAS online when 188:8001 is up; MINDEX catalogs; training jobs fail-closed

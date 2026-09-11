@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 # Frozen ITDX v1.4 synthetic reference (preserve; do not overwrite).
 LEGACY_MODEL_JSON_SHA256 = "1d3fe486d94507600f5c82e2be527ac9be42ff9a8a59586e7f158397a1a3b792"
@@ -54,6 +56,12 @@ FORBIDDEN_SUBTREES = (
     "/usr/share/ollama",
 )
 WEIGHT_SUFFIXES = {".pt", ".npz", ".bin", ".safetensors", ".pth", ".ckpt"}
+INVENTORY_TTL_SECONDS = 60.0
+MAX_INVENTORY_FILES = 200
+MAX_INVENTORY_DEPTH = 8
+MAX_INVENTORY_ARTIFACTS = 50
+_INVENTORY_CACHE: Dict[str, Any] = {"at": 0.0, "value": None}
+_HASH_CACHE: Dict[str, Tuple[float, int, str]] = {}
 
 
 def _candidate_dirs() -> List[Path]:
@@ -194,6 +202,66 @@ def _sha256_file(path: Path) -> Optional[str]:
         return None
 
 
+def _sha256_file_cached(path: Path) -> Optional[str]:
+    try:
+        stat = path.stat()
+        key = str(path.resolve())
+    except OSError:
+        return None
+    hit = _HASH_CACHE.get(key)
+    if hit and hit[0] == stat.st_mtime and hit[1] == stat.st_size:
+        return hit[2]
+    digest = _sha256_file(path)
+    if digest:
+        _HASH_CACHE[key] = (stat.st_mtime, stat.st_size, digest)
+    return digest
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _unique_scan_roots(roots: Iterable[Path]) -> List[Path]:
+    resolved: List[Path] = []
+    seen = set()
+    for root in roots:
+        try:
+            key_path = root.resolve()
+        except OSError:
+            key_path = root
+        key = str(key_path)
+        if key in seen:
+            continue
+        seen.add(key)
+        resolved.append(key_path)
+    kept: List[Path] = []
+    for root in resolved:
+        if any(other != root and _is_relative_to(root, other) for other in resolved):
+            continue
+        kept.append(root)
+    return kept
+
+
+def _public_relpath(home: Path, path: Path) -> str:
+    for root in (home, Path(DEFAULT_NLM_HOME)):
+        try:
+            return path.resolve().relative_to(root.resolve()).as_posix()
+        except (OSError, ValueError):
+            continue
+    return path.name
+
+
+def _scan_depth(root: Path, path: Path) -> int:
+    try:
+        return len(path.relative_to(root).parts)
+    except ValueError:
+        return 0
+
+
 def _artifact_role(path: Path) -> str:
     blob = str(path).replace("\\", "/").lower()
     if "/reference/" in blob or blob.endswith("/reference"):
@@ -211,35 +279,47 @@ def nlm_home() -> Path:
     return Path(os.getenv("NLM_HOME", DEFAULT_NLM_HOME))
 
 
-def inventory_nlm_weights() -> Dict[str, Any]:
-    """List every on-disk NLM artifact. Never GGUF/Ollama. Never invent forecast qualification."""
+def inventory_nlm_weights(*, refresh: bool = False) -> Dict[str, Any]:
+    """List on-disk NLM artifacts. Cached, depth-capped, path-redacted. Never Ollama."""
+    now = time.monotonic()
+    cached = _INVENTORY_CACHE.get("value")
+    cached_at = float(_INVENTORY_CACHE.get("at") or 0.0)
+    if not refresh and cached is not None and now - cached_at < INVENTORY_TTL_SECONDS:
+        return copy.deepcopy(cached)
+
     home = nlm_home()
-    roots = [
-        home,
-        home / "reference",
-        home / "incoming",
-        home / "archived",
-        home / "data",
-    ]
-    env_dir = os.getenv("NLM_MODEL_DIR", "").strip()
-    if env_dir:
-        roots.append(Path(env_dir))
+    roots = _unique_scan_roots(
+        [
+            home,
+            home / "reference",
+            home / "incoming",
+            home / "archived",
+            home / "data",
+            Path(os.getenv("NLM_MODEL_DIR", "").strip()) if os.getenv("NLM_MODEL_DIR", "").strip() else home,
+        ]
+    )
 
     artifacts: List[Dict[str, Any]] = []
     seen = set()
     notes: List[str] = []
+    walked = 0
     for root in roots:
         if _looks_like_chat(root, ""):
-            notes.append(f"ignored chat/GGUF path {root}")
+            notes.append("ignored chat/GGUF root")
             continue
         if not root.exists():
             continue
         try:
             for path in root.rglob("*"):
+                walked += 1
+                if walked > MAX_INVENTORY_FILES:
+                    notes.append("scan capped at file limit")
+                    break
+                if _scan_depth(root, path) > MAX_INVENTORY_DEPTH:
+                    continue
                 if not path.is_file():
                     continue
                 if _looks_like_chat(path, ""):
-                    notes.append(f"ignored chat/GGUF file {path}")
                     continue
                 suffix = path.suffix.lower()
                 if suffix not in WEIGHT_SUFFIXES and path.name != "model.json":
@@ -252,11 +332,12 @@ def inventory_nlm_weights() -> Dict[str, Any]:
                     continue
                 seen.add(key)
                 stat = path.stat()
-                sha = _sha256_file(path) if suffix in WEIGHT_SUFFIXES else None
+                sha = _sha256_file_cached(path) if suffix in WEIGHT_SUFFIXES else None
                 artifacts.append(
                     {
+                        "id": sha or _public_relpath(home, path),
                         "name": path.name,
-                        "path": str(path),
+                        "path": _public_relpath(home, path),
                         "role": _artifact_role(path),
                         "kind": "weights" if suffix in WEIGHT_SUFFIXES else "metadata",
                         "bytes": stat.st_size,
@@ -269,12 +350,17 @@ def inventory_nlm_weights() -> Dict[str, Any]:
                         "bound_to_ollama": False,
                     }
                 )
+                if len(artifacts) >= MAX_INVENTORY_ARTIFACTS:
+                    notes.append("scan capped at artifact limit")
+                    break
+            if walked > MAX_INVENTORY_FILES or len(artifacts) >= MAX_INVENTORY_ARTIFACTS:
+                break
         except OSError as exc:
-            notes.append(f"scan failed under {root}: {exc}")
+            notes.append(f"scan failed under {root.name}: {exc}")
 
     artifacts.sort(key=lambda row: row.get("modified_at") or "", reverse=True)
-    return {
-        "home": str(home),
+    payload = {
+        "home": "nlm-home",
         "count": len(artifacts),
         "weights": artifacts,
         "bound_to_ollama": False,
@@ -282,7 +368,10 @@ def inventory_nlm_weights() -> Dict[str, Any]:
         "forecast_p": None,
         "notes": notes,
         "note": (
-            "On-disk NLM artifacts only. No HuggingFace/Ollama pulls. "
-            "Legacy reference is not a calibrated forecast. p stays null."
+            "On-disk NLM artifacts only. Paths are relative to NLM home. "
+            "No HuggingFace/Ollama pulls. Legacy reference is not a calibrated forecast. p stays null."
         ),
     }
+    _INVENTORY_CACHE["at"] = now
+    _INVENTORY_CACHE["value"] = payload
+    return copy.deepcopy(payload)

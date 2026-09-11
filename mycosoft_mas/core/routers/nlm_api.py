@@ -981,7 +981,7 @@ async def nlm_weights() -> Dict[str, Any]:
     for row in inventory.get("weights") or []:
         row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
     inventory["loaded_sha256"] = loaded_sha
-    inventory["model_dir"] = runtime.model_dir
+    inventory["model_dir"] = "nlm-home"
     inventory["model_loaded"] = bool(runtime.is_loaded)
     inventory["service"] = "mas-nlm"
     return inventory
@@ -1006,8 +1006,10 @@ async def nlm_runtime() -> Dict[str, Any]:
         "model_loaded": probe.model_loaded,
         "is_legacy_reference": probe.is_legacy_reference,
         "reason": probe.reason,
-        "model_dir": probe.model_dir,
+        "model_dir": "nlm-home",
     }
+    if "model_dir" in status:
+        status["model_dir"] = "nlm-home"
     status["weights"] = inventory.get("weights") or []
     status["weight_count"] = inventory.get("count") or 0
     status["bound_to_ollama"] = False
