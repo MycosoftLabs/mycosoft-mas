@@ -15,9 +15,23 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | Mycorrhizae | http://192.168.0.188:8002 | 20+ | Protocol API: channels/streams, envelope verification + dedupe, replay ACK publish |
 | NatureOS | http://192.168.0.188:5000 | 30+ | Nature Operating System |
 | MycoBrain | http://192.168.0.188:8080 | 20+ | IoT Device Management |
-| NLM | http://192.168.0.188:8200 | 15+ | Nature Learning Models |
+| NLM | http://192.168.0.188:8001/api/nlm | 15+ | Nature Learning Model on MAS (not Ollama, not port 8200) |
 
 ---
+
+## NLM training console (Sep 11, 2026)
+
+**Router:** `mycosoft_mas/core/routers/nlm_training_api.py` on MAS `192.168.0.188:8001`. NLM is **not** bound to Ollama. Unqualified forecast `p` stays `null`. Skip-startup collectors are not a MAS outage.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/nlm/health` | GET | Live NLM health. `bound_to_ollama: false`. |
+| `/api/nlm/training/health` | GET | Training router liveness. `jobs_available: false` on 188 fail-closed. |
+| `/api/nlm/training/console` | GET | Honest training-app payload: MAS `ui_status=online`, NLM, MINDEX taxa/compounds/stats, checkpoints. |
+| `/api/nlm/training/checkpoints` | GET | Memory + disk checkpoints. Empty is honest. |
+| `/api/nlm/training/start` | POST | Returns **503** while 188 is fail-closed / skip-startup. Does not fake a run. |
+
+Website BFF: `GET /api/natureos/nlm-training` (public), `/models`, `/mindex`, `/status`. Live page: `/natureos/model-training`.
 
 ## MAS API Endpoints
 

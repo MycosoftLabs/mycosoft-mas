@@ -150,6 +150,156 @@ def _update_run_metrics(run_id: str, metrics: Dict[str, Any]):
             break
 
 
+def _skip_startup_enabled() -> bool:
+    return os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _mindex_headers() -> Dict[str, str]:
+    headers = {"Accept": "application/json"}
+    token = (
+        os.getenv("MINDEX_INTERNAL_TOKEN")
+        or os.getenv("MAS_INTERNAL_TOKEN")
+        or os.getenv("MINDEX_INTERNAL_TOKENS", "").split(",")[0]
+        or ""
+    ).strip()
+    api_key = (os.getenv("MINDEX_API_KEY") or "").strip()
+    if token:
+        headers["X-Internal-Token"] = token
+    if api_key:
+        headers["X-API-Key"] = api_key
+    return headers
+
+
+async def _mindex_get(path: str, timeout: float = 8.0) -> Optional[Any]:
+    """GET a MINDEX /api/mindex path. Returns parsed JSON or None."""
+    try:
+        import httpx
+    except Exception as exc:  # pragma: no cover
+        logger.warning("httpx unavailable for MINDEX catalog: %s", exc)
+        return None
+
+    base = MINDEX_API_URL.rstrip("/")
+    url = f"{base}{path}"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.get(url, headers=_mindex_headers())
+            if response.status_code >= 400:
+                logger.warning("MINDEX %s returned %s", path, response.status_code)
+                return None
+            return response.json()
+    except Exception as exc:
+        logger.warning("MINDEX fetch failed %s: %s", path, exc)
+        return None
+
+
+def _normalize_items(payload: Any) -> List[Dict[str, Any]]:
+    if payload is None:
+        return []
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    if not isinstance(payload, dict):
+        return []
+    for key in ("items", "taxa", "compounds", "data", "results", "rows", "observations"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return [row for row in value if isinstance(row, dict)]
+    return []
+
+
+def _disk_checkpoints() -> List[Dict[str, Any]]:
+    found: List[Dict[str, Any]] = []
+    roots = {Path(NLM_CHECKPOINT_DIR), Path(NLM_MODEL_DIR)}
+    suffixes = {".pt", ".bin", ".safetensors", ".ckpt", ".gguf", ".pth"}
+    for root in roots:
+        try:
+            if not root.exists():
+                continue
+            for path in root.rglob("*"):
+                if not path.is_file() or path.suffix.lower() not in suffixes:
+                    continue
+                stat = path.stat()
+                found.append(
+                    {
+                        "id": path.stem,
+                        "checkpoint_id": path.stem,
+                        "path": str(path),
+                        "bytes": stat.st_size,
+                        "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "source": "disk",
+                    }
+                )
+        except OSError as exc:
+            logger.warning("Checkpoint scan failed under %s: %s", root, exc)
+    found.sort(key=lambda row: row.get("modified_at") or "", reverse=True)
+    return found[:50]
+
+
+def _training_capacity() -> Dict[str, Any]:
+    skip = _skip_startup_enabled()
+    reason = None
+    if skip:
+        reason = (
+            "MAS skip-startup / FAIL-CLOSED: training jobs are not started and "
+            "no new model pulls are allowed. Loaded NLM and MINDEX catalogs remain visible."
+        )
+    return {
+        "jobs_available": False,
+        "skip_startup": skip,
+        "reason": reason
+        or "Training compute is fail-closed on MAS 188; catalogs and the loaded NLM remain available.",
+        "gpu_target": GPU_NODE_IP,
+    }
+
+
+async def _nlm_live_status() -> Dict[str, Any]:
+    """Honest NLM status. Never binds Ollama. Never stubs forecast p."""
+    try:
+        from mycosoft_mas.nlm.config import get_nlm_config
+        from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
+        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
+        from mycosoft_mas.nlm.inference.service import get_nlm_service
+
+        service = get_nlm_service()
+        config = get_nlm_config()
+        probe = probe_scientific_nlm()
+        runtime = load_reference_runtime()
+        runtime_status = runtime.runtime_status()
+        loaded = bool(runtime.is_loaded or (probe.model_loaded and service.is_ready))
+        return {
+            "status": "loaded" if loaded else "unloaded",
+            "model_loaded": loaded,
+            "model_name": getattr(config, "model_name", "nlm"),
+            "model_version": getattr(config, "model_version", "0.0.0"),
+            "display_name": getattr(config, "model_display_name", "Nature Learning Model"),
+            "description": getattr(
+                config, "model_description", "Domain-specific model for mycology and natural sciences"
+            ),
+            "bound_to_ollama": False,
+            "forecast_qualified": False,
+            "forecast_p": None,
+            "qualification_status": runtime_status.get("qualification_status") or "unqualified",
+            "training_origin": runtime_status.get("training_origin") or "none",
+            "architecture_family": runtime_status.get("architecture_family"),
+            "weights_sha256": runtime_status.get("weights_sha256"),
+            "model_dir": runtime_status.get("model_dir") or getattr(config, "model_dir", None),
+        }
+    except Exception as exc:
+        logger.warning("NLM live status failed: %s", exc)
+        return {
+            "status": "unavailable",
+            "model_loaded": False,
+            "bound_to_ollama": False,
+            "forecast_qualified": False,
+            "forecast_p": None,
+            "error": str(exc),
+        }
+
+
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("/config")
@@ -176,10 +326,87 @@ async def list_training_runs() -> Dict[str, Any]:
 
 @router.get("/checkpoints")
 async def list_checkpoints() -> Dict[str, Any]:
-    """List all saved checkpoints."""
+    """List in-memory plus on-disk checkpoints. Empty disk is honest, not fake."""
+    disk = _disk_checkpoints()
+    combined = list(_checkpoints) + disk
     return {
-        "checkpoints": _checkpoints,
-        "count": len(_checkpoints),
+        "checkpoints": combined,
+        "count": len(combined),
+        "memory_count": len(_checkpoints),
+        "disk_count": len(disk),
+    }
+
+
+@router.get("/health")
+async def training_router_health() -> Dict[str, Any]:
+    """Router liveness. Orchestrator up is not the same as skip-startup collectors."""
+    capacity = _training_capacity()
+    return {
+        "status": "healthy",
+        "bound_to_ollama": False,
+        "forecast_qualified": False,
+        "skip_startup": capacity["skip_startup"],
+        "jobs_available": False,
+    }
+
+
+@router.get("/console")
+async def training_console() -> Dict[str, Any]:
+    """
+    Honest NLM training-app payload.
+
+    MAS skip-startup collector degradation is not a MAS outage.
+    NLM is never bound to Ollama. Unqualified forecast p stays null.
+    """
+    capacity = _training_capacity()
+    nlm = await _nlm_live_status()
+    stats = await _mindex_get("/api/mindex/stats")
+    taxa_payload = await _mindex_get(
+        "/api/mindex/taxa?limit=25&order=desc&order_by=observations_count"
+    )
+    compounds_payload = await _mindex_get("/api/mindex/compounds?limit=25")
+    taxa = _normalize_items(taxa_payload)
+    compounds = _normalize_items(compounds_payload)
+    stats_dict = stats if isinstance(stats, dict) else {}
+    checkpoints = list(_checkpoints) + _disk_checkpoints()
+
+    return {
+        "mas": {
+            "reachable": True,
+            "ui_status": "online",
+            "skip_startup": capacity["skip_startup"],
+            "health_note": (
+                "Orchestrator is up. Collectors may be skipped under "
+                "MAS_SKIP_BACKGROUND_STARTUP; that is not a MAS outage."
+            ),
+        },
+        "nlm": nlm,
+        "mindex": {
+            "reachable": bool(stats_dict or taxa or compounds),
+            "stats": stats_dict or None,
+            "taxa_count": stats_dict.get("total_taxa"),
+            "observation_count": stats_dict.get("total_observations"),
+            "genome_records": stats_dict.get("genome_records"),
+            "trait_records": stats_dict.get("trait_records"),
+            "taxa": taxa[:25],
+            "compounds": compounds[:25],
+            "compound_count": (
+                stats_dict.get("compound_count")
+                if stats_dict.get("compound_count") is not None
+                else len(compounds)
+            ),
+        },
+        "training": {
+            "jobs_available": False,
+            "reason": capacity["reason"],
+            "active_run_id": _active_run_id,
+            "runs": _training_runs,
+            "run_count": len(_training_runs),
+        },
+        "checkpoints": checkpoints,
+        "bound_to_ollama": False,
+        "forecast_qualified": False,
+        "forecast_p": None,
     }
 
 
@@ -188,10 +415,13 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
     """
     Start a new NLM training run.
 
-    This creates a training run record and dispatches the actual training
-    to the GPU node via the NLM Trainer.
+    FAIL-CLOSED: skip-startup / no new model pulls. Do not fake a running train.
     """
     global _active_run_id
+
+    capacity = _training_capacity()
+    if capacity["skip_startup"] or not capacity["jobs_available"]:
+        raise HTTPException(status_code=503, detail=capacity["reason"])
 
     if _active_run_id:
         active = _get_active_run()
