@@ -1,5 +1,8 @@
 # Master Document Index
 
+## NLM model-training app (SEP11 2026)
+- [NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md](NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md) — Live NatureOS training console: MAS online when 188:8001 is up; MINDEX catalogs; training jobs fail-closed
+
 ## GitHub CI triage (SEP10 2026)
 - [GITHUB_CI_TRIAGE_SEP10_2026.md](GITHUB_CI_TRIAGE_SEP10_2026.md) — Red-check inventory: MAS FormSpace modules, MINDEX OpenAPI `/api/mindex` + SINE uuid[], Arraylake SSH opt-in, platform-infra has no GitHub remote
 
