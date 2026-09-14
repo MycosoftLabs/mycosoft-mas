@@ -19,6 +19,35 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ---
 
+## FlyBrain — FlyWire whole-brain LIF module (Sep 14, 2026)
+
+**Router:** `mycosoft_mas/core/routers/flybrain_api.py` on MAS `192.168.0.188:8001` (prefix `/api/flybrain`, tag `flybrain`; mounted from `myca_main.py` inside `try/except ImportError` like ITDX). **Package:** `mycosoft_mas/flybrain/`. **Agent:** `flybrain` (`mycosoft_mas/agents/flybrain_agent.py`). Every payload carries `origin: "SIMULATED"` — spikes come from the Shiu et al. 2024 LIF model of the FlyWire v783 connectome, never a biological measurement. No connectome on disk → health `unavailable`, sessions **503** with fetch instructions. No detector → **503**, `available: false`; never synthetic detections. Droid actuation is triple-gated (`dry_run=False` + `FLYBRAIN_DROID_ACTUATE=1` + AVANI approval); default is dry-run. No MAS→MAS HTTP self-calls; plugs call in-process functions.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/flybrain/health` | GET | `FlyBrainHealth`: connectome loaded?, vision available?, backend (`numpy` / `torch:cpu` / `torch:cuda`), session + autopilot counts. `status: unavailable` when the connectome is missing. |
+| `/api/flybrain/connectome/manifest` | GET | `ConnectomeManifest`: data dir, file paths, `n_neurons` (138,639), `n_synapses` (15,091,983), SHA-256 check vs `config.KNOWN_SHA256`, FlyWire license note. |
+| `/api/flybrain/atlas` | GET | `AtlasSummary`: group sizes from `config/flybrain_atlas.yaml`, `missing_ids` (never silently dropped), sensorimotor inputs/readouts map. |
+| `/api/flybrain/sessions` | GET | List `SessionInfo` for live sessions. |
+| `/api/flybrain/sessions` | POST | Body `SessionConfig` (`plug`, `backend`, `dt_ms`, `window_ms`, `seed`, `subgraph`, `dry_run`, `record`, `device_id`). Returns `SessionInfo`; **503** when the connectome is missing. |
+| `/api/flybrain/sessions/{id}` | GET | `SessionInfo`. |
+| `/api/flybrain/sessions/{id}` | DELETE | Stop the session and its autopilot; drops the engine. |
+| `/api/flybrain/sessions/{id}/tick` | POST | Body `TickRequest` (`observations[]`, `stimuli[]`, `window_ms`, `act`). Encoder → engine window → decoder → plug. Returns `TickResult` (brain state, `MotorAction`, optional `NavPath` / `DetectionFrame`, plug result, AVANI record). |
+| `/api/flybrain/sessions/{id}/stimulate` | POST | Body `List[StimulusCommand]` (`poisson` / `silence` / `unsilence` / `clear` on a group or `flywire_ids`). Returns `BrainState`. |
+| `/api/flybrain/sessions/{id}/state` | GET | `BrainState`: per-group Hz over the window, active count, stimulated / silenced groups, realtime ratio. |
+| `/api/flybrain/sessions/{id}/spikes` | GET | `?limit=` recent spikes as `SpikeRecord` (times, local indices, FlyWire ids, `truncated`). |
+| `/api/flybrain/sessions/{id}/reset` | POST | Reset engine state and clock; returns `SessionInfo`. |
+| `/api/flybrain/sessions/{id}/autopilot` | POST | Body `{enabled, period_s}` (period ≥ 0.2 s). Background observe→tick→act loop; returns `SessionInfo`. |
+| `/api/flybrain/vision/health` | GET | `VisionHealth`: YOLO26 (ultralytics) + SAHI availability, weights, device, `sahi_impl`, remote detector URL, `reason` when unavailable. |
+| `/api/flybrain/vision/detect` | POST | Multipart `image` **or** JSON `{image_b64 \| image_url, sahi?, conf?, pose?:{lat,lon,heading_deg}}`. Returns `DetectionFrame` with categories, optional MINDEX taxon, bearing / range / location / perimeter; **503** when no detector. |
+| `/api/flybrain/itdx/channels` | POST | Body `{map_slice, session_id?, detections?}`. Returns `{schema_version, channels:{pathways,navigation,biology,information}, nav, session_id}` in the `itdx_api._channel` row shape; `SCORED` only for geometry computed this tick, else `NOT_SUPPLIED` / `UNQUALIFIED`. |
+| `/api/flybrain/nlm/observation` | POST | Body `{session_id, cutoff?}`. Emits a `formspace.observation/v1` envelope of population rates (`origin: "SYNTHETIC"`) through `CausalObservationPipeline`; never emits a probability, forecasts stay `UNSUPPORTED` unless the scientific NLM is loaded. |
+| `/api/flybrain/droid/{device_id}/guidance` | GET | `?session_id=`. Psathyrella / MycaControl guidance payload (heading delta, throttle, waypoints). Dry-run: never actuates from this route. |
+
+Website BFF (owner-gated, allow-listed): `GET/POST/DELETE /api/fusarium/flybrain/[...path]` → MAS `/api/flybrain/*` (`app/api/fusarium/flybrain/[...path]/route.ts`, server client `lib/flybrain/client.ts`, TS contract `lib/flybrain/contract.ts`). Live panel: `components/itdx/ITDXFlyBrainPanel.tsx` inside the ITDX application; it renders honest status from `/api/fusarium/flybrain/health`.
+
+Connectome data (FlyWire v783, `2025_Completeness_783.csv` + `2025_Connectivity_783.npz`) lives on the NAS at `FLYBRAIN_DATA_DIR` and is fetched by `scripts/flybrain_fetch_connectome.py`; it is never committed.
+
 ## NLM training console (Sep 11, 2026)
 
 **Router:** `mycosoft_mas/core/routers/nlm_training_api.py` on MAS `192.168.0.188:8001`. NLM is **not** bound to Ollama. Unqualified forecast `p` stays `null`. Skip-startup collectors are not a MAS outage.

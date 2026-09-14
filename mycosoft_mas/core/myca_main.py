@@ -1215,6 +1215,16 @@ except ImportError:
 
     _itdx_log.getLogger(__name__).exception("ITDX routers not mounted")
 
+# FlyBrain — FlyWire whole-brain LIF pluggable module (September 14, 2026)
+try:
+    from mycosoft_mas.core.routers.flybrain_api import router as flybrain_router
+
+    app.include_router(flybrain_router, tags=["flybrain"])
+except ImportError:
+    import logging as _flybrain_log
+
+    _flybrain_log.getLogger(__name__).exception("FlyBrain router not mounted")
+
 
 
 # ---------------------------------------------------------------------------
