@@ -71,6 +71,7 @@ _safe_import(".financial.agent_payments", "AgentPaymentsAgent")
 
 # Bio Agents (Track 3 - Full Platform Integration)
 _safe_import(".bio.culture_vision_agent", "CultureVisionAgent")
+_safe_import(".flybrain_agent", "FlyBrainAgent")
 
 # Business Agents (Track 4 - SBIR/STTR Grant Agent)
 _safe_import(".business.grant_agent", "GrantAgent")

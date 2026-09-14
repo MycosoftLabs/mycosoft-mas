@@ -1,0 +1,1265 @@
+schema_version: flybrain.atlas/v1
+source:
+  connectome: FlyWire v783 public release
+  model: Shiu et al. 2024 (Nature) whole-brain LIF; neuron lists from eonsystemspbc/fly-brain (code/benchmark.py EXPERIMENTS, data/sez_neurons.pickle)
+groups:
+  sugar_grn:
+    role: sensory
+    description: Sugar-sensing gustatory receptor neurons (Shiu et al. 2024 sugar experiment, 21 neurons; 200 Hz optogenetic-style drive).
+    flywire_ids:
+    - 720575940624963786
+    - 720575940630233916
+    - 720575940637568838
+    - 720575940638202345
+    - 720575940617000768
+    - 720575940630797113
+    - 720575940632889389
+    - 720575940621754367
+    - 720575940621502051
+    - 720575940640649691
+    - 720575940639332736
+    - 720575940616885538
+    - 720575940639198653
+    - 720575940639259967
+    - 720575940617937543
+    - 720575940632425919
+    - 720575940633143833
+    - 720575940612670570
+    - 720575940628853239
+    - 720575940629176663
+    - 720575940611875570
+  p9_left:
+    role: motor
+    description: P9 descending neuron, left (forward walking command neuron; Shiu et al. P9 experiment, 100 Hz).
+    flywire_ids:
+    - 720575940627652358
+  p9_right:
+    role: motor
+    description: P9 descending neuron, right (forward walking command neuron).
+    flywire_ids:
+    - 720575940635872101
+  sez_aDT6:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type aDT6 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940630165007
+    - 720575940637381466
+    - 720575940620306300
+    - 720575940612302506
+    - 720575940626512881
+    - 720575940644751651
+    - 720575940638900469
+    - 720575940604764862
+    - 720575940631570636
+    - 720575940635191438
+    - 720575940637531369
+  sez_amulet:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type amulet from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940604470240
+    - 720575940635211768
+  sez_aSG1:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type aSG1 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940633376301
+    - 720575940620829878
+  sez_aSG7:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type aSG7 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940636928398
+    - 720575940622273868
+    - 720575940625082298
+    - 720575940620879809
+    - 720575940613428707
+  sez_aster:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type aster from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621982413
+    - 720575940614965691
+    - 720575940623988733
+    - 720575940619453831
+  sez_Asteroid:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type Asteroid from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940623697898
+    - 720575940614235323
+    - 720575940632835923
+  sez_bamboo:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type bamboo from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940634333631
+    - 720575940612107673
+  sez_basket:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type basket from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940618299216
+    - 720575940626922810
+    - 720575940613043939
+    - 720575940626412298
+    - 720575940613950530
+    - 720575940624005868
+    - 720575940628134555
+    - 720575940633611418
+    - 720575940631177809
+    - 720575940620183462
+    - 720575940631416121
+    - 720575940621614246
+    - 720575940628069904
+    - 720575940616287645
+    - 720575940627565059
+  sez_bluebell:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type bluebell from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940635166571
+    - 720575940631168057
+  sez_bobber:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type bobber from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621628582
+  sez_box:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type box from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940637849822
+    - 720575940633340953
+  sez_bract:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type bract from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626557442
+    - 720575940645045527
+    - 720575940627285267
+    - 720575940610001220
+  sez_bridle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type bridle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627293201
+    - 720575940637851069
+    - 720575940643847022
+    - 720575940638394446
+  sez_brontosaraus:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type brontosaraus from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627514627
+    - 720575940609617614
+    - 720575940628362058
+    - 720575940638642547
+    - 720575940609030776
+    - 720575940632852124
+    - 720575940636734382
+    - 720575940636592270
+    - 720575940626390018
+    - 720575940627947772
+    - 720575940619559838
+    - 720575940621089741
+  sez_broom:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type broom from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940624710653
+    - 720575940612033253
+  sez_buddy:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type buddy from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626961241
+    - 720575940618028125
+    - 720575940647010356
+  sez_clavicle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type clavicle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940632648868
+    - 720575940655014049
+  sez_coy:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type coy from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940618156689
+  sez_crab:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type crab from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626140164
+    - 720575940635206251
+  sez_cradle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type cradle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620979638
+    - 720575940625716357
+  sez_damsel:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type damsel from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940623457535
+    - 720575940621583286
+  sez_diatom:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type diatom from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626679317
+    - 720575940637107312
+    - 720575940641058523
+    - 720575940622198230
+    - 720575940627854595
+    - 720575940605699104
+    - 720575940638726717
+    - 720575940628527439
+    - 720575940627979782
+    - 720575940614897458
+    - 720575940617303857
+    - 720575940619697134
+    - 720575940621717025
+    - 720575940638280270
+  sez_doublescoop:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type doublescoop from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940623366538
+    - 720575940620506996
+  sez_earmuff:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type earmuff from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940629013199
+    - 720575940631448874
+    - 720575940611411057
+    - 720575940635642725
+  sez_eiffel:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type eiffel from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627327238
+    - 720575940629468026
+  sez_Fdg:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type Fdg from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940647030324
+    - 720575940631997032
+  sez_fluff:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type fluff from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940637360730
+    - 720575940632134227
+  sez_FMIn:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type FMIn from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940636675214
+    - 720575940614763666
+  sez_foxglove:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type foxglove from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940611160930
+    - 720575940628755815
+  sez_fudog:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type fudog from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940632877869
+    - 720575940612648106
+  sez_G2N_1:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type G2N_1 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940623718380
+    - 720575940620874757
+  sez_gallinule:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type gallinule from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940629663596
+    - 720575940630620687
+    - 720575940640464373
+    - 720575940645859972
+    - 720575940639485648
+    - 720575940626519704
+    - 720575940638597283
+    - 720575940618926757
+    - 720575940628046635
+    - 720575940623301256
+  sez_gazebo:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type gazebo from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940641282267
+    - 720575940620287623
+  sez_genie:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type genie from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626179614
+    - 720575940636029807
+    - 720575940615323298
+    - 720575940627366675
+  sez_gnome:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type gnome from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940648864633
+    - 720575940610232274
+  sez_good_dog:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type good_dog from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621326324
+    - 720575940631740497
+  sez_gumdrop:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type gumdrop from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940631110095
+    - 720575940630697078
+  sez_handle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type handle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620527830
+    - 720575940620879476
+    - 720575940628306114
+    - 720575940629592567
+  sez_handup:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type handup from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940611697394
+    - 720575940612206810
+  sez_haystack:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type haystack from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940619741104
+    - 720575940615071391
+  sez_horntail:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type horntail from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940631293202
+    - 720575940608451420
+  sez_horseshoe:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type horseshoe from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940604130481
+    - 720575940622028778
+    - 720575940603514141
+    - 720575940627498499
+    - 720575940621373278
+    - 720575940632012243
+    - 720575940630619719
+    - 720575940623600619
+    - 720575940620798284
+  sez_horn:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type horn from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940630133110
+    - 720575940621333509
+    - 720575940604722278
+  sez_hound:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type hound from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940630094652
+    - 720575940628676457
+  sez_hyacinth:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type hyacinth from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940654057889
+    - 720575940623044103
+    - 720575940624532408
+    - 720575940626015640
+    - 720575940620096171
+    - 720575940630548751
+  sez_justice:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type justice from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940614660519
+    - 720575940635175007
+  sez_kelp:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type kelp from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940635239672
+    - 720575940622474899
+    - 720575940636895406
+    - 720575940612289010
+  sez_kitty:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type kitty from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940644669732
+    - 720575940610056772
+    - 720575940624987175
+    - 720575940627704392
+  sez_knees:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type knees from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627731176
+    - 720575940609589443
+  sez_kokopelli:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type kokopelli from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940613761858
+    - 720575940634251164
+  sez_landslide:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type landslide from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940617563577
+    - 720575940634290913
+  sez_lion:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type lion from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621900981
+    - 720575940630788882
+  sez_mandala:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type mandala from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626548605
+    - 720575940639295696
+    - 720575940616648251
+    - 720575940632089887
+    - 720575940632316205
+    - 720575940636079502
+    - 720575940610390746
+    - 720575940651919094
+    - 720575940617437697
+    - 720575940625979650
+  sez_marge:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type marge from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620262465
+    - 720575940610690372
+  sez_meteor:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type meteor from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940645474583
+    - 720575940635112544
+  sez_mime:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type mime from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627936515
+    - 720575940637742150
+    - 720575940624273149
+    - 720575940634788247
+    - 720575940638557312
+    - 720575940613828202
+    - 720575940622688765
+    - 720575940614223154
+    - 720575940621149709
+    - 720575940630575943
+    - 720575940637788137
+    - 720575940624253991
+    - 720575940634844408
+    - 720575940629598935
+  sez_mist:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type mist from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940646530612
+    - 720575940637216624
+  sez_moor:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type moor from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940635574958
+    - 720575940611849826
+  sez_mothership:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type mothership from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620714150
+    - 720575940644758308
+  sez_mute:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type mute from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940630119532
+    - 720575940616921629
+  sez_nagini:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type nagini from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940625870640
+    - 720575940627825923
+  sez_nori:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type nori from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940616851030
+    - 720575940630670454
+    - 720575940630679801
+  sez_oink:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type oink from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940616172033
+    - 720575940633156799
+    - 720575940616851030
+    - 720575940635613358
+    - 720575940630670454
+    - 720575940626348106
+    - 720575940630679801
+    - 720575940613222195
+    - 720575940626376600
+  sez_OinkT:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type OinkT from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940622853258
+    - 720575940631983464
+    - 720575940604791217
+    - 720575940640348149
+    - 720575940613433519
+    - 720575940639826339
+  sez_oval:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type oval from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621522352
+    - 720575940626085562
+  sez_peacock:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type peacock from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940612030899
+    - 720575940623687757
+    - 720575940631237203
+    - 720575940618563664
+  sez_peahen:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type peahen from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940618118485
+    - 720575940613361010
+    - 720575940626983684
+    - 720575940617854676
+  sez_peafowl:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type peafowl from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940619985243
+    - 720575940622284947
+  sez_phantom:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type phantom from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940637763135
+    - 720575940616103218
+  sez_planter:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type planter from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940617497437
+    - 720575940628129129
+  sez_pleco:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type pleco from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940615583647
+    - 720575940611502286
+  sez_pringle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type pringle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621218694
+    - 720575940611715813
+  sez_pSG1:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type pSG1 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940610698931
+    - 720575940620224532
+    - 720575940630757516
+    - 720575940629997050
+    - 720575940620943365
+    - 720575940621517481
+  sez_puddle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type puddle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627739023
+    - 720575940616848214
+  sez_rattle:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type rattle from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940630461660
+    - 720575940638103349
+  sez_rocket:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type rocket from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620916360
+    - 720575940611783410
+    - 720575940613735391
+    - 720575940639621760
+    - 720575940619196848
+    - 720575940629081175
+    - 720575940639107573
+    - 720575940637761213
+    - 720575940610322040
+    - 720575940629977192
+    - 720575940638604733
+    - 720575940620950554
+    - 720575940616455483
+    - 720575940635839845
+    - 720575940643253271
+    - 720575940638874064
+    - 720575940619462128
+    - 720575940619862720
+  sez_rose:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type rose from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940624101524
+  sez_roundup:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type roundup from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940607272649
+    - 720575940623211725
+  sez_ruby:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type ruby from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940622168052
+    - 720575940608901897
+  sez_Salivary_MN13:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type Salivary_MN13 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940619455879
+    - 720575940618864725
+  sez_seagull:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type seagull from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626278974
+  sez_shark:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type shark from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940635776760
+    - 720575940626770057
+    - 720575940620182181
+    - 720575940607641010
+  sez_sink_sync:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type sink_sync from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940622624214
+    - 720575940638001498
+    - 720575940628029180
+    - 720575940647560500
+  sez_snake:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type snake from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940631643532
+    - 720575940625815562
+  sez_spray:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type spray from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940608402012
+    - 720575940629210490
+  sez_spirit:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type spirit from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621468404
+    - 720575940613461043
+  sez_sullivan:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type sullivan from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940628590697
+    - 720575940638663221
+  sez_sundrop:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type sundrop from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940626086842
+    - 720575940607014530
+  sez_tentacular:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type tentacular from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940620673985
+    - 720575940621399899
+  sez_TH_VUM:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type TH_VUM from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940616857174
+  sez_tinctoria:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type tinctoria from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940619048827
+    - 720575940625875504
+    - 720575940630868793
+    - 720575940618165019
+  sez_tophat:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type tophat from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940622541005
+    - 720575940638865011
+    - 720575940620441024
+    - 720575940660281217
+  sez_TPN4:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type TPN4 from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940634147936
+    - 720575940614238114
+  sez_trident:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type trident from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940624163303
+  sez_trogon:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type trogon from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940631595603
+  sez_trumpet:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type trumpet from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940645056791
+    - 720575940628386295
+  sez_tulip:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type tulip from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940617755220
+    - 720575940620061793
+  sez_tundra:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type tundra from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621573542
+    - 720575940621538142
+  sez_turner:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type turner from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940629437378
+    - 720575940610956334
+  sez_twirl:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type twirl from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940636034661
+  sez_usnea:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type usnea from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940641366517
+    - 720575940632648612
+  sez_vice:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type vice from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940621431884
+    - 720575940622392260
+    - 720575940616623590
+    - 720575940612879783
+    - 720575940623252407
+    - 720575940611156978
+  sez_wafflecone:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type wafflecone from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940624913959
+    - 720575940626075517
+  sez_weaver:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type weaver from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940616605441
+    - 720575940629460524
+    - 720575940628469508
+    - 720575940636887130
+    - 720575940633050524
+    - 720575940614728607
+    - 720575940612023922
+    - 720575940612938961
+    - 720575940625384323
+    - 720575940628330651
+    - 720575940619409135
+    - 720575940628546807
+    - 720575940613412002
+  sez_web:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type web from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940624038663
+    - 720575940627286088
+    - 720575940622500172
+    - 720575940632722636
+    - 720575940627087646
+    - 720575940624897516
+  sez_whisker:
+    role: interneuron
+    description: SEZ (subesophageal zone) neuron type whisker from the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940627429907
+    - 720575940627418387
+  sez_all:
+    role: interneuron
+    description: Union of all SEZ neuron types in the Shiu et al. 2024 SEZ subset.
+    flywire_ids:
+    - 720575940603514141
+    - 720575940604130481
+    - 720575940604470240
+    - 720575940604722278
+    - 720575940604764862
+    - 720575940604791217
+    - 720575940605699104
+    - 720575940607014530
+    - 720575940607272649
+    - 720575940607641010
+    - 720575940608402012
+    - 720575940608451420
+    - 720575940608901897
+    - 720575940609030776
+    - 720575940609589443
+    - 720575940609617614
+    - 720575940610001220
+    - 720575940610056772
+    - 720575940610232274
+    - 720575940610322040
+    - 720575940610390746
+    - 720575940610690372
+    - 720575940610698931
+    - 720575940610956334
+    - 720575940611156978
+    - 720575940611160930
+    - 720575940611411057
+    - 720575940611502286
+    - 720575940611697394
+    - 720575940611715813
+    - 720575940611783410
+    - 720575940611849826
+    - 720575940612023922
+    - 720575940612030899
+    - 720575940612033253
+    - 720575940612107673
+    - 720575940612206810
+    - 720575940612289010
+    - 720575940612302506
+    - 720575940612648106
+    - 720575940612879783
+    - 720575940612938961
+    - 720575940613043939
+    - 720575940613222195
+    - 720575940613361010
+    - 720575940613412002
+    - 720575940613428707
+    - 720575940613433519
+    - 720575940613461043
+    - 720575940613735391
+    - 720575940613761858
+    - 720575940613828202
+    - 720575940613950530
+    - 720575940614223154
+    - 720575940614235323
+    - 720575940614238114
+    - 720575940614660519
+    - 720575940614728607
+    - 720575940614763666
+    - 720575940614897458
+    - 720575940614965691
+    - 720575940615071391
+    - 720575940615323298
+    - 720575940615583647
+    - 720575940616103218
+    - 720575940616172033
+    - 720575940616287645
+    - 720575940616455483
+    - 720575940616605441
+    - 720575940616623590
+    - 720575940616648251
+    - 720575940616848214
+    - 720575940616851030
+    - 720575940616857174
+    - 720575940616921629
+    - 720575940617303857
+    - 720575940617437697
+    - 720575940617497437
+    - 720575940617563577
+    - 720575940617755220
+    - 720575940617854676
+    - 720575940618028125
+    - 720575940618118485
+    - 720575940618156689
+    - 720575940618165019
+    - 720575940618299216
+    - 720575940618563664
+    - 720575940618864725
+    - 720575940618926757
+    - 720575940619048827
+    - 720575940619196848
+    - 720575940619409135
+    - 720575940619453831
+    - 720575940619455879
+    - 720575940619462128
+    - 720575940619559838
+    - 720575940619697134
+    - 720575940619741104
+    - 720575940619862720
+    - 720575940619985243
+    - 720575940620061793
+    - 720575940620096171
+    - 720575940620182181
+    - 720575940620183462
+    - 720575940620224532
+    - 720575940620262465
+    - 720575940620287623
+    - 720575940620306300
+    - 720575940620441024
+    - 720575940620506996
+    - 720575940620527830
+    - 720575940620673985
+    - 720575940620714150
+    - 720575940620798284
+    - 720575940620829878
+    - 720575940620874757
+    - 720575940620879476
+    - 720575940620879809
+    - 720575940620916360
+    - 720575940620943365
+    - 720575940620950554
+    - 720575940620979638
+    - 720575940621089741
+    - 720575940621149709
+    - 720575940621218694
+    - 720575940621326324
+    - 720575940621333509
+    - 720575940621373278
+    - 720575940621399899
+    - 720575940621431884
+    - 720575940621468404
+    - 720575940621517481
+    - 720575940621522352
+    - 720575940621538142
+    - 720575940621573542
+    - 720575940621583286
+    - 720575940621614246
+    - 720575940621628582
+    - 720575940621717025
+    - 720575940621900981
+    - 720575940621982413
+    - 720575940622028778
+    - 720575940622168052
+    - 720575940622198230
+    - 720575940622273868
+    - 720575940622284947
+    - 720575940622392260
+    - 720575940622474899
+    - 720575940622500172
+    - 720575940622541005
+    - 720575940622624214
+    - 720575940622688765
+    - 720575940622853258
+    - 720575940623044103
+    - 720575940623211725
+    - 720575940623252407
+    - 720575940623301256
+    - 720575940623366538
+    - 720575940623457535
+    - 720575940623600619
+    - 720575940623687757
+    - 720575940623697898
+    - 720575940623718380
+    - 720575940623988733
+    - 720575940624005868
+    - 720575940624038663
+    - 720575940624101524
+    - 720575940624163303
+    - 720575940624253991
+    - 720575940624273149
+    - 720575940624532408
+    - 720575940624710653
+    - 720575940624897516
+    - 720575940624913959
+    - 720575940624987175
+    - 720575940625082298
+    - 720575940625384323
+    - 720575940625716357
+    - 720575940625815562
+    - 720575940625870640
+    - 720575940625875504
+    - 720575940625979650
+    - 720575940626015640
+    - 720575940626075517
+    - 720575940626085562
+    - 720575940626086842
+    - 720575940626140164
+    - 720575940626179614
+    - 720575940626278974
+    - 720575940626348106
+    - 720575940626376600
+    - 720575940626390018
+    - 720575940626412298
+    - 720575940626512881
+    - 720575940626519704
+    - 720575940626548605
+    - 720575940626557442
+    - 720575940626679317
+    - 720575940626770057
+    - 720575940626922810
+    - 720575940626961241
+    - 720575940626983684
+    - 720575940627087646
+    - 720575940627285267
+    - 720575940627286088
+    - 720575940627293201
+    - 720575940627327238
+    - 720575940627366675
+    - 720575940627418387
+    - 720575940627429907
+    - 720575940627498499
+    - 720575940627514627
+    - 720575940627565059
+    - 720575940627704392
+    - 720575940627731176
+    - 720575940627739023
+    - 720575940627825923
+    - 720575940627854595
+    - 720575940627936515
+    - 720575940627947772
+    - 720575940627979782
+    - 720575940628029180
+    - 720575940628046635
+    - 720575940628069904
+    - 720575940628129129
+    - 720575940628134555
+    - 720575940628306114
+    - 720575940628330651
+    - 720575940628362058
+    - 720575940628386295
+    - 720575940628469508
+    - 720575940628527439
+    - 720575940628546807
+    - 720575940628590697
+    - 720575940628676457
+    - 720575940628755815
+    - 720575940629013199
+    - 720575940629081175
+    - 720575940629210490
+    - 720575940629437378
+    - 720575940629460524
+    - 720575940629468026
+    - 720575940629592567
+    - 720575940629598935
+    - 720575940629663596
+    - 720575940629977192
+    - 720575940629997050
+    - 720575940630094652
+    - 720575940630119532
+    - 720575940630133110
+    - 720575940630165007
+    - 720575940630461660
+    - 720575940630548751
+    - 720575940630575943
+    - 720575940630619719
+    - 720575940630620687
+    - 720575940630670454
+    - 720575940630679801
+    - 720575940630697078
+    - 720575940630757516
+    - 720575940630788882
+    - 720575940630868793
+    - 720575940631110095
+    - 720575940631168057
+    - 720575940631177809
+    - 720575940631237203
+    - 720575940631293202
+    - 720575940631416121
+    - 720575940631448874
+    - 720575940631570636
+    - 720575940631595603
+    - 720575940631643532
+    - 720575940631740497
+    - 720575940631983464
+    - 720575940631997032
+    - 720575940632012243
+    - 720575940632089887
+    - 720575940632134227
+    - 720575940632316205
+    - 720575940632648612
+    - 720575940632648868
+    - 720575940632722636
+    - 720575940632835923
+    - 720575940632852124
+    - 720575940632877869
+    - 720575940633050524
+    - 720575940633156799
+    - 720575940633340953
+    - 720575940633376301
+    - 720575940633611418
+    - 720575940634147936
+    - 720575940634251164
+    - 720575940634290913
+    - 720575940634333631
+    - 720575940634788247
+    - 720575940634844408
+    - 720575940635112544
+    - 720575940635166571
+    - 720575940635175007
+    - 720575940635191438
+    - 720575940635206251
+    - 720575940635211768
+    - 720575940635239672
+    - 720575940635574958
+    - 720575940635613358
+    - 720575940635642725
+    - 720575940635776760
+    - 720575940635839845
+    - 720575940636029807
+    - 720575940636034661
+    - 720575940636079502
+    - 720575940636592270
+    - 720575940636675214
+    - 720575940636734382
+    - 720575940636887130
+    - 720575940636895406
+    - 720575940636928398
+    - 720575940637107312
+    - 720575940637216624
+    - 720575940637360730
+    - 720575940637381466
+    - 720575940637531369
+    - 720575940637742150
+    - 720575940637761213
+    - 720575940637763135
+    - 720575940637788137
+    - 720575940637849822
+    - 720575940637851069
+    - 720575940638001498
+    - 720575940638103349
+    - 720575940638280270
+    - 720575940638394446
+    - 720575940638557312
+    - 720575940638597283
+    - 720575940638604733
+    - 720575940638642547
+    - 720575940638663221
+    - 720575940638726717
+    - 720575940638865011
+    - 720575940638874064
+    - 720575940638900469
+    - 720575940639107573
+    - 720575940639295696
+    - 720575940639485648
+    - 720575940639621760
+    - 720575940639826339
+    - 720575940640348149
+    - 720575940640464373
+    - 720575940641058523
+    - 720575940641282267
+    - 720575940641366517
+    - 720575940643253271
+    - 720575940643847022
+    - 720575940644669732
+    - 720575940644751651
+    - 720575940644758308
+    - 720575940645045527
+    - 720575940645056791
+    - 720575940645474583
+    - 720575940645859972
+    - 720575940646530612
+    - 720575940647010356
+    - 720575940647030324
+    - 720575940647560500
+    - 720575940648864633
+    - 720575940651919094
+    - 720575940654057889
+    - 720575940655014049
+    - 720575940660281217
+derived:
+  p9_left_downstream:
+    downstream_of:
+    - p9_left
+    hops: 1
+    min_weight: 5
+    exclude:
+    - p9_right
+    role: motor
+    description: Direct postsynaptic partners of left P9 (weight >= 5). Turn readout, left branch.
+  p9_right_downstream:
+    downstream_of:
+    - p9_right
+    hops: 1
+    min_weight: 5
+    exclude:
+    - p9_left
+    role: motor
+    description: Direct postsynaptic partners of right P9 (weight >= 5). Turn readout, right branch.
+  p9_shared_downstream:
+    downstream_of:
+    - p9_left
+    - p9_right
+    hops: 1
+    min_weight: 5
+    intersection: true
+    role: motor
+    description: Neurons postsynaptic to both P9s. Forward-drive readout.
+  sugar_downstream:
+    downstream_of:
+    - sugar_grn
+    hops: 1
+    min_weight: 5
+    role: interneuron
+    description: Direct postsynaptic partners of sugar GRNs (feeding circuit second order).
+sensorimotor:
+  note: Demonstration mapping. Which biological groups get external drive and which are read out is a configuration choice, not a biological claim.
+  inputs:
+    forward:
+    - p9_left
+    - p9_right
+    left:
+    - p9_left
+    right:
+    - p9_right
+    attract:
+    - sugar_grn
+  readouts:
+    forward:
+    - p9_shared_downstream
+    turn_left:
+    - p9_left_downstream
+    turn_right:
+    - p9_right_downstream
+    feeding:
+    - sugar_downstream

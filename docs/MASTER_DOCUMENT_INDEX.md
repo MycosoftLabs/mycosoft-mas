@@ -1,5 +1,8 @@
 # Master Document Index
 
+## FlyBrain module (SEP14 2026)
+- [FLYBRAIN_MODULE_SEP14_2026.md](FLYBRAIN_MODULE_SEP14_2026.md) — FlyWire v783 whole-brain LIF (Shiu et al. 2024) as a pluggable MYCA module: `/api/flybrain/*`, agent `flybrain`, plugs droid/earthsim/nlm/itdx, YOLO26+SAHI vision, NAS-only connectome (FlyWire terms, never committed), all outputs SIMULATED
+
 ## Sorcery / CI review fixes (SEP11 2026)
 - [SORCERY_CI_REVIEW_FIXES_SEP11_2026.md](SORCERY_CI_REVIEW_FIXES_SEP11_2026.md) — Sourcery rate-limit, Bugbot/security on #318/#319/#152/#153, restore myca workflow-drift script
 
