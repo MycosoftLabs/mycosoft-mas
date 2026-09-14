@@ -147,22 +147,13 @@ Then check:
 - **MYCA UniFi Dashboard**: `http://localhost:3100`
 - **MAS container port mapping**: `http://localhost:8001` (see note below about running the FastAPI app)
 
-### Important note about the MAS API container
+### MAS API container
 
-The MAS API is implemented as a FastAPI app exported by:
+The MAS API is implemented as a FastAPI app exported by `mycosoft_mas.core.myca_main:app`.
 
-- `mycosoft_mas.core.myca_main:app`
+The `mas-orchestrator` service in `docker-compose.yml` already runs Uvicorn for this app (`uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8000`) and depends on healthy Redis, Postgres, and Qdrant services before starting.
 
-If you want the **`mas-orchestrator`** container to serve the API, its command should run Uvicorn for that app.
-
-- **If your Compose stack is not responding on the mapped API port**, run the API locally (see [Local development](#local-development-backend--ui)) or update the Compose command to something like:
-
-```yaml
-command: >
-  sh -c "wait-for-it redis:6379 -t 60 &&
-         wait-for-it postgres:5432 -t 60 &&
-         uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8000"
-```
+If the health check still fails after `docker compose up -d`, check the container logs: `docker compose logs mas-orchestrator`.
 
 ---
 
@@ -283,10 +274,12 @@ If these env vars are not set (or token is invalid), those endpoints will return
   - `GET /metrics` â€” Prometheus metrics
   - `/dashboard` â€” a mounted dashboard app plus an API router (see note below)
 
-**Note:** `mycosoft_mas/core/myca_main.py` both mounts a dashboard ASGI app at `/dashboard` and also includes an API router with prefix `/dashboard`. If you see unexpected routing behavior, check:
+**Note:** Two `/dashboard` implementations exist in this repo but are **not both mounted** in `myca_main.py` at the same time:
 
-- Mounted app: `mycosoft_mas/monitoring/dashboard.py` (mounted at `/dashboard`)
-- API router: `mycosoft_mas/core/routers/dashboard.py` (prefix `/dashboard`, requires auth)
+- `mycosoft_mas/monitoring/dashboard.py` — standalone ASGI app with `root_path="/dashboard"` (Jinja2 HTML dashboard)
+- `mycosoft_mas/core/routers/dashboard.py` — API router with `prefix="/dashboard"` (JSON metrics, requires auth)
+
+Currently neither is included in `myca_main.py`. If you add one, avoid mounting both under the same path.
 
 ---
 
