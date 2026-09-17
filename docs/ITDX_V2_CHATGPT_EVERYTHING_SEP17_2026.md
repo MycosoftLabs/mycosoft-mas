@@ -65,7 +65,7 @@ Must-fetch (parentheses in path are literal; encode as `%28dashboard%29` if a cl
 | `app/api/fusarium/itdx/connectivity/route.ts` | `?force=offline` → `probeItdxConnectivity(true)` |
 | `components/fusarium/itdx-v2-demo-board.tsx` | v2 chips: **NLM ONLINE / weights loaded** · always fetches `/nlm` |
 | `lib/fusarium/bluesight/formspace-nlm.ts` | Equations + `nlmServiceChip` (**ONLINE / weights loaded** vs **MAS_NLM_DOWN**) |
-| `lib/fusarium/bluesight/loop-refine.ts` | Last-good IoU accept/reject/seed |
+| `lib/fusarium/bluesight/loop-refine.ts` | Loop-refine **works**: wrap increments loop; accept/reject IoU logged |
 | `lib/fusarium/itdx/local-weka.ts` | Fresh Hess-reproducible CLI jobs |
 | `app/api/fusarium/bluesight-trail/nlm/route.ts` | LAN NLM BFF (Node `http` to 188) |
 | `app/api/fusarium/bluesight-trail/math-log/route.ts` | Cap math-log reads at 8 MB; do not ingest the 512 MB dump |
@@ -84,7 +84,7 @@ Working copy `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website` is often on
 | Org/repo | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) |
 | PR | **[#156](https://github.com/MycosoftLabs/mycosoft-mas/pull/156)** — “ITDX v2 ChatGPT GitHub code map — 17 Sep 2026” — **OPEN. Do not merge.** |
 | PR branch | `docs/itdx-v2-chatgpt-map-from-main` |
-| PR head (before this pack) | `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` |
+| PR head (before this pin) | `dda25a5affea3b826b31b1eb0b1b30b2c3de9763` |
 | Sibling docs branch | `docs/itdx-v2-chatgpt-github-map-sep17` |
 
 Code-map raw (PR branch; pin commit after this pack is pushed):
