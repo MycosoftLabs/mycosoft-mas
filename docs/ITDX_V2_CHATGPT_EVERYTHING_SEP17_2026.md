@@ -2,7 +2,7 @@
 
 ```
 ITDX v2 EVERYTHING — 17 Sep 2026. Instant Deploy HELD. Do not merge website PR #322.
-Website ship/trail-ar-itdx-sep17 @ 20bf2b068591f7de16487ca03e77efb6b5785c4e (loop-refine already on this SHA; no later commit).
+Website ship/trail-ar-itdx-sep17 @ d5180f414a07baa637103fbcd4405806eaef15b2 (loop-refine WORKS on da00d0c2 + NLM bind on tip; do not merge #322).
 mycosoft.com / sandbox / 187:3000 HTTP 200 = last Instant Deploy ~13 Sep — NOT Trail AR v2.
 force=offline ≠ NLM off. Always GET LAN 192.168.0.188:8001/api/nlm (health+runtime). model loaded ≠ forecast issued.
 forecast_p is null. FORECAST_ABSTAIN. WEKA ≠ NLM. Never print 0.85. RJ Ricasata is CFO. No CUI.
@@ -20,7 +20,7 @@ Three slides / four tasks: FormSpace equations, NLM abstain, WEKA 149, Trail AR 
 
 `forecast_p` is **null**. `live` is **false**. `forecast_qualified` is **false**. **WEKA ≠ NLM.** Never stub **0.85**.
 
-This file **supersedes** needing the four earlier Sep 17 ChatGPT briefs for a first paste. Those remain implementation companions (builder / slides / code map / FINAL). One error in the older slide brief is **void**: “NLM fetch runs only in ONLINE mode” is **false**. Code at `20bf2b06` already probes LAN NLM under `?force=offline`.
+This file **supersedes** needing the four earlier Sep 17 ChatGPT briefs for a first paste. Those remain implementation companions (builder / slides / code map / FINAL). One error in the older slide brief is **void**: “NLM fetch runs only in ONLINE mode” is **false**. SHA `d5180f41` probes LAN `/api/nlm` health+runtime under `?force=offline` and chips **NLM ONLINE / weights loaded** vs **MAS_NLM_DOWN** vs **FORECAST_ABSTAIN**.
 
 ---
 
@@ -42,38 +42,40 @@ This file **supersedes** needing the four earlier Sep 17 ChatGPT briefs for a fi
 |---|---|
 | Org/repo | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) |
 | Branch | `ship/trail-ar-itdx-sep17` |
-| Full SHA | `20bf2b068591f7de16487ca03e77efb6b5785c4e` |
-| `git log -1` | `feat(itdx): land loop-refine, LAN NLM bind, and dual-mode BFF honesty.` — 17 Sep 2026 13:47:52 −0700 |
-| Commits after `20bf2b06` | **None** (local == origin as of 17 Sep ~14:02 Pacific) |
-| Prior commit on branch | `fcec0e5002976821c6b7437347b28ee21e430122` — high-contrast Trail AR + ITDX 2.0 dual-mode |
+| Full SHA | `d5180f414a07baa637103fbcd4405806eaef15b2` |
+| `git log -1` | `fix(itdx): keep LAN NLM bind when WEKA is force=offline.` — 17 Sep 2026 |
+| Commits after `d5180f41` | **None** (origin `ship/trail-ar-itdx-sep17` as of 17 Sep ~14:15 Pacific) |
+| Prior commits | `da00d0c2` loop-refine IoU · `20bf2b06` LAN NLM bind · `fcec0e50` Trail AR + dual-mode |
 | PR | **[#322](https://github.com/MycosoftLabs/website/pull/322)** — “Ship Trail AR / ITDX 2.0 dual-mode (Instant Deploy HELD)” — **OPEN. Do not merge.** |
-| Tree | https://github.com/MycosoftLabs/website/tree/20bf2b068591f7de16487ca03e77efb6b5785c4e |
-| Commit | https://github.com/MycosoftLabs/website/commit/20bf2b068591f7de16487ca03e77efb6b5785c4e |
+| Tree | https://github.com/MycosoftLabs/website/tree/d5180f414a07baa637103fbcd4405806eaef15b2 |
+| Commit | https://github.com/MycosoftLabs/website/commit/d5180f414a07baa637103fbcd4405806eaef15b2 |
 
 Raw prefix:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/<path>
+https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/<path>
 ```
 
 Must-fetch (parentheses in path are literal; encode as `%28dashboard%29` if a client breaks):
 
 | Path | Why |
 |---|---|
-| `lib/fusarium/itdx/connectivity.ts` | Dual-mode probe; **always** `GET /api/nlm/health` even when `force=offline` |
+| `lib/fusarium/itdx/connectivity.ts` | Dual-mode; **always** `GET /api/nlm/health` + `/api/nlm/runtime` even when `force=offline` |
+| `lib/fusarium/itdx/lan-json.ts` | BFF Node `http`/`https` to 188 (bypasses patched fetch) |
 | `app/api/fusarium/itdx/connectivity/route.ts` | `?force=offline` → `probeItdxConnectivity(true)` |
-| `components/fusarium/itdx-v2-demo-board.tsx` | v2 NLM panel; always fetches `/api/fusarium/bluesight-trail/nlm` |
-| `lib/fusarium/bluesight/formspace-nlm.ts` | Equations + `PAPER_FORMULA_MAP` + `nlmServiceChip` |
+| `components/fusarium/itdx-v2-demo-board.tsx` | v2 chips: **NLM ONLINE / weights loaded** · always fetches `/nlm` |
+| `lib/fusarium/bluesight/formspace-nlm.ts` | Equations + `nlmServiceChip` (**ONLINE / weights loaded** vs **MAS_NLM_DOWN**) |
 | `lib/fusarium/bluesight/loop-refine.ts` | Last-good IoU accept/reject/seed |
 | `lib/fusarium/itdx/local-weka.ts` | Fresh Hess-reproducible CLI jobs |
-| `app/api/fusarium/bluesight-trail/nlm/route.ts` | LAN NLM BFF (1.8 s / call) |
+| `app/api/fusarium/bluesight-trail/nlm/route.ts` | LAN NLM BFF (Node `http` to 188) |
+| `app/api/fusarium/bluesight-trail/math-log/route.ts` | Cap math-log reads at 8 MB; do not ingest the 512 MB dump |
 | `app/api/fusarium/itdx/local-weka/route.ts` | GET ledger / POST run |
 | `app/api/fusarium/bluesight-trail/loop-refine/route.ts` | JSONL append |
 | `app/fusarium/%28dashboard%29/itdx/v2/page.tsx` | ITDX 2.0 page |
 | `components/fusarium/bluesight-trail-lab.tsx` | Trail AR lab |
 | `docs/ITDX_TRAIL_AR_FORMSPACE_NLM_BACKBONE_SEP14_2026.md` | Backbone honesty (PDFs not in repo) |
 
-Working copy `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website` is often on **`fix/launchpad-ingest-bearer-alias`** with **unrelated dirty files**. **Do not git reset.** Fetch **only** SHA `20bf2b06`.
+Working copy `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website` is often on **`fix/launchpad-ingest-bearer-alias`** with **unrelated dirty files**. **Do not git reset.** Fetch **only** SHA `d5180f41`.
 
 ### MAS (handoffs + WEKA narrative + this pack)
 
@@ -321,7 +323,7 @@ D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\.data\trail-ar\weka\
 
 ---
 
-## 6. NLM contract (confirm — already true in `20bf2b06`)
+## 6. NLM contract (on GitHub as of `d5180f41`)
 
 ChatGPT already stated this. **Confirm and keep it on every slide/chip.**
 
@@ -329,8 +331,8 @@ ChatGPT already stated this. **Confirm and keep it on every slide/chip.**
 |---|---|
 | Forcing offline turns NLM off | **False** |
 | `?force=offline` / `ITDX_FORCE_OFFLINE=1` / no WAN | Isolates **WAN / public-demo WEKA mode** → banner `OFFLINE LOCAL WEKA`, `wan_status: WAN_DOWN` |
-| LAN NLM | **Still probed:** MAS `GET http://192.168.0.188:8001/api/nlm/health` (connectivity, 3.5 s) **and** BFF `GET /api/fusarium/bluesight-trail/nlm` → `/api/nlm/health` + `/api/nlm/runtime` (1.8 s each) |
-| NLM chip | `BOUND` / **model loaded** (`NLM ONLINE / weights loaded`) vs **runtime unreachable** (`MAS_NLM_DOWN`) |
+| LAN NLM | **Still probed:** MAS `GET http://192.168.0.188:8001/api/nlm/health` **and** `/api/nlm/runtime` (connectivity, 3.5 s, Node `http`) **and** BFF `GET /api/fusarium/bluesight-trail/nlm` |
+| NLM chip | **`NLM ONLINE / weights loaded`** (or `/ weights not loaded`) vs **`NLM MAS_NLM_DOWN`** |
 | Forecast chip | `forecast_p: null` / **forecast abstained** / `FORECAST_ABSTAIN` / `forecast_qualified: false` |
 | Never | Stub **0.85** or **0.5**. Equate WEKA with NLM. Paint **UNBOUND** because WEKA is offline |
 
@@ -345,7 +347,7 @@ Three chips — **do not collapse:**
 v2 board (`itdx-v2-demo-board.tsx`) comment: “LAN NLM is independent of WAN / force=offline WEKA mode.” It **always** fetches `/api/fusarium/bluesight-trail/nlm`.  
 `probeItdxConnectivity` **always** `Promise.all`s MAS health, MINDEX health, **and** `probeNlm()`.
 
-**NLM-offline-still-probes was already true on ship SHA `20bf2b06`.** No website code change was required on 17 Sep afternoon for this pack. **#322 was not pushed again.**
+**NLM bind/label is now ON GITHUB** at ship SHA `d5180f41` (PR **#322** pushed, **not merged**). Live mycosoft.com is still **~13 Sep**. Instant Deploy **HELD**. `probeNlm()` hits health+runtime even under `WAN_DOWN`. Math-log GET/POST skip files over 8 MB. Do **not** commit `.data/` or the 512 MB math-log.
 
 Older slide handoff §3 step 4 (“NLM fetch runs only in ONLINE mode”) is a **superseded error**. Ignore it.
 

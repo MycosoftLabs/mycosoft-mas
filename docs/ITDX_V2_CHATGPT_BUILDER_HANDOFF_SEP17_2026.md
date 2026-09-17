@@ -1,7 +1,7 @@
 # ITDX v2.0 — ChatGPT software-builder handoff — 17 Sep 2026
 
 **Date:** Thursday 17 September 2026  
-**Status:** Integration brief for **software** ChatGPT is implementing **now**. Local demo is scaffolded on **localhost:3010**. Code is on GitHub **`ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`**. **Not deployed.** Instant Deploy **HELD**. Do **not** wait for Cursor e2e.  
+**Status:** Integration brief for **software** ChatGPT is implementing **now**. Local demo is scaffolded on **localhost:3010**. Code is on GitHub **`ship/trail-ar-itdx-sep17` @ `d5180f414a07baa637103fbcd4405806eaef15b2`**. **Not deployed.** Instant Deploy **HELD**. Do **not** wait for Cursor e2e.  
 **Classification:** UNCLASSIFIED commercial. No CUI. No Army FOUO. No secrets.  
 **Audience:** ChatGPT building a **local ITDX 2.0 + Fusarium-integrated demo + slide deck**. Repo access is via the GitHub code map (raw.githubusercontent.com / clone).  
 **Companion (slides only):** `docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md` — use that file for deck copy; **this file is the implementation contract**.  
@@ -14,10 +14,12 @@
 
 Paste the **GitHub code map** first so you can `curl` / clone the real files. Then paste this entire file. Then paste the slide handoff if you need the 12-slide outline.
 
-**Website SHA to fetch:** `20bf2b068591f7de16487ca03e77efb6b5785c4e` on `ship/trail-ar-itdx-sep17`  
-https://github.com/MycosoftLabs/website/commit/20bf2b068591f7de16487ca03e77efb6b5785c4e
+**Website SHA to fetch:** `d5180f414a07baa637103fbcd4405806eaef15b2` on `ship/trail-ar-itdx-sep17`  
+https://github.com/MycosoftLabs/website/commit/d5180f414a07baa637103fbcd4405806eaef15b2
 
 **LIVE vs this SHA:** https://mycosoft.com and sandbox origin are **200** from the last Instant Deploy **~13 Sep 2026**. That is **not** Trail AR v2. This SHA is **IN PROGRESS** on GitHub only.
+
+**Loop-refine (landed in `da00d0c2`, still on tip `d5180f41`):** wrap-hook increments loop; last-good keys persist across wrap; batched POST to `/api/fusarium/bluesight-trail/loop-refine` logs accept/reject IoU. `forecast_p` stays null. Instant Deploy still **HELD**.
 
 ---
 
@@ -289,7 +291,7 @@ Cursor e2e is fixing these **now**. Keep building the demo board and deck. **Do 
 
 7. **Scientific readiness is false.** Trail F1 not yet scored. Planned 4,760 filter×classifier cells not run.
 
-8. **NLM UNBOUND was a website label bug (fixed locally 17 Sep, not deployed).** MAS 188 `/api/nlm/health` was already up. Do not treat `forecast_p: null` as missing NLM.
+8. **NLM UNBOUND was a website label bug. Fix is ON GITHUB at `d5180f41` (PR #322, not merged, not Instant Deployed).** MAS 188 `/api/nlm/health` was already up. Do not treat `forecast_p: null` as missing NLM. Offline WEKA ≠ NLM off.
 
 ---
 
@@ -580,7 +582,7 @@ CUI lives only in PreVeil. This brief, the demo, and the public site stay unclas
 - GitHub code map: `D:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\docs\ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`
 - Mirror: `D:\Users\admin2\Desktop\MYCOSOFT\CODE\docs\ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`
 - Slides: `docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`
-- Dual-mode note: `WEBSITE/website/docs/ITDX_V2_LOCAL_DEMO_DUAL_MODE_SEP17_2026.md` (on ship SHA `20bf2b06`)
+- Dual-mode note: `WEBSITE/website/docs/ITDX_V2_LOCAL_DEMO_DUAL_MODE_SEP17_2026.md` (on ship SHA `d5180f41`)
 - Force offline: `/api/fusarium/itdx/connectivity?force=offline`
 
-**Deploy status: not deployed. Instant Deploy HELD.** Website branch `ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`.
+**Deploy status: not deployed. Instant Deploy HELD.** Website branch `ship/trail-ar-itdx-sep17` @ `d5180f414a07baa637103fbcd4405806eaef15b2`.

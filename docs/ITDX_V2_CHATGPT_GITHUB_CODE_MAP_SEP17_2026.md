@@ -23,21 +23,21 @@ Companion briefs (paste after the EVERYTHING pack if you still need contracts / 
 
 | Surface | Org/repo | Branch | Full SHA | Compare / tree |
 |---|---|---|---|---|
-| **Website (implement this)** | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) | `ship/trail-ar-itdx-sep17` | `20bf2b068591f7de16487ca03e77efb6b5785c4e` | [tree](https://github.com/MycosoftLabs/website/tree/20bf2b068591f7de16487ca03e77efb6b5785c4e) · [commit](https://github.com/MycosoftLabs/website/commit/20bf2b068591f7de16487ca03e77efb6b5785c4e) |
-| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-github-map-sep17` | `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` | [tree](https://github.com/MycosoftLabs/mycosoft-mas/tree/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18) · [commit](https://github.com/MycosoftLabs/mycosoft-mas/commit/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18) |
+| **Website (implement this)** | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) | `ship/trail-ar-itdx-sep17` | `d5180f414a07baa637103fbcd4405806eaef15b2` | [tree](https://github.com/MycosoftLabs/website/tree/d5180f414a07baa637103fbcd4405806eaef15b2) · [commit](https://github.com/MycosoftLabs/website/commit/d5180f414a07baa637103fbcd4405806eaef15b2) |
+| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-map-from-main` | `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` | [tree](https://github.com/MycosoftLabs/mycosoft-mas/tree/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1) · [commit](https://github.com/MycosoftLabs/mycosoft-mas/commit/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1) |
 
 Website clone:
 
 ```text
 https://github.com/MycosoftLabs/website/tree/ship/trail-ar-itdx-sep17
-https://github.com/MycosoftLabs/website/commit/20bf2b068591f7de16487ca03e77efb6b5785c4e
+https://github.com/MycosoftLabs/website/commit/d5180f414a07baa637103fbcd4405806eaef15b2
 ```
 
 MAS clone (docs branch; created with this map):
 
 ```text
-https://github.com/MycosoftLabs/mycosoft-mas/tree/docs/itdx-v2-chatgpt-github-map-sep17
-https://github.com/MycosoftLabs/mycosoft-mas/commit/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18
+https://github.com/MycosoftLabs/mycosoft-mas/tree/docs/itdx-v2-chatgpt-map-from-main
+https://github.com/MycosoftLabs/mycosoft-mas/commit/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1
 ```
 
 Do **not** treat `main` as Trail AR v2. Production `main` last Instant Deploy is **~13 Sep 2026** and does **not** include this SHA.
@@ -58,7 +58,7 @@ Probed 17 Sep 2026 ~13:45 Pacific:
 
 Trail AR v2 is **not live**. Do not claim `/natureos/bluesight-trail`, `/fusarium/itdx/v2`, WEKA Army ARFF, or LAN NLM chips exist on mycosoft.com from this pass.
 
-### IN PROGRESS (on GitHub as of website `20bf2b06`)
+### IN PROGRESS (on GitHub as of website `d5180f41`)
 
 On GitHub **now** (after `git push` of `ship/trail-ar-itdx-sep17`):
 
@@ -66,11 +66,12 @@ On GitHub **now** (after `git push` of `ship/trail-ar-itdx-sep17`):
 - ITDX 2.0 dual-mode board (`/fusarium/itdx/v2`)
 - Connectivity BFF (3.5 s abort, WAN vs MAS vs NLM chips)
 - WEKA campaign BFF + local Java WEKA BFF
-- NLM honesty BFF (LAN `188:8001/api/nlm` — `forecast_p` null = ABSTAIN)
-- Loop-refine module + `/loop-refine` BFF (IoU only; no fake F1)
+- NLM honesty BFF (LAN `188:8001/api/nlm` — `forecast_p` null = ABSTAIN; chip **NLM BOUND**)
+- **Loop-refine now works** (`da00d0c2`, still on tip `d5180f41`) — wrap-hook increments loop; last-good keys persist; batched JSONL logs accept/reject IoU
+- WEKA Run / Resume / Refresh / session+prediction ARFF
 - Dual-mode + FormSpace backbone notes
 
-**Still mid-e2e / not proven** (sibling `f6976835`; Instant Deploy **HELD** until freeze-free + WEKA + NLM pass):
+**Still mid-e2e / Instant Deploy HELD** (sibling `f6976835` not a green cutover; freeze-free + WEKA + NLM pass still required):
 
 - Ungated Trail AR rAF freeze after Play
 - v2 Trail AR embed (`?embed=1` vs full-page iframe)
@@ -78,7 +79,7 @@ On GitHub **now** (after `git push` of `ship/trail-ar-itdx-sep17`):
 - WEKA Army / trail ARFF **scored** F1 (still `not yet scored`; `actual` and `p` are `?`)
 - Scientific readiness (stays **false**)
 
-### Still dirty locally — **not** in `20bf2b06`
+### Still dirty locally — **not** in `d5180f41`
 
 Working copy `D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website` is still on `fix/launchpad-ingest-bearer-alias` with **unrelated** dirty files (auth, Eagle, Launchpad, `_bg_*` cutover scripts, Psathyrella notes). **Do not git reset.** Those files are **not** this ship. ChatGPT should fetch **only** the blob URLs below.
 
@@ -93,31 +94,31 @@ MAS working tree still has many untracked ops/CMMC/WEKA binary receipts. This co
 Pattern:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/<path>
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18/<path>
+https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/<path>
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1/<path>
 ```
 
 Example:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/app/natureos/bluesight-trail/page.tsx
-https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/lib/fusarium/itdx/connectivity.ts
+https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/app/natureos/bluesight-trail/page.tsx
+https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/lib/fusarium/itdx/connectivity.ts
 ```
 
 HTML view (same SHA):
 
 ```text
-https://github.com/MycosoftLabs/website/blob/20bf2b068591f7de16487ca03e77efb6b5785c4e/<path>
+https://github.com/MycosoftLabs/website/blob/d5180f414a07baa637103fbcd4405806eaef15b2/<path>
 ```
 
 ### B. Sparse clone (if you can run git)
 
 ```bash
 git clone --depth 1 --branch ship/trail-ar-itdx-sep17 https://github.com/MycosoftLabs/website.git
-git clone --depth 1 --branch docs/itdx-v2-chatgpt-github-map-sep17 https://github.com/MycosoftLabs/mycosoft-mas.git
+git clone --depth 1 --branch docs/itdx-v2-chatgpt-map-from-main https://github.com/MycosoftLabs/mycosoft-mas.git
 ```
 
-Pin website after clone: `git checkout 20bf2b068591f7de16487ca03e77efb6b5785c4e`
+Pin website after clone: `git checkout d5180f414a07baa637103fbcd4405806eaef15b2`
 
 Do **not** download `.data/weka-campaign` (not in git). Do **not** invent F1 from missing ARFFs.
 
@@ -125,8 +126,8 @@ Do **not** download `.data/weka-campaign` (not in git). Do **not** invent F1 fro
 
 ## 4. Website files to fetch (blob + raw)
 
-Base blob: `https://github.com/MycosoftLabs/website/blob/20bf2b068591f7de16487ca03e77efb6b5785c4e/`  
-Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/`
+Base blob: `https://github.com/MycosoftLabs/website/blob/d5180f414a07baa637103fbcd4405806eaef15b2/`  
+Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/`
 
 ### Pages / board
 
@@ -150,7 +151,7 @@ Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7
 | `lib/fusarium/bluesight/trail-contact.ts` | Contact / footholds |
 | `lib/fusarium/bluesight/contact-hud.ts` | Contact HUD |
 | `lib/fusarium/bluesight/path-corridor.ts` | Path / corridor |
-| `lib/fusarium/bluesight/loop-refine.ts` | Loop-refine IoU (new on this SHA) |
+| `lib/fusarium/bluesight/loop-refine.ts` | Loop-refine IoU — **works** (loop increments; accept/reject logged) |
 | `lib/fusarium/bluesight/trail-contours.ts` | Contours / IoU helper |
 | `lib/fusarium/bluesight/trail-lock.ts` | Lock |
 | `lib/fusarium/bluesight/trail-next-step.ts` | Next step |
@@ -164,7 +165,9 @@ Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7
 
 | Path | Why |
 |---|---|
-| `lib/fusarium/itdx/connectivity.ts` | Dual-mode 3.5 s probe |
+| `lib/fusarium/itdx/lan-json.ts` | LAN GET (bypasses patched fetch) |
+| `lib/fusarium/itdx/lan-json.ts` | LAN GET via Node `http` (bypasses patched fetch) |
+| `lib/fusarium/itdx/connectivity.ts` | Dual-mode 3.5 s probe; health+runtime even under `force=offline` |
 | `lib/fusarium/itdx/local-weka.ts` | Local Java CLI ledger |
 | `lib/fusarium/itdx/runtime-paths.ts` | JRE / jar / ARFF paths (no binaries) |
 | `app/api/fusarium/itdx/connectivity/route.ts` | Connectivity BFF |
@@ -173,6 +176,7 @@ Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7
 | `app/api/fusarium/bluesight-trail/weka-campaign/route.ts` | Campaign BFF |
 | `app/api/fusarium/bluesight-trail/weka-campaign/file/route.ts` | Campaign file download |
 | `app/api/fusarium/bluesight-trail/nlm/route.ts` | NLM honesty BFF |
+| `app/api/fusarium/bluesight-trail/math-log/route.ts` | Math-log BFF (8 MB cap; skip 512 MB dump) |
 | `app/api/fusarium/bluesight-trail/weka/route.ts` | Session ARFF export (not F1) |
 | `app/api/fusarium/bluesight-trail/loop-refine/route.ts` | Loop-refine JSONL BFF |
 | `app/api/fusarium/bluesight-trail/video/route.ts` | Replay video |
@@ -187,11 +191,12 @@ Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7
 | `docs/ITDX_TRAIL_AR_FORMSPACE_NLM_BACKBONE_SEP14_2026.md` | FormSpace / NLM backbone |
 | `docs/TRAIL_AR_ITDX_LIVE_DEPLOY_SEP17_2026.md` | Deploy hold note |
 | `docs/TRAIL_TWO_CLOCK_OVERLAY_SEP14_2026.md` | Two clocks |
-| `scripts/itdx-e2e-sep17-2026.mjs` | Local e2e (not green Instant Deploy) |
+| `scripts/itdx-e2e-sep17-2026.mjs` | Local e2e (sibling `f6976835`; not green Instant Deploy) |
+| `scripts/_prove_loop_refine_sep17.mjs` | Local loop-refine proof (loop increment + JSONL) |
 | `scripts/trail-ar-sidecar.py` | Sidecar helper |
 
 Raw URL recipe: prefix every path with  
-`https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/`
+`https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/`
 
 Parentheses in `app/fusarium/(dashboard)/itdx/v2/page.tsx` are literal. If a client breaks on `(` `)`, use:
 
@@ -201,7 +206,7 @@ Parentheses in `app/fusarium/(dashboard)/itdx/v2/page.tsx` are literal. If a cli
 
 ## 5. MAS files to fetch (after this branch is pushed)
 
-MAS SHA `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` on branch `docs/itdx-v2-chatgpt-github-map-sep17`. The follow-up commit that pins this SHA in the table is on the same branch.
+MAS SHA `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` on branch `docs/itdx-v2-chatgpt-map-from-main`. The follow-up commit that pins this SHA in the table is on the same branch.
 
 | Path | Why |
 |---|---|
@@ -215,7 +220,7 @@ MAS SHA `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` on branch `docs/itdx-v2-chatg
 Raw pattern:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
 ```
 
 Mirrors (not a third GitHub source of truth): `CODE/docs/` copies of the three ChatGPT Sep 17 files.
@@ -243,7 +248,7 @@ Mirrors (not a third GitHub source of truth): `CODE/docs/` copies of the three C
 |---|---|
 | Instant Deploy | **HELD** |
 | Merge to `main` | **No** until freeze-free + WEKA + NLM e2e |
-| Sibling e2e `f6976835` | **Not** accepted as green in this pass |
+| Sibling e2e `f6976835` | Loop-refine path **works** on `da00d0c2` (tip `d5180f41`); **not** a green Instant Deploy |
 | Public cutover | **No** |
 
 Local demo only: `http://localhost:3010/fusarium/itdx/v2` and `http://localhost:3010/natureos/bluesight-trail`.
