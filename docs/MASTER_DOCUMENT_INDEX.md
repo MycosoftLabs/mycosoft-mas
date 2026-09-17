@@ -1,5 +1,9 @@
 # Master Document Index
 
+## ITDX v2.1 sixteen objectives + ChatGPT handoff (SEP17 2026)
+- [ITDX_V21_SIXTEEN_OBJECTIVES_CAPABILITY_MAP_SEP17_2026.md](ITDX_V21_SIXTEEN_OBJECTIVES_CAPABILITY_MAP_SEP17_2026.md) — Unclassified 16-row C&E map. Showcase **12 / 13 / 8 / 14** only. Supporting stack listed. Instant Deploy **HELD**. No FOUO.
+- [ITDX_V21_CHATGPT_HANDOFF_SEP17_2026.md](ITDX_V21_CHATGPT_HANDOFF_SEP17_2026.md) — ChatGPT 2.1 paste + apply-to-lab locks. Do not overwrite Cursor. Lab **8765**. WEKA receipts local, not GitHub.
+
 ## ITDX v2 ChatGPT EVERYTHING pack (SEP17 2026)
 - [ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md](ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md) — **Paste-complete** ChatGPT pack: SHAs/PRs, LIVE vs HELD vs LOCAL, four tasks + in-repo equations, Cursor-reported vs Hess-reproducible results, gitignored `.data` paths, NLM offline≠off contract, system flow, forbidden claims. Website PR **#322** / MAS PR **#156** — do not merge. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`.
 

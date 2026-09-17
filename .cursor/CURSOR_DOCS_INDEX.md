@@ -6,6 +6,10 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## ITDX v2.1 sixteen objectives + ChatGPT handoff (Sep 17, 2026)
+- `docs/ITDX_V21_SIXTEEN_OBJECTIVES_CAPABILITY_MAP_SEP17_2026.md` — Unclassified 16-row C&E map. Showcase **12 / 13 / 8 / 14** only. FormSpace/NLM/WEKA/Trail AR = support. Instant Deploy **HELD**. No FOUO.
+- `docs/ITDX_V21_CHATGPT_HANDOFF_SEP17_2026.md` — Paste-ready ChatGPT 2.1 upgrade brief. Do not overwrite Cursor. Lab port **8765**. WEKA receipts local `.data` not GitHub.
+
 ## ITDX v2 ChatGPT EVERYTHING pack (Sep 17, 2026)
 - `docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md` — **Paste-complete** ChatGPT pack (8-line header). Website `ship/trail-ar-itdx-sep17` @ `20bf2b06` / PR **#322 HELD**. MAS PR **#156**. LIVE mycosoft.com ~13 Sep ≠ v2. Offline ≠ NLM off. Cursor `.data` receipts **not in git**. Hess = fresh `POST /local-weka` only. Three slides / four tasks. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`.
 
