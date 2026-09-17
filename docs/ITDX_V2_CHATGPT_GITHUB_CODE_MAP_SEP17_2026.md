@@ -9,10 +9,13 @@
 
 `forecast_p` is **null**. `live` is **false**. **WEKA ≠ NLM.** Do **not** print **0.85**.
 
-Companion briefs (paste after this map if you still need contracts / slides):
+**Paste-complete pack (prefer this first):** `docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`
+
+Companion briefs (paste after the EVERYTHING pack if you still need contracts / slides):
 
 - Builder: `docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`
 - Slides: `docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`
+- FINAL: `docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md`
 
 ---
 
@@ -202,9 +205,11 @@ MAS SHA `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` on branch `docs/itdx-v2-chatg
 
 | Path | Why |
 |---|---|
+| `docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md` | **Paste-complete pack** (prefer first) |
 | `docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md` | **This map** |
 | `docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md` | Software contract / BFF JSON |
 | `docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md` | Slide deck only |
+| `docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md` | Loop-refine / freeze notes |
 | `docs/WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md` | Sep 14 honesty narrative (149/149 compatibility; scientific readiness false) |
 
 Raw pattern:

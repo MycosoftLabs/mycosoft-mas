@@ -6,6 +6,12 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## ITDX v2 ChatGPT EVERYTHING pack (Sep 17, 2026)
+- `docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md` — **Paste-complete** ChatGPT pack (8-line header). Website `ship/trail-ar-itdx-sep17` @ `20bf2b06` / PR **#322 HELD**. MAS PR **#156**. LIVE mycosoft.com ~13 Sep ≠ v2. Offline ≠ NLM off. Cursor `.data` receipts **not in git**. Hess = fresh `POST /local-weka` only. Three slides / four tasks. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT FINAL handoff (Sep 17, 2026)
+- `docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md` — **Current** local-integration brief: loop-refine JSONL + last-good IoU, NLM bound vs unreachable, WEKA Run/Resume/ARFF, Trail AR freeze root cause. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md`.
+
 ## ITDX v2 ChatGPT GitHub code map (Sep 17, 2026)
 - `docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md` — **Fetch map** for ChatGPT: org/repo/branch/SHA, blob + `raw.githubusercontent.com` URLs, LIVE (mycosoft.com 200, last Instant Deploy ~13 Sep) vs IN PROGRESS (`ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`). Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
 
