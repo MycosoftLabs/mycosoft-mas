@@ -24,7 +24,7 @@ Companion briefs (paste after the EVERYTHING pack if you still need contracts / 
 | Surface | Org/repo | Branch | Full SHA | Compare / tree |
 |---|---|---|---|---|
 | **Website (implement this)** | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) | `ship/trail-ar-itdx-sep17` | `d5180f414a07baa637103fbcd4405806eaef15b2` | [tree](https://github.com/MycosoftLabs/website/tree/d5180f414a07baa637103fbcd4405806eaef15b2) · [commit](https://github.com/MycosoftLabs/website/commit/d5180f414a07baa637103fbcd4405806eaef15b2) |
-| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-map-from-main` | `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` | [tree](https://github.com/MycosoftLabs/mycosoft-mas/tree/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1) · [commit](https://github.com/MycosoftLabs/mycosoft-mas/commit/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1) |
+| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-map-from-main` | `5491af53e45f4f0bd73b0930bb378c225f72ba82` | [tree](https://github.com/MycosoftLabs/mycosoft-mas/tree/5491af53e45f4f0bd73b0930bb378c225f72ba82) · [commit](https://github.com/MycosoftLabs/mycosoft-mas/commit/5491af53e45f4f0bd73b0930bb378c225f72ba82) |
 
 Website clone:
 
@@ -37,7 +37,7 @@ MAS clone (docs branch; created with this map):
 
 ```text
 https://github.com/MycosoftLabs/mycosoft-mas/tree/docs/itdx-v2-chatgpt-map-from-main
-https://github.com/MycosoftLabs/mycosoft-mas/commit/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1
+https://github.com/MycosoftLabs/mycosoft-mas/commit/5491af53e45f4f0bd73b0930bb378c225f72ba82
 ```
 
 Do **not** treat `main` as Trail AR v2. Production `main` last Instant Deploy is **~13 Sep 2026** and does **not** include this SHA.
@@ -66,7 +66,9 @@ On GitHub **now** (after `git push` of `ship/trail-ar-itdx-sep17`):
 - ITDX 2.0 dual-mode board (`/fusarium/itdx/v2`)
 - Connectivity BFF (3.5 s abort, WAN vs MAS vs NLM chips)
 - WEKA campaign BFF + local Java WEKA BFF
-- NLM honesty BFF (LAN `188:8001/api/nlm` — `forecast_p` null = ABSTAIN; chip **NLM BOUND**)
+- NLM honesty BFF (LAN `188:8001/api/nlm` health+runtime — `forecast_p` null = **FORECAST_ABSTAIN**)
+- v2 chip: **NLM ONLINE / weights loaded** vs **MAS_NLM_DOWN** (`WAN_DOWN` ≠ NLM off)
+- BFF Node `http` to 188 (`lan-json.ts`); math-log reads capped at 8 MB
 - **Loop-refine now works** (`da00d0c2`, still on tip `d5180f41`) — wrap-hook increments loop; last-good keys persist; batched JSONL logs accept/reject IoU
 - WEKA Run / Resume / Refresh / session+prediction ARFF
 - Dual-mode + FormSpace backbone notes
@@ -95,7 +97,7 @@ Pattern:
 
 ```text
 https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07baa637103fbcd4405806eaef15b2/<path>
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1/<path>
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/5491af53e45f4f0bd73b0930bb378c225f72ba82/<path>
 ```
 
 Example:
@@ -165,7 +167,6 @@ Base raw: `https://raw.githubusercontent.com/MycosoftLabs/website/d5180f414a07ba
 
 | Path | Why |
 |---|---|
-| `lib/fusarium/itdx/lan-json.ts` | LAN GET (bypasses patched fetch) |
 | `lib/fusarium/itdx/lan-json.ts` | LAN GET via Node `http` (bypasses patched fetch) |
 | `lib/fusarium/itdx/connectivity.ts` | Dual-mode 3.5 s probe; health+runtime even under `force=offline` |
 | `lib/fusarium/itdx/local-weka.ts` | Local Java CLI ledger |
@@ -206,7 +207,7 @@ Parentheses in `app/fusarium/(dashboard)/itdx/v2/page.tsx` are literal. If a cli
 
 ## 5. MAS files to fetch (after this branch is pushed)
 
-MAS SHA `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` on branch `docs/itdx-v2-chatgpt-map-from-main`. The follow-up commit that pins this SHA in the table is on the same branch.
+MAS SHA `5491af53e45f4f0bd73b0930bb378c225f72ba82` on branch `docs/itdx-v2-chatgpt-map-from-main`. The follow-up commit that pins this SHA in the table is on the same branch.
 
 | Path | Why |
 |---|---|
@@ -220,7 +221,7 @@ MAS SHA `4cdd1d027145b185c01ad6a95c374a5f26e5e8a1` on branch `docs/itdx-v2-chatg
 Raw pattern:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/4cdd1d027145b185c01ad6a95c374a5f26e5e8a1/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/5491af53e45f4f0bd73b0930bb378c225f72ba82/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
 ```
 
 Mirrors (not a third GitHub source of truth): `CODE/docs/` copies of the three ChatGPT Sep 17 files.
