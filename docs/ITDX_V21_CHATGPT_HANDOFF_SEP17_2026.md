@@ -53,7 +53,7 @@ RJ Ricasata is CFO. Synthetic Fort Stewart AO. live: false.
 | Repo | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) |
 | PR | **[#156](https://github.com/MycosoftLabs/mycosoft-mas/pull/156)** OPEN. **Do not merge.** |
 | Branch | `docs/itdx-v2-chatgpt-map-from-main` |
-| v2.1 docs SHA | *(set after push)* |
+| v2.1 docs SHA | `2e5135349b4a95067abf883205b0cd4b3e70173d` |
 
 Raw capability map (after push):
 
