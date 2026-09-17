@@ -1,5 +1,18 @@
 # Master Document Index
 
+## ITDX v2 ChatGPT GitHub code map (SEP17 2026)
+- [ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md](ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md) — ChatGPT **fetch map**: MycosoftLabs/website `ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`; MAS docs @ `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18`. LIVE mycosoft.com **200** ≠ this SHA. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT builder handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md) — **Paste-first** software contract for ChatGPT (routes, APIs, banners, WEKA I/O, Fusarium shell). Dual-mode 3.5s probe. **NLM is LAN-bound** (`WAN_DOWN` ≠ `MAS_NLM_DOWN` ≠ `FORECAST_ABSTAIN`). Honesty table + forbidden claims. Trail AR two clocks / halo / `__trailOverlay`. Known defects (v2 embed, trail freeze). Call existing BFFs — do not duplicate WEKA CLI. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT slide handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md) — ChatGPT **slide-deck** handoff. Points at the builder brief above for software. Dual-mode ONLINE vs OFFLINE LOCAL WEKA. Cited Sep 14 receipts only. Local demo `/fusarium/itdx/v2`. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`.
+- Website scaffold: `WEBSITE/website/docs/ITDX_V2_LOCAL_DEMO_DUAL_MODE_SEP17_2026.md`
+
+## WEKA ITDX full-scheme campaign (SEP14 2026)
+- [WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md](WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md) — 149/149 schemes executed (preprocess + classify + cluster). Compatibility receipts complete; scientific readiness not established. Trail F1 not yet scored. Local ITDX BFF `/api/fusarium/bluesight-trail/weka-campaign`. No Instant Deploy.
+
 ## Sorcery / CI review fixes (SEP11 2026)
 - [SORCERY_CI_REVIEW_FIXES_SEP11_2026.md](SORCERY_CI_REVIEW_FIXES_SEP11_2026.md) — Sourcery rate-limit, Bugbot/security on #318/#319/#152/#153, restore myca workflow-drift script
 
