@@ -1,6 +1,76 @@
 # Master Document Index
 
+## ITDX v2 ChatGPT GitHub code map (SEP17 2026)
+- [ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md](ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md) — ChatGPT **fetch map**: MycosoftLabs/website `ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`; MAS docs branch. LIVE mycosoft.com **200** ≠ this SHA. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT builder handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md) — **Paste-first** software contract for ChatGPT (routes, APIs, banners, WEKA I/O, Fusarium shell). Dual-mode 3.5s probe. **NLM is LAN-bound** (`WAN_DOWN` ≠ `MAS_NLM_DOWN` ≠ `FORECAST_ABSTAIN`). Honesty table + forbidden claims. Trail AR two clocks / halo / `__trailOverlay`. Known defects (v2 embed, trail freeze). Call existing BFFs — do not duplicate WEKA CLI. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT slide handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md) — ChatGPT **slide-deck** handoff (no repo access). Points at the builder brief above for software. Dual-mode ONLINE vs OFFLINE LOCAL WEKA. Cited Sep 14 receipts only. Local demo `/fusarium/itdx/v2`. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`.
+- Website scaffold: `WEBSITE/website/docs/ITDX_V2_LOCAL_DEMO_DUAL_MODE_SEP17_2026.md`
+
+## WEKA ITDX full-scheme campaign (SEP14 2026)
+- [WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md](WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md) — 149/149 schemes executed (preprocess + classify + cluster). Compatibility receipts complete; scientific readiness not established. Trail F1 not yet scored. Local ITDX BFF `/api/fusarium/bluesight-trail/weka-campaign`. No Instant Deploy.
+
+## Claude + Cursor handoff — ITDX terrain + civil (SEP14 2026)
+- [CLAUDE_CURSOR_HANDOFF_ITDX_TERRAIN_CIVIL_SEP14_2026.md](CLAUDE_CURSOR_HANDOFF_ITDX_TERRAIN_CIVIL_SEP14_2026.md) — **Paste-ready handle** for new Claude + Cursor threads. 14 Sep live probe, locks, Part A terrain + Part B civil demo on `fusarium-scenario-sim/v1`. Mirror: `CODE/docs/CLAUDE_CURSOR_HANDOFF_ITDX_TERRAIN_CIVIL_SEP14_2026.md`.
+
+## Live verification Earth Sim / media / NLM (SEP11 2026)
+- [LIVE_VERIFICATION_EARTHSIM_MEDIA_NLM_SEP11_2026.md](LIVE_VERIFICATION_EARTHSIM_MEDIA_NLM_SEP11_2026.md) — Production proof: website **blue `2a46b851`**, MAS NLM **`5561e893`**, globe pan **360 ms**, media 206/readyState, NLM weights loaded, training jobs fail-closed. No deploy.
+
+## Website full hero media audit (SEP11 2026)
+- [WEBSITE_FULL_HERO_MEDIA_AUDIT_SEP11_2026.md](WEBSITE_FULL_HERO_MEDIA_AUDIT_SEP11_2026.md) — Full sitemap: About Commercial 1 / 2026-web **200**, unique `-web` originals restored (no master hardlinks). Fusarium Instant Deploy already on green; NAS-only. Science hero honest 404.
+
+## Device media original restore (SEP11 2026)
+- [DEVICE_MEDIA_ORIGINAL_RESTORE_SEP11_2026.md](DEVICE_MEDIA_ORIGINAL_RESTORE_SEP11_2026.md) — **Lag + fix:** today’s `-web`/tile hardlinks of 126–523 MB masters made InstantHero/`preload="auto"` and home tiles start full 4K files. Aliases unlinked; git MycoBrain 44 MB + Psathyrella 13 MB restored. No player code. CF Purge Everything. Instant Deploy `34630455403` (`ab2b7ea4`) already in flight — no second deploy. **Superseded for full-sitemap About/stills by WEBSITE_FULL_HERO_MEDIA_AUDIT_SEP11_2026.md.**
+- [DEVICE_MEDIA_MANIPULATION_INCIDENT_SEP11_2026.md](DEVICE_MEDIA_MANIPULATION_INCIDENT_SEP11_2026.md) — Wrong-device stills were Sep 11 Mushroom 1 stand-ins, not a missing mount. Stand-ins removed.
+- [LIVE_DEVICE_MEDIA_NAS_FIX_SEP11_2026.md](LIVE_DEVICE_MEDIA_NAS_FIX_SEP11_2026.md) — Mount was present; first alias pass that caused the lag (superseded for playback).
+
+## Fusarium personnel system-wide (SEP10 2026)
+- Worktree: `WEBSITE/website-itdx-codex-v13/docs/FUSARIUM_PERSONNEL_SYSTEMWIDE_SEP10_2026.md` — 180-role catalog, 19 duty shells, shell switcher, surveys/outcomes/KO relay. Not measured stays Not measured. No 187 cut.
+- `WEBSITE/website-itdx-codex-v13/docs/FUSARIUM_180_ROLE_UX_ARCHITECTURE_SEP10_2026.md`
+- `WEBSITE/website-itdx-codex-v13/docs/FUSARIUM_OUTCOMES_MEASUREMENT_AND_KO_RELAY_SEP10_2026.md`
+- `WEBSITE/website-itdx-codex-v13/docs/FUSARIUM_PERSONNEL_ROLES_IMPLEMENTED_SEP10_2026.md`
+
+## ITDX Instant Deploy OOM hold (SEP10 2026)
+- Worktree: `WEBSITE/website-itdx-codex-v13/docs/ITDX_INSTANT_DEPLOY_OOM_HOLD_SEP10_2026.md` — Instant Deploy `34529506828` cancelled in GHCR build; no 187 cut. Waiting for viewport-cull + memory governor before the next candidate.
+
+## ITDX Fusarium app tabs restored (SEP10 2026)
+- Worktree: `WEBSITE/website-itdx-codex-v13/docs/ITDX_FUSARIUM_APP_TABS_RESTORED_SEP10_2026.md` — Root cause `98979511` hid the Algorithm Lab iframe when 8765 was unbound; packaged v1.4 lab always mounts on `/fusarium/itdx`. Combined Instant Deploy SHA also includes Earth Sim Live Data binds (`docs/EARTH_SIM_LIVE_DATA_BIND_COMPLETE_SEP10_2026.md`). 187 cut held for OOM governor.
+
+## Live Data ERA5 globe bind (SEP10 2026)
+- [LIVE_DATA_ERA5_GLOBE_BIND_COMPLETE_SEP10_2026.md](LIVE_DATA_ERA5_GLOBE_BIND_COMPLETE_SEP10_2026.md) — PR #309 `ba8c5a83`; Instant Deploy [34521730309](https://github.com/MycosoftLabs/website/actions/runs/34521730309) success; 187 green + NAS ro; catalog `base_configured: true`; ERA5 12 frames; ITDX SYNTHETIC EXERCISE not reverted
+
+## API rate limit / billing health (SEP10 2026)
+- [API_RATE_LIMIT_BILLING_HEALTH_SEP10_2026.md](API_RATE_LIMIT_BILLING_HEALTH_SEP10_2026.md) — Live outbound API audit: no 429/402; Earth-2 249 down; CF/ElevenLabs 401; Fusarium Maps SUPPLIED; AIS/ADS-B failover left to `c7a77c74`
+
+## CREP AIS / ADS-B failover (SEP10 2026)
+- [CREP_AIS_ADSB_FAILOVER_SEP10_2026.md](CREP_AIS_ADSB_FAILOVER_SEP10_2026.md) — OpenSky + AISStream primary; adsb.lol/adsb.fi and GFW/Digitraffic/AISHub backups; no mock tracks; Earth Sim BFF
+
+## VM resource health (SEP10 2026)
+- [VM_RESOURCE_HEALTH_SEP10_2026.md](VM_RESOURCE_HEALTH_SEP10_2026.md) — Fleet mem/disk/ports: 187/188/189/public UP; 188 root 89% fail-closed; 191 n8n up, workspace/evolution crash-loop after restart; Voice 241 + Earth-2 249 down; no 187 rebuild
+
+## Fusarium UI browser pass (SEP10 2026)
+- [FUSARIUM_UI_BROWSER_PASS_SEP10_2026.md](FUSARIUM_UI_BROWSER_PASS_SEP10_2026.md) — TEST ONLY Playwright pass: 3010 vs live, console list, PASS/DEGRADED/FAIL; NLM loaded `p=null`; ITDX BFF 200; no 187
+
+## ITDX synthetic Army intel demo (SEP10 2026)
+- Worktree: `WEBSITE/website-itdx-codex-v13/docs/ITDX_SYNTHETIC_ARMY_INTEL_DEMO_SEP10_2026.md` — Dense SYNTHETIC EXERCISE briefing (AO, training PIRs, playback, NLM/Weka/MYCA/AVANI, movement/C2, OSINT pathways). Overlay stays `live=false`. No 187 deploy.
+
+## Earth Sim PC / iPad demo stability (SEP10 2026)
+- [EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md](EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md) — NatureOS + Fusarium Earth Sim: PC/iPad matrix, default-off heavy layers, hidden-tab pause, no 187 deploy
+
+## Fusarium ITDX live ship (SEP10 2026)
+- [FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md](FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md) — **Live ship**: Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer
+- [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Browser/BFF E2E: no fake live tracks; NLM/smoke/AQ degraded
+
+## Dr. Hess / Weka / Perplexity (SEP10 2026)
+- [PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md](PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md) — **Paste-ready Perplexity prompt**: Hess emails + attachments; Morgan uploads white papers, NLM math, WEKA packet, modified email note. Attachments win on numbers; this prompt wins on claims.
+- [WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md](WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md) — Official Weka operator runbook (dated MAS copy)
+- [DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md](DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md) — Packet email skeleton (do not send as-is)
+
 ## ITDX + NLM E2E (SEP10 2026)
+- [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Fusarium Earth Sim / C2 / aerosol E2E: worktree 3010, no fake convoy, NLM unloaded, ITDX BFF abort
 - [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
 - [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
 - [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt

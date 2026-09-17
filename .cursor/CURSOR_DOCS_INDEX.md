@@ -6,6 +6,71 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## ITDX v2 ChatGPT GitHub code map (Sep 17, 2026)
+- `docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md` — **Fetch map** for ChatGPT: org/repo/branch/SHA, blob + `raw.githubusercontent.com` URLs, LIVE (mycosoft.com 200, last Instant Deploy ~13 Sep) vs IN PROGRESS (`ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`). Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT builder handoff (Sep 17, 2026)
+- `docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md` — **Paste-first** software contract for ChatGPT implementing the local ITDX 2.0 + Fusarium demo (routes, BFF contracts, banners, WEKA I/O). Dual-mode 3.5s probe. **LAN NLM vs WAN_DOWN vs FORECAST_ABSTAIN.** Honesty table + forbidden claims. Trail AR two clocks / halo. Known defects in flight. **Not deployed.** Mirror: `CODE/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT slide handoff (Sep 17, 2026)
+- `docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md` — Paste-ready ChatGPT **slide deck**. Points at the builder brief above for software. Dual-mode ONLINE vs OFFLINE LOCAL WEKA. Honesty table only. Local `/fusarium/itdx/v2`. **Not deployed.** Mirror: `CODE/docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`.
+
+## WEKA ITDX full-scheme campaign (Sep 14, 2026)
+- `docs/WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md` — 149/149 WEKA schemes ran (56 classify / 85 filter / 8 cluster) on campaign + Trail AR ARFFs. Compatibility complete; scientific readiness **false**. `forecast_p` null. WEKA ≠ NLM. Local 3010 `/fusarium/itdx` BFF only — no Instant Deploy.
+
+## Claude + Cursor handoff — ITDX terrain + civil (Sep 14, 2026)
+- `docs/CLAUDE_CURSOR_HANDOFF_ITDX_TERRAIN_CIVIL_SEP14_2026.md` — **Paste-ready first message** for new Claude + Cursor threads. Live ops 14 Sep (`64a89509` / MAS `5561e893`+`65dbffb7` / NLM weights loaded). Part A terrain honesty + Part B non-US civil overlays on the existing scenario bus. Copy: `CODE/docs/CLAUDE_CURSOR_HANDOFF_ITDX_TERRAIN_CIVIL_SEP14_2026.md`.
+
+## Fusarium personnel system-wide (Sep 10, 2026)
+- `WEBSITE/website-itdx-codex-v13/docs/FUSARIUM_PERSONNEL_SYSTEMWIDE_SEP10_2026.md` — 180 roles across Fusarium shell (Earth Sim, aerosol, ITDX, SA). Duty switcher. Surveys + KO relay. `in_boundary_cui` hook disabled. No 187.
+
+## ITDX Instant Deploy OOM hold (Sep 10, 2026)
+- `WEBSITE/website-itdx-codex-v13/docs/ITDX_INSTANT_DEPLOY_OOM_HOLD_SEP10_2026.md` — 187 cut held; Instant Deploy `34529506828` cancelled in Phase A. Wait for viewport-cull + memory governor.
+
+## ITDX Fusarium app tabs restored (Sep 10, 2026)
+- `WEBSITE/website-itdx-codex-v13/docs/ITDX_FUSARIUM_APP_TABS_RESTORED_SEP10_2026.md` — `98979511` hid the lab iframe; packaged Algorithm Lab always mounts on `/fusarium/itdx`. 187 cut held.
+
+## Live verification Earth Sim / media / NLM (Sep 11, 2026)
+- `docs/LIVE_VERIFICATION_EARTHSIM_MEDIA_NLM_SEP11_2026.md` — Live blue **`2a46b851`**, MAS **`5561e893`**, Earth Sim pan 360 ms, hero media 206 + pixels, NLM weights loaded / jobs fail-closed. No second deploy.
+
+## Website full hero media audit (Sep 11, 2026)
+- `docs/WEBSITE_FULL_HERO_MEDIA_AUDIT_SEP11_2026.md` — Entire sitemap heroes/stills. About 2026-web 41 MB + Commercial 1 fallback **200**. Unique originals on NAS; no Instant Deploy (Fusarium already on green).
+
+## Device media original restore (Sep 11, 2026)
+- `docs/DEVICE_MEDIA_ORIGINAL_RESTORE_SEP11_2026.md` — Lag cause: `-web`/tile hardlinks of 126–523 MB masters + `preload="auto"`. Unlinked aliases; restored git MycoBrain 44 MB + Psathyrella 13 MB. No player code. CF purged. **Superseded for About/full sitemap by the audit above.**
+- `docs/DEVICE_MEDIA_MANIPULATION_INCIDENT_SEP11_2026.md` — Mushroom 1 stand-ins removed; Hyphae/MycoNode originals 200.
+- `docs/LIVE_DEVICE_MEDIA_NAS_FIX_SEP11_2026.md` — First pass that created the giant `-web` aliases (superseded for playback).
+
+## Earth Sim Live Data local toggle (Sep 11, 2026)
+- `WEBSITE/website-itdx-codex-v13/docs/EARTH_SIM_LIVE_DATA_LOCAL_TOGGLE_FIX_SEP11_2026.md` — 3010 was dirty `WEBSITE/website`; worktree always-mount + pin ERA5; sibling Arraylake bake. Live catalog stayed 200.
+
+## Live Data ERA5 globe bind (Sep 10, 2026)
+- `docs/LIVE_DATA_ERA5_GLOBE_BIND_COMPLETE_SEP10_2026.md` — PR #309 `ba8c5a83` Instant Deploy 34521730309; 187 green + NAS; ERA5 12 frames paint; ITDX synthetic stays `live: false`
+
+## API rate limit / billing health (Sep 10, 2026)
+- `docs/API_RATE_LIMIT_BILLING_HEALTH_SEP10_2026.md` — Outbound API audit: no 429/402; Earth-2 249 down; CF + ElevenLabs 401; Fusarium Maps SUPPLIED
+
+## VM resource health (Sep 10, 2026)
+- `docs/VM_RESOURCE_HEALTH_SEP10_2026.md` — Fleet mem/disk/ports: site+MAS+MINDEX up; 188 89% fail-closed; 191 crash-loops; GPU Legions down
+
+## CREP AIS / ADS-B failover (Sep 10, 2026)
+- `docs/CREP_AIS_ADSB_FAILOVER_SEP10_2026.md` — Plane/vessel BFF failover; OpenSky + AISStream; public OSINT backups; honest empty
+
+## Fusarium UI browser pass (Sep 10, 2026)
+- `docs/FUSARIUM_UI_BROWSER_PASS_SEP10_2026.md` — TEST ONLY: 3010 vs live, full console list, PASS/DEGRADED/FAIL; NLM `p=null`; ITDX BFF 200
+
+## ITDX synthetic Army intel demo (Sep 10, 2026)
+- `WEBSITE/website-itdx-codex-v13/docs/ITDX_SYNTHETIC_ARMY_INTEL_DEMO_SEP10_2026.md` — Dense unclassified briefing on ITDX chip / Intel Feed / workspace; `live=false`; no FOUO
+
+## Earth Sim PC / iPad demo (Sep 10, 2026)
+- `docs/EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md` — NatureOS + Fusarium globe: PC/iPad matrix, default-off movers/weather, hidden-tab pause
+
+## Fusarium ITDX live ship (Sep 10, 2026)
+- `docs/FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md` — Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer, live vs hypothesis vs NOT_SUPPLIED
+- `docs/FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md` — 3010 E2E: no fake tracks; NLM/smoke/AQ degraded
+
+## Dr. Hess / Weka / Perplexity (Sep 10, 2026)
+- `docs/PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md` — Paste-ready Perplexity prompt for Hess emails and attachments
 
 ## ITDX + NLM E2E (Sep 10, 2026)
 - `docs/ITDX_NLM_E2E_STATE_SEP10_2026.md` — NAS reference copied; Fusarium p null; MINDEX/memory retain; forecast not promoted
