@@ -1,5 +1,28 @@
 # Master Document Index
 
+## ITDX v2.1 sixteen objectives + ChatGPT handoff (SEP17 2026)
+- [ITDX_V21_SIXTEEN_OBJECTIVES_CAPABILITY_MAP_SEP17_2026.md](ITDX_V21_SIXTEEN_OBJECTIVES_CAPABILITY_MAP_SEP17_2026.md) — Unclassified 16-row C&E map. Showcase **12 / 13 / 8 / 14** only. Supporting stack listed. Instant Deploy **HELD**. No FOUO.
+- [ITDX_V21_CHATGPT_HANDOFF_SEP17_2026.md](ITDX_V21_CHATGPT_HANDOFF_SEP17_2026.md) — ChatGPT 2.1 paste + apply-to-lab locks. Do not overwrite Cursor. Lab **8765**. WEKA receipts local, not GitHub.
+
+## ITDX v2 ChatGPT EVERYTHING pack (SEP17 2026)
+- [ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md](ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md) — **Paste-complete** ChatGPT pack: SHAs/PRs, LIVE vs HELD vs LOCAL, four tasks + in-repo equations, Cursor-reported vs Hess-reproducible results, gitignored `.data` paths, NLM offline≠off contract, system flow, forbidden claims. Website PR **#322** / MAS PR **#156** — do not merge. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT FINAL handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md) — Current local brief: loop refine (JSONL + accept/reject), NLM bind honesty, WEKA Army buttons/ARFFs, freeze cause. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT GitHub code map (SEP17 2026)
+- [ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md](ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md) — ChatGPT **fetch map**: MycosoftLabs/website `ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`; MAS docs @ `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18`. LIVE mycosoft.com **200** ≠ this SHA. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT builder handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md) — **Paste-first** software contract for ChatGPT (routes, APIs, banners, WEKA I/O, Fusarium shell). Dual-mode 3.5s probe. **NLM is LAN-bound** (`WAN_DOWN` ≠ `MAS_NLM_DOWN` ≠ `FORECAST_ABSTAIN`). Honesty table + forbidden claims. Trail AR two clocks / halo / `__trailOverlay`. Known defects (v2 embed, trail freeze). Call existing BFFs — do not duplicate WEKA CLI. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT slide handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md) — ChatGPT **slide-deck** handoff. Points at the builder brief above for software. Dual-mode ONLINE vs OFFLINE LOCAL WEKA. Cited Sep 14 receipts only. Local demo `/fusarium/itdx/v2`. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_SLIDE_HANDOFF_SEP17_2026.md`.
+- Website scaffold: `WEBSITE/website/docs/ITDX_V2_LOCAL_DEMO_DUAL_MODE_SEP17_2026.md`
+
+## WEKA ITDX full-scheme campaign (SEP14 2026)
+- [WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md](WEKA_ITDX_CAMPAIGN_RUN_SEP14_2026.md) — 149/149 schemes executed (preprocess + classify + cluster). Compatibility receipts complete; scientific readiness not established. Trail F1 not yet scored. Local ITDX BFF `/api/fusarium/bluesight-trail/weka-campaign`. No Instant Deploy.
+
 ## Sorcery / CI review fixes (SEP11 2026)
 - [SORCERY_CI_REVIEW_FIXES_SEP11_2026.md](SORCERY_CI_REVIEW_FIXES_SEP11_2026.md) — Sourcery rate-limit, Bugbot/security on #318/#319/#152/#153, restore myca workflow-drift script
 
