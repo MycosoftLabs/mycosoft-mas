@@ -21,7 +21,7 @@ Companion briefs (paste after this map if you still need contracts / slides):
 | Surface | Org/repo | Branch | Full SHA | Compare / tree |
 |---|---|---|---|---|
 | **Website (implement this)** | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) | `ship/trail-ar-itdx-sep17` | `20bf2b068591f7de16487ca03e77efb6b5785c4e` | [tree](https://github.com/MycosoftLabs/website/tree/20bf2b068591f7de16487ca03e77efb6b5785c4e) · [commit](https://github.com/MycosoftLabs/website/commit/20bf2b068591f7de16487ca03e77efb6b5785c4e) |
-| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-github-map-sep17` | *(this file’s commit — use the SHA on the PR after push)* | [repo](https://github.com/MycosoftLabs/mycosoft-mas) |
+| **MAS (handoffs + WEKA narrative)** | [MycosoftLabs/mycosoft-mas](https://github.com/MycosoftLabs/mycosoft-mas) | `docs/itdx-v2-chatgpt-github-map-sep17` | `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` | [tree](https://github.com/MycosoftLabs/mycosoft-mas/tree/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18) · [commit](https://github.com/MycosoftLabs/mycosoft-mas/commit/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18) |
 
 Website clone:
 
@@ -34,6 +34,7 @@ MAS clone (docs branch; created with this map):
 
 ```text
 https://github.com/MycosoftLabs/mycosoft-mas/tree/docs/itdx-v2-chatgpt-github-map-sep17
+https://github.com/MycosoftLabs/mycosoft-mas/commit/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18
 ```
 
 Do **not** treat `main` as Trail AR v2. Production `main` last Instant Deploy is **~13 Sep 2026** and does **not** include this SHA.
@@ -90,7 +91,7 @@ Pattern:
 
 ```text
 https://raw.githubusercontent.com/MycosoftLabs/website/20bf2b068591f7de16487ca03e77efb6b5785c4e/<path>
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/<MAS_SHA>/<path>
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18/<path>
 ```
 
 Example:
@@ -197,7 +198,7 @@ Parentheses in `app/fusarium/(dashboard)/itdx/v2/page.tsx` are literal. If a cli
 
 ## 5. MAS files to fetch (after this branch is pushed)
 
-Use the MAS commit SHA from the PR once published. Until then, branch `docs/itdx-v2-chatgpt-github-map-sep17`.
+MAS SHA `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18` on branch `docs/itdx-v2-chatgpt-github-map-sep17`. The follow-up commit that pins this SHA in the table is on the same branch.
 
 | Path | Why |
 |---|---|
@@ -209,7 +210,7 @@ Use the MAS commit SHA from the PR once published. Until then, branch `docs/itdx
 Raw pattern:
 
 ```text
-https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/docs/itdx-v2-chatgpt-github-map-sep17/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
+https://raw.githubusercontent.com/MycosoftLabs/mycosoft-mas/8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18/docs/ITDX_V2_CHATGPT_BUILDER_HANDOFF_SEP17_2026.md
 ```
 
 Mirrors (not a third GitHub source of truth): `CODE/docs/` copies of the three ChatGPT Sep 17 files.
