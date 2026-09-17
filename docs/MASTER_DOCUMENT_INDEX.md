@@ -1,5 +1,11 @@
 # Master Document Index
 
+## ITDX v2 ChatGPT EVERYTHING pack (SEP17 2026)
+- [ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md](ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md) — **Paste-complete** ChatGPT pack: SHAs/PRs, LIVE vs HELD vs LOCAL, four tasks + in-repo equations, Cursor-reported vs Hess-reproducible results, gitignored `.data` paths, NLM offline≠off contract, system flow, forbidden claims. Website PR **#322** / MAS PR **#156** — do not merge. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_EVERYTHING_SEP17_2026.md`.
+
+## ITDX v2 ChatGPT FINAL handoff (SEP17 2026)
+- [ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md](ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md) — Current local brief: loop refine (JSONL + accept/reject), NLM bind honesty, WEKA Army buttons/ARFFs, freeze cause. Not deployed. Mirror: `CODE/docs/ITDX_V2_CHATGPT_FINAL_HANDOFF_SEP17_2026.md`.
+
 ## ITDX v2 ChatGPT GitHub code map (SEP17 2026)
 - [ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md](ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md) — ChatGPT **fetch map**: MycosoftLabs/website `ship/trail-ar-itdx-sep17` @ `20bf2b068591f7de16487ca03e77efb6b5785c4e`; MAS docs @ `8bbdbfcfeaa0272cbbee235366e5a4f2226e5f18`. LIVE mycosoft.com **200** ≠ this SHA. Instant Deploy **HELD**. Mirror: `CODE/docs/ITDX_V2_CHATGPT_GITHUB_CODE_MAP_SEP17_2026.md`.
 
