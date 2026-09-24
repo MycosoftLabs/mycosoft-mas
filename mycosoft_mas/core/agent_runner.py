@@ -39,6 +39,11 @@ DEFAULT_SAVE_TIMEOUT_SEC = float(os.getenv("AGENT_CYCLE_SAVE_TIMEOUT_SEC", "2"))
 MAX_CYCLES_RETAINED = int(os.getenv("AGENT_RUNNER_MAX_CYCLES", "200"))
 MAX_INSIGHTS_RETAINED = int(os.getenv("AGENT_RUNNER_MAX_INSIGHTS", "200"))
 MAX_NOTIFICATIONS_RETAINED = int(os.getenv("AGENT_RUNNER_MAX_NOTIFICATIONS", "200"))
+# Per-cycle JSON files into a multi-GB directory wedge :8001 (ext4 dirent cost).
+# Default OFF — in-memory bounded history is enough for /runner/status.
+PERSIST_CYCLES = os.getenv("AGENT_RUNNER_PERSIST_CYCLES", "0") == "1"
+PERSIST_NOTIFICATIONS = os.getenv("AGENT_RUNNER_PERSIST_NOTIFICATIONS", "0") == "1"
+PERSIST_INSIGHTS = os.getenv("AGENT_RUNNER_PERSIST_INSIGHTS", "0") == "1"
 
 
 @dataclass
@@ -367,11 +372,14 @@ class AgentCycleRunner:
 
         cycle.completed_at = datetime.now().isoformat()
 
-        # Best-effort disk persist — never block the loop for NAS/disk stalls.
-        try:
-            await asyncio.wait_for(self._save_cycle(cycle), timeout=DEFAULT_SAVE_TIMEOUT_SEC)
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("Cycle save skipped: %s", exc)
+        # Best-effort disk persist — OFF by default (huge cycles/ dir wedges I/O).
+        if PERSIST_CYCLES:
+            try:
+                await asyncio.wait_for(
+                    self._save_cycle(cycle), timeout=DEFAULT_SAVE_TIMEOUT_SEC
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Cycle save skipped: %s", exc)
 
         return cycle
 
@@ -431,11 +439,14 @@ class AgentCycleRunner:
                     continue
 
                 try:
-                    filepath = (
-                        STORAGE_PATH / "notifications" / f"{notification.notification_id}.json"
-                    )
-                    async with aiofiles.open(filepath, "w") as f:
-                        await f.write(json.dumps(asdict(notification), indent=2))
+                    if PERSIST_NOTIFICATIONS:
+                        filepath = (
+                            STORAGE_PATH
+                            / "notifications"
+                            / f"{notification.notification_id}.json"
+                        )
+                        async with aiofiles.open(filepath, "w") as f:
+                            await f.write(json.dumps(asdict(notification), indent=2))
                 except Exception as exc:  # noqa: BLE001
                     logger.debug("Notification save skipped: %s", exc)
 
