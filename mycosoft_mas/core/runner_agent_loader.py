@@ -117,16 +117,7 @@ class LoadedRunnerAgent:
         )
         if self.error:
             summary += f"; reason: {self.error}"
-        # Touch heartbeat metrics without DB I/O.
-        try:
-            from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
-
-            hb = get_heartbeat_service()
-            metrics = hb.agent_metrics[self.agent_id]
-            metrics.status = "online"
-            metrics.last_cycle_time = datetime.utcnow().isoformat() + "Z"
-        except Exception:  # noqa: BLE001
-            pass
+        # Intentionally no heartbeat/redis/DB imports here — those have wedged :8001.
         return {
             "tasks_processed": 0,
             "insights_generated": 0,

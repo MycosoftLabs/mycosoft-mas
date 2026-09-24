@@ -199,38 +199,27 @@ class AgentCycleRunner:
             self._run_cycles(generation), name="agent-runner-cycles"
         )
 
-        # Non-blocking admin notify (queued)
-        try:
-            await self.notify_admin(
-                type="system",
-                title="MYCA System Online",
-                message=(
-                    f"24/7 Agent Runner started with {len(self._agents)} agents. "
-                    "All systems operational."
-                ),
-                agent="MYCA",
-                priority="high",
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("Startup notify skipped: %s", exc)
+        # Do not await admin notify on the request path — queue only.
+        if os.getenv("AGENT_RUNNER_STARTUP_NOTIFY", "0") == "1":
+            try:
+                await self.notify_admin(
+                    type="system",
+                    title="MYCA System Online",
+                    message=(
+                        f"24/7 Agent Runner started with {len(self._agents)} agents. "
+                        "All systems operational."
+                    ),
+                    agent="MYCA",
+                    priority="high",
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Startup notify skipped: %s", exc)
 
     async def stop(self):
         """Stop the agent runner and cancel background tasks."""
         self.running = False
         self._generation += 1
         logger.info("Stopping 24/7 Agent Runner")
-
-        try:
-            await self.notify_admin(
-                type="system",
-                title="MYCA System Shutdown",
-                message="24/7 Agent Runner shutting down.",
-                agent="MYCA",
-                priority="critical",
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("Shutdown notify skipped: %s", exc)
-
         await self._cancel_background_tasks()
 
     async def _cancel_background_tasks(self) -> None:
@@ -245,6 +234,8 @@ class AgentCycleRunner:
     async def _run_cycles(self, generation: int):
         """Main cycle loop - runs agents continuously with yields between agents."""
         try:
+            # Defer first cycle so the HTTP response that started us can flush.
+            await asyncio.sleep(float(os.getenv("AGENT_RUNNER_INITIAL_DELAY_SEC", "2")))
             while self.running and generation == self._generation:
                 cycle_start = datetime.now()
 
@@ -258,16 +249,6 @@ class AgentCycleRunner:
                     except Exception as e:  # noqa: BLE001
                         name = getattr(agent, "name", agent.__class__.__name__)
                         logger.error("Error in agent cycle %s: %s", name, e)
-                        try:
-                            await self.notify_admin(
-                                type="error",
-                                title=f"Agent Error: {name}",
-                                message=str(e)[:500],
-                                agent=str(name),
-                                priority="high",
-                            )
-                        except Exception:  # noqa: BLE001
-                            pass
                     # Yield to uvicorn request handlers between agents.
                     await asyncio.sleep(0)
 
