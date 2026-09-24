@@ -59,3 +59,14 @@ ss -ltn sport = :8001     → Recv-Q stays low while cycling
 
 data/agent_work/cycles had grown to a multi-megabyte directory (hundreds of thousands of JSON files). Each _save_cycle into that directory stalled I/O and wedged uvicorn even for light presence cycles. Persist-to-disk is now **off by default** (AGENT_RUNNER_PERSIST_CYCLES=0).
 
+
+## Verification (188, Sep 24 2026 UTC)
+
+After quieter critical boot (no supervisor, no startup notify, no disk persist, no heartbeat imports):
+
+- `POST /runner/load-critical` ? 200 in ~1s, `running=true`, **5** light-presence agents
+- `/live` + `/health` stayed **200** for >90s while cycles advanced (5 ? 20+)
+- `ss` Recv-Q on `:8001` stayed **0** (no wedge)
+- Honest counts: **~47** registry agents registered; **5** critical watchers live; **not** thousands
+
+Keep `MAS_SKIP_BACKGROUND_STARTUP=1`. Do not enable `AGENT_RUNNER_NATIVE_CORE` or `AGENT_CRITICAL_START_SUPERVISOR` on 188 until separately hardened.
