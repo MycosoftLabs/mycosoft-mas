@@ -130,7 +130,7 @@ from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry
 from mycosoft_mas.core.routes_infrastructure import router as infrastructure_router
 from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
 
-# OpenViking — edge device context database bridge (March 2026)
+# OpenViking â€” edge device context database bridge (March 2026)
 try:
     from mycosoft_mas.core.routers.openviking_api import router as openviking_router
 
@@ -425,6 +425,24 @@ try:
 except ImportError:
     NLM_TRAINING_API_AVAILABLE = False
 
+# FormSpace Engine API — atlas / graphs / experiments / memory
+try:
+    from mycosoft_mas.core.routers.formspace_api import router as formspace_router
+
+    FORMSPACE_API_AVAILABLE = True
+except ImportError:
+    FORMSPACE_API_AVAILABLE = False
+    formspace_router = None
+
+# NLM Ingest / Agents / Security spine — device registry + MDP + Merkle grounding
+try:
+    from mycosoft_mas.core.routers.nlm_ingest_api import router as nlm_ingest_router
+
+    NLM_INGEST_API_AVAILABLE = True
+except ImportError:
+    NLM_INGEST_API_AVAILABLE = False
+    nlm_ingest_router = None
+
 # EarthLIVE API - packetized environmental data (weather, seismic, satellite)
 try:
     from mycosoft_mas.core.routers.earthlive_api import router as earthlive_router
@@ -469,7 +487,7 @@ except ImportError:
     economy_router = None
     ECONOMY_API_AVAILABLE = False
 
-# Agent Payments API — x402 payment protocol (Ampersend + CrewAI)
+# Agent Payments API â€” x402 payment protocol (Ampersend + CrewAI)
 try:
     from mycosoft_mas.core.routers.agent_payments_api import router as agent_payments_router
 
@@ -580,7 +598,7 @@ def extract_response_text(payload: object) -> str | None:
 
 
 def extract_user_message_for_fallback(message: str) -> str:
-    """Use only the user's words for pattern fallbacks — ignore injected chat directives."""
+    """Use only the user's words for pattern fallbacks â€” ignore injected chat directives."""
     text = (message or "").strip()
     if not text:
         return text
@@ -595,7 +613,7 @@ def extract_user_message_for_fallback(message: str) -> str:
 
 
 def generate_myca_fallback_response(message: str) -> str:
-    """Generate a user-facing MYCA fallback — never expose internal infrastructure."""
+    """Generate a user-facing MYCA fallback â€” never expose internal infrastructure."""
     message_lower = extract_user_message_for_fallback(message).lower().strip()
 
     # IDENTITY - MYCA must always know who she is
@@ -681,7 +699,7 @@ def generate_myca_fallback_response(message: str) -> str:
         "real-time",
     ]
     if any(p in message_lower for p in voice_patterns):
-        return "I can speak with you in real time through Mycosoft's voice interface — natural, full-duplex conversation when you use voice mode. In text chat, just type what you need and I'll help."
+        return "I can speak with you in real time through Mycosoft's voice interface â€” natural, full-duplex conversation when you use voice mode. In text chat, just type what you need and I'll help."
 
     # MEMORY - user-facing only (never Redis/Postgres/Qdrant/VM details)
     memory_patterns = ["memory", "remember", "recall", "memorize"]
@@ -718,11 +736,11 @@ def generate_myca_fallback_response(message: str) -> str:
     # STATUS
     status_patterns = ["status", "how are you", "are you there", "you working"]
     if any(p in message_lower for p in status_patterns):
-        return "I'm here and ready to help. What would you like to explore — species, compounds, devices, or something else?"
+        return "I'm here and ready to help. What would you like to explore â€” species, compounds, devices, or something else?"
 
-    # Short probes (e.g. "test") — respond naturally, not with architecture
+    # Short probes (e.g. "test") â€” respond naturally, not with architecture
     if message_lower in {"test", "testing", "ping", "hello?", "are you there?"}:
-        return "I'm here — what would you like to try?"
+        return "I'm here â€” what would you like to try?"
 
     # DEFAULT - Always identify as MYCA with helpful context
     return "I'm MYCA, Mycosoft's AI assistant. I can help with mycology, research data, devices, and scientific questions. What's on your mind?"
@@ -740,7 +758,7 @@ def get_n8n_client() -> N8NClient:
 
 
 class MycosoftMAS:
-    """Small faÃ§ade object to keep compatibility with older imports."""
+    """Small faÃƒÂ§ade object to keep compatibility with older imports."""
 
     def __init__(self) -> None:
         self.config = load_config()
@@ -845,7 +863,7 @@ app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
 app.include_router(search_memory_router, tags=["search-memory"])
 
-# MYCA Harness — Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (mounted by default; opt-out)
+# MYCA Harness â€” Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (mounted by default; opt-out)
 def _mount_harness_api() -> bool:
     if os.environ.get("HARNESS_API_DISABLED", "").strip().lower() in ("1", "true", "yes", "on"):
         return False
@@ -872,7 +890,7 @@ if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
 if IDENTITY_API_AVAILABLE and identity_router is not None:
     app.include_router(identity_router, tags=["identity"])
 
-# Telemetry Pipeline API (MycoBrain → MAS → MINDEX)
+# Telemetry Pipeline API (MycoBrain â†’ MAS â†’ MINDEX)
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
@@ -884,7 +902,7 @@ app.include_router(myca_posture_router)
 app.include_router(security_evidence_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
-# CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
+# CFO MCP API (Meridian adapter â€” finance discovery, delegation, reporting)
 app.include_router(cfo_mcp_router, tags=["cfo-mcp"])
 # MYCA coordination API (capabilities, MCP-over-HTTP, desktop JSONL mesh)
 app.include_router(coordination_router, tags=["myca-coordination"])
@@ -1073,6 +1091,20 @@ try:
 except NameError:
     pass
 
+# FormSpace Engine API - atlas, dynamics, graphing, evidence, memory
+try:
+    if FORMSPACE_API_AVAILABLE and formspace_router:
+        app.include_router(formspace_router, tags=["formspace"])
+except NameError:
+    pass
+
+# NLM Ingest / Agents / Security — device registry + MDP protocol mapping
+try:
+    if NLM_INGEST_API_AVAILABLE and nlm_ingest_router:
+        app.include_router(nlm_ingest_router, tags=["nlm-ingest"])
+except NameError:
+    pass
+
 # Serving API - KVTC serving profiles and deployment bundles
 try:
     if SERVING_API_AVAILABLE and serving_router:
@@ -1115,14 +1147,14 @@ try:
 except NameError:
     pass
 
-# Agent Payments API — x402 payment protocol (Ampersend + CrewAI + Tiger Tiers)
+# Agent Payments API â€” x402 payment protocol (Ampersend + CrewAI + Tiger Tiers)
 try:
     if AGENT_PAYMENTS_API_AVAILABLE and agent_payments_router:
         app.include_router(agent_payments_router, tags=["agent-payments", "x402"])
 except NameError:
     pass
 
-# OWS Wallet API — Open Wallet Standard multi-chain wallet system (March 2026)
+# OWS Wallet API â€” Open Wallet Standard multi-chain wallet system (March 2026)
 try:
     from mycosoft_mas.core.routers.ows_wallet_api import router as ows_wallet_router
 
@@ -1218,7 +1250,7 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# RaaS — Robot-as-a-Service Agent Platform (March 2026)
+# RaaS â€” Robot-as-a-Service Agent Platform (March 2026)
 # ---------------------------------------------------------------------------
 try:
     from mycosoft_mas.raas.agent_card import router as raas_discovery_router
@@ -1744,7 +1776,7 @@ async def _mas_background_startup() -> None:
     ingestion_only = os.getenv("MAS_INGESTION_ONLY_STARTUP", "0") == "1"
     if ingestion_only:
         logger.warning(
-            "MAS_INGESTION_ONLY_STARTUP=1 — skipping consciousness, runner, and heavy init"
+            "MAS_INGESTION_ONLY_STARTUP=1 â€” skipping consciousness, runner, and heavy init"
         )
 
     if not ingestion_only:
@@ -1755,7 +1787,7 @@ async def _mas_background_startup() -> None:
             consciousness = get_consciousness()
             if not consciousness.is_conscious:
                 await consciousness.awaken()
-            logger.info("✓ MYCA consciousness is active")
+            logger.info("âœ“ MYCA consciousness is active")
         except Exception as exc:
             logger.warning("Consciousness awaken failed during startup: %s", exc)
 
@@ -1764,10 +1796,10 @@ async def _mas_background_startup() -> None:
         all_agents = registry.list_all()
         active_agents = registry.list_active()
 
-        logger.info("🚀 MAS Orchestrator starting (background)...")
-        logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
-        logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
-        logger.info("✓ All agents are idle and ready to process tasks")
+        logger.info("ðŸš€ MAS Orchestrator starting (background)...")
+        logger.info(f"âœ“ Agent registry loaded: {len(all_agents)} total agents")
+        logger.info(f"âœ“ Active agents (24/7): {len(active_agents)}")
+        logger.info("âœ“ All agents are idle and ready to process tasks")
 
         # Log category breakdown
         from mycosoft_mas.core.agent_registry import AgentCategory
@@ -1785,7 +1817,7 @@ async def _mas_background_startup() -> None:
             runner_info = runner_result.get("runner", {})
             load_info = runner_result.get("load", {})
             logger.info(
-                "✓ Runner loaded: agents=%s (native=%s, fallback=%s)",
+                "âœ“ Runner loaded: agents=%s (native=%s, fallback=%s)",
                 runner_info.get("agents", 0),
                 load_info.get("native_loaded", 0),
                 load_info.get("fallback_loaded", 0),
@@ -1798,20 +1830,20 @@ async def _mas_background_startup() -> None:
         from mycosoft_mas.collectors import start_default_collectors
 
         await start_default_collectors()
-        logger.info("✓ Ingestion collectors started (OpenSky, USGS, NORAD, AIS, NOAA)")
+        logger.info("âœ“ Ingestion collectors started (OpenSky, USGS, NORAD, AIS, NOAA)")
     except Exception as exc:
         logger.warning("Ingestion collectors failed to start: %s", exc)
 
     if ingestion_only:
-        logger.info("✓ MAS ingestion-only startup complete")
+        logger.info("âœ“ MAS ingestion-only startup complete")
         return
 
-    # Start MycoBrain → MINDEX telemetry pipeline (polls every 60s)
+    # Start MycoBrain â†’ MINDEX telemetry pipeline (polls every 60s)
     try:
         from mycosoft_mas.services.telemetry_pipeline import start_telemetry_pipeline
 
         start_telemetry_pipeline()
-        logger.info("✓ Telemetry pipeline started (MycoBrain → MINDEX)")
+        logger.info("âœ“ Telemetry pipeline started (MycoBrain â†’ MINDEX)")
     except Exception as exc:
         logger.warning("Telemetry pipeline failed to start: %s", exc)
 
@@ -1822,7 +1854,7 @@ async def _mas_background_startup() -> None:
         try:
             monitor = get_workflow_auto_monitor()
             await monitor.start()
-            logger.info("✓ WorkflowAutoMonitor started (health 60s, drift 15m)")
+            logger.info("âœ“ WorkflowAutoMonitor started (health 60s, drift 15m)")
         except Exception as exc:
             logger.warning("WorkflowAutoMonitor failed to start: %s", exc)
     elif get_workflow_auto_monitor is not None:
@@ -1843,7 +1875,7 @@ async def _mas_background_startup() -> None:
         app.state.gateway = gateway
         app.state.sandbox_manager = sandbox_mgr
         app.state.session_manager = session_mgr
-        logger.info("✓ Gateway Control Plane and Sandbox Manager initialized")
+        logger.info("âœ“ Gateway Control Plane and Sandbox Manager initialized")
     except Exception as exc:
         logger.warning("Gateway/Sandbox init skipped: %s", exc)
 
@@ -1885,7 +1917,7 @@ async def _mas_background_startup() -> None:
 
             app.state.static_validator = validator
             logger.info(
-                f"✓ STATIC constraint indexes built: "
+                f"âœ“ STATIC constraint indexes built: "
                 f"{len(report.indexes)} indexes across "
                 f"{len(report.domains_built)} domains "
                 f"({report.build_time_ms:.0f}ms)"
@@ -1893,13 +1925,13 @@ async def _mas_background_startup() -> None:
         except Exception as exc:
             logger.warning(f"STATIC index build skipped: {exc}")
 
-    # Start Agent Heartbeat Service (bridges runner → Redis → topology/dashboard)
+    # Start Agent Heartbeat Service (bridges runner â†’ Redis â†’ topology/dashboard)
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
 
         heartbeat_svc = get_heartbeat_service()
         await asyncio.wait_for(heartbeat_svc.start(), timeout=10)
-        logger.info("✓ Agent heartbeat service started (publishing to Redis every 15s)")
+        logger.info("âœ“ Agent heartbeat service started (publishing to Redis every 15s)")
     except Exception as exc:
         logger.warning(f"Heartbeat service failed to start: {exc}")
 
@@ -1909,11 +1941,11 @@ async def _mas_background_startup() -> None:
 
         supervisor = get_supervisor()
         await asyncio.wait_for(supervisor.start(), timeout=10)
-        logger.info("✓ Agent supervisor started (monitoring agent health every 30s)")
+        logger.info("âœ“ Agent supervisor started (monitoring agent health every 30s)")
     except Exception as exc:
         logger.warning(f"Agent supervisor failed to start: {exc}")
 
-    logger.info("✓ MAS ready - all agents operational 24/7")
+    logger.info("âœ“ MAS ready - all agents operational 24/7")
 
     # Initialize Deep Agent orchestrator (feature-flagged; no-op when disabled)
     try:
@@ -1924,7 +1956,7 @@ async def _mas_background_startup() -> None:
         if deep_cfg.enabled or deep_cfg.protocol_enabled:
             await get_deep_agent_orchestrator().initialize()
             logger.info(
-                "✓ Deep Agents orchestrator initialized (enabled=%s protocol=%s)",
+                "âœ“ Deep Agents orchestrator initialized (enabled=%s protocol=%s)",
                 deep_cfg.enabled,
                 deep_cfg.protocol_enabled,
             )
@@ -1937,14 +1969,14 @@ async def _mas_background_startup() -> None:
             from mycosoft_mas.services.network_discovery import start_network_discovery_background
 
             start_network_discovery_background()
-            logger.info("✓ Network discovery background scheduled (soc_ops.device_inventory)")
+            logger.info("âœ“ Network discovery background scheduled (soc_ops.device_inventory)")
         except Exception as exc:
             logger.warning("Network discovery start failed: %s", exc)
         try:
             from mycosoft_mas.redteam.layer1_safe import start_redteam_layer1_background
 
             start_redteam_layer1_background()
-            logger.info("✓ Red team Layer 1 background scheduled (safe health/TLS checks)")
+            logger.info("âœ“ Red team Layer 1 background scheduled (safe health/TLS checks)")
         except Exception as exc:
             logger.warning("Red team L1 start failed: %s", exc)
         try:
@@ -1953,21 +1985,21 @@ async def _mas_background_startup() -> None:
             )
 
             start_incident_source_poller_background()
-            logger.info("✓ Incident source poller scheduled (diagnostics + UniFi + optional threat intel)")
+            logger.info("âœ“ Incident source poller scheduled (diagnostics + UniFi + optional threat intel)")
         except Exception as exc:
             logger.warning("Incident source poller start failed: %s", exc)
         try:
             from mycosoft_mas.redteam.layer2_scoped import start_redteam_layer2_background
 
             start_redteam_layer2_background()
-            logger.info("✓ Red team Layer 2 background scheduled (scoped sandbox checks)")
+            logger.info("âœ“ Red team Layer 2 background scheduled (scoped sandbox checks)")
         except Exception as exc:
             logger.warning("Red team L2 start failed: %s", exc)
         try:
             from mycosoft_mas.redteam.layer3_ai import start_redteam_layer3_background
 
             start_redteam_layer3_background()
-            logger.info("✓ Red team Layer 3 background scheduled (sandbox AI planner)")
+            logger.info("âœ“ Red team Layer 3 background scheduled (sandbox AI planner)")
         except Exception as exc:
             logger.warning("Red team L3 start failed: %s", exc)
 
@@ -1989,7 +2021,7 @@ async def startup_event():
         return
     await posture_integrity_monitor.start()
     logger.info("CMMC posture integrity monitor scheduled")
-    logger.info("MAS Orchestrator HTTP stack ready — scheduling background initialization")
+    logger.info("MAS Orchestrator HTTP stack ready â€” scheduling background initialization")
     app.state.mas_startup_task = asyncio.create_task(_mas_background_startup())
 
     def _log_background_startup_result(task: asyncio.Task) -> None:
