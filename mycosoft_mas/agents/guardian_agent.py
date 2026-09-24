@@ -47,7 +47,9 @@ class GuardianAgent(BaseAgent):
                 "tool_gate": tool_gate,
             },
         }
-        await self.record_task_completion("guardian_check", result["result"])
+        await self.record_task_completion(
+            "guardian_check", result["result"], success=True
+        )
         return result
 
     def _extract_text(self, task: Dict[str, Any]) -> str:

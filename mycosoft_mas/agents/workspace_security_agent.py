@@ -12,8 +12,10 @@ Runs on: 192.168.0.191 (MYCA VM)
 Created: March 3, 2026
 """
 
+import asyncio
 import logging
 import os
+import subprocess
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -68,8 +70,8 @@ class WorkspaceSecurityAgent(BaseAgent):
         """
         alerts = []
 
-        # Read auth log entries (last 100 lines)
-        auth_log = self._read_auth_log()
+        # Read auth log off the event loop (journalctl/subprocess is sync).
+        auth_log = await asyncio.to_thread(self._read_auth_log)
 
         for entry in auth_log:
             if "Accepted" in entry:
@@ -187,17 +189,18 @@ class WorkspaceSecurityAgent(BaseAgent):
         Verify that git is configured with MYCA's identity.
         Expected: MYCA <myca@mycosoft.org>
         """
-        import subprocess
-
         issues = []
         git_config = {}
 
-        try:
-            name = subprocess.check_output(
-                ["git", "config", "--global", "user.name"],
+        def _git_config(key: str) -> str:
+            return subprocess.check_output(
+                ["git", "config", "--global", key],
                 text=True,
                 timeout=5,
             ).strip()
+
+        try:
+            name = await asyncio.to_thread(_git_config, "user.name")
             git_config["user.name"] = name
             if name != "MYCA":
                 issues.append(
@@ -211,11 +214,7 @@ class WorkspaceSecurityAgent(BaseAgent):
             issues.append({"type": "git_name_not_set"})
 
         try:
-            email = subprocess.check_output(
-                ["git", "config", "--global", "user.email"],
-                text=True,
-                timeout=5,
-            ).strip()
+            email = await asyncio.to_thread(_git_config, "user.email")
             git_config["user.email"] = email
             if email != "myca@mycosoft.org":
                 issues.append(
@@ -284,8 +283,6 @@ class WorkspaceSecurityAgent(BaseAgent):
         log_path = "/var/log/auth.log"
         if not os.path.exists(log_path):
             # Try journalctl as fallback
-            import subprocess
-
             try:
                 output = subprocess.check_output(
                     ["journalctl", "-u", "ssh", "--no-pager", "-n", "100"],

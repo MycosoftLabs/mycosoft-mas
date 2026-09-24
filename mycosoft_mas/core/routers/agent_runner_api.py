@@ -21,15 +21,28 @@ async def get_runner_status() -> Dict[str, Any]:
 
 @router.post("/start")
 async def start_runner() -> Dict[str, Any]:
-    """Start the 24/7 agent runner."""
+    """Start the 24/7 agent runner with critical NLM/security/login watchers."""
     runner = get_agent_runner()
     if runner.running:
         return {"status": "already_running", "message": "Agent runner is already active"}
 
-    # This will be called with agents from the main app
-    # For now, start with empty list - agents will be added via register endpoint
-    await runner.start([])
-    return {"status": "started", "message": "24/7 agent runner started"}
+    # Prefer critical watchers over an empty runner. Full registry load remains
+    # behind background startup (often skipped to keep :8001 responsive).
+    from mycosoft_mas.core.critical_runner_loader import restart_runner_with_critical_agents
+
+    return await restart_runner_with_critical_agents()
+
+
+@router.post("/load-critical")
+async def load_critical_watchers() -> Dict[str, Any]:
+    """
+    Load/restart only critical always-on watchers:
+    guardian, immune_system, workspace_security (SSH login), nlm-agent, security-monitor.
+    Safe while MAS_SKIP_BACKGROUND_STARTUP=1.
+    """
+    from mycosoft_mas.core.critical_runner_loader import restart_runner_with_critical_agents
+
+    return await restart_runner_with_critical_agents()
 
 
 @router.post("/stop")
