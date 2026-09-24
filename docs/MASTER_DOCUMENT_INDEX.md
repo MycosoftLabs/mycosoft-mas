@@ -1,52 +1,65 @@
-# Master Document Index
+﻿# Master Document Index
 
 ## Sorcery / CI review fixes (SEP11 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [SORCERY_CI_REVIEW_FIXES_SEP11_2026.md](SORCERY_CI_REVIEW_FIXES_SEP11_2026.md) — Sourcery rate-limit, Bugbot/security on #318/#319/#152/#153, restore myca workflow-drift script
 
 ## NLM model-training app (SEP11 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md](NLM_SERVICE_WEIGHTS_INTEGRATION_SEP11_2026.md) — MAS `/api/nlm` service + on-disk weight inventory; Fusarium/NatureOS same bind
 - [NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md](NLM_MODEL_TRAINING_APP_FIX_SEP11_2026.md) — Live NatureOS training console: MAS online when 188:8001 is up; MINDEX catalogs; training jobs fail-closed
 
 ## GitHub CI triage (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [GITHUB_CI_TRIAGE_SEP10_2026.md](GITHUB_CI_TRIAGE_SEP10_2026.md) — Red-check inventory: MAS FormSpace modules, MINDEX OpenAPI `/api/mindex` + SINE uuid[], Arraylake SSH opt-in, platform-infra has no GitHub remote
 
 ## Sourcery AI GitHub triage (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md](SORCERY_AI_GITHUB_TRIAGE_SEP10_2026.md) — Sourcery AI (`sourcery-ai[bot]`) comments: 63 inline, dispositions, fixes, merge-time CI (no `SOURCERY_TOKEN`)
 
 ## Earth Sim PC / iPad demo stability (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md](EARTH_SIM_PC_IPAD_DEMO_STABILITY_SEP10_2026.md) — NatureOS + Fusarium Earth Sim: PC/iPad matrix, default-off heavy layers, hidden-tab pause, no 187 deploy
 
 ## Fusarium ITDX live ship (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md](FUSARIUM_ITDX_LIVE_SHIP_SEP10_2026.md) — **Live ship**: Earth-Sim-only ITDX chip, OSINT topo/devices, aerosol+movement honesty, Hess/Weka pointer
 - [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Browser/BFF E2E: no fake live tracks; NLM/smoke/AQ degraded
 
 ## Dr. Hess / Weka / Perplexity (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md](PERPLEXITY_DR_HESS_EMAIL_ATTACHMENT_HANDOFF_SEP10_2026.md) — **Paste-ready Perplexity prompt**: Hess emails + attachments; Morgan uploads white papers, NLM math, WEKA packet, modified email note. Attachments win on numbers; this prompt wins on claims.
 - [WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md](WEKA_DEMONSTRATION_RUNBOOK_SEP10_2026.md) — Official Weka operator runbook (dated MAS copy)
 - [DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md](DR_HESS_EMAIL_NOTE_SOURCE_SEP10_2026.md) — Packet email skeleton (do not send as-is)
 
 ## ITDX + NLM E2E (SEP10 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md](FUSARIUM_E2E_BROWSER_TEST_SEP10_2026.md) — Fusarium Earth Sim / C2 / aerosol E2E: worktree 3010, no fake convoy, NLM unloaded, ITDX BFF abort
 - [ITDX_NLM_E2E_STATE_SEP10_2026.md](ITDX_NLM_E2E_STATE_SEP10_2026.md) — Live/NAS/MINDEX/memory closeout; archived SHA on NAS; forecast not promoted
 - [NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md](NLM_WEIGHTS_IMPLEMENTED_MAS188_SEP10_2026.md) — START_HERE followed; 21/21 oracles; no 0.85 p
 - [NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json](NLM_NUMERICAL_ORACLE_RESULTS_SEP10_2026.json) — Fresh 21/21 specification receipt
 
 ## ITDX work saved pending NLM weights (SEP09 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md](ITDX_WORK_SAVED_PENDING_NLM_WEIGHTS_SEP09_2026.md) — Local SHAs only; push/deploy NO; wait for NAS `models/nlm/incoming` weights
 
 ## FormSpace NLM (SEP09 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md](FORMSPACE_NLM_REPOSITORY_MAP_SEP09_2026.md) — Scientific NLM on NAS `models/nlm` vs MYCA Ollama `models/myca`
 - [FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md](FORMSPACE_NLM_IMPLEMENTATION_STATUS_SEP09_2026.md) — Stage B forecast ledger; no stub 0.85 p
 - [NLM_WEIGHTS_ON_188_SEP09_2026.md](NLM_WEIGHTS_ON_188_SEP09_2026.md) — Ollama NLM adapter reverted; wait for Morgan `incoming/weights.pt`
 - [VM188_NAS_MODEL_PROTECTION_SEP09_2026.md](VM188_NAS_MODEL_PROTECTION_SEP09_2026.md) — 188 root fail-closed; NAS 8-bay 2×8TB (`df` 7.3T / 7.2T free); MYCA GGUF on `models/myca`; UDM 27TB Protect-only
 
 ## ITDX Google traffic wall (SEP09 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md](ITDX_GOOGLE_TRAFFIC_WALL_FIX_SEP09_2026.md) — Situation-assessment 4.8s wall raised to 14s; Google Directions/Matrix 12s first/parallel; traffic/pathways SUPPLIED from cites or honest `google_maps_timeout`
 
 ## ITDX26 Fusarium live ship (SEP09 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md](ITDX_FUSARIUM_LIVE_SHIP_SEP09_2026.md) — Local proofs + 188/189 hot data/math; Weka PASS / trial NOT_MET; add data without website rebuild; blue-green 187
 
 ## ITDX26 VM backends (SEP09 2026)
+- `docs/FORMSPACE_NLM_SESSION_COMPLETE_SEP23_2026.md` — FormSpace+NLM session complete (Sep 23 2026): verify, SHAs, blue-green ship.
 - [ITDX_VM_BACKENDS_SEP09_2026.md](ITDX_VM_BACKENDS_SEP09_2026.md) — 188/189 live prove; NLM BOUND; skip-startup on
 
 ## Internal program documentation (not public)

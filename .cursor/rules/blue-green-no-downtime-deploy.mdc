@@ -1,0 +1,72 @@
+---
+description: Blue-green no-downtime website deploy — hard rule. Never cut primary until new origin is healthy; restore-only when site is down.
+alwaysApply: true
+---
+
+# Blue-Green No-Downtime Deploy (All Agents — Always On)
+
+**Canonical source:** `CODE/docs/BLUE_GREEN_NO_DOWNTIME_RULE_JUL15_2026.md`
+
+**Applies to:** every agent that deploys, rebuilds, restarts, or cutovers the website (Sandbox `192.168.0.187`, public `sandbox.mycosoft.com` / `mycosoft.com`). Synced via `scripts/sync_cursor_system.py`.
+
+---
+
+## PRIME DIRECTIVE
+
+**Zero downtime. HTTP 502 during deploy is NEVER allowed.** The live primary must keep serving until a healthy secondary is proven and cutover is intentional.
+
+Secondary work must never cancel, interrupt, or tear down the primary serving path. **Nothing walks on anything else** — no racing restore vs cutover, no two agents flipping nginx, no swapping upstream until the candidate is proven.
+
+**Canonical sole-owner lock (Sep 23 2026):** `docs/BLUE_GREEN_NEVER_502_SOLE_OWNER_SEP23_2026.md` (website + MAS + CODE).
+
+---
+
+## Hard constraints (MUST)
+
+1. **Secondary deploy NEVER cancels or cuts off primary.** Building, pulling, or starting a candidate container must not stop, rename-away, or remove the live serving container until cutover is explicitly authorized and the new origin is healthy.
+2. **NEVER replace during blue-green until the candidate returns healthy HTTP 200 on its own probe.** Probe the **candidate container IP** (e.g. `http://<candidate-ip>:3000/`), not only through a broken nginx upstream. Confirm **HTTP 200** before any traffic cutover, port swap, or primary teardown.
+3. **Old container keeps serving until safe cutover.** Leave the current production container running and bound to traffic until the new image is healthy and cutover steps complete. Do not `docker stop` / `rm` the live container as a “rebuild first” shortcut.
+4. **One deploy owner — sole-owner abort.** Only one agent/session owns a deploy/cutover at a time. If another deploy, restore, `CUTOVER_FROZEN`, or `deploy.lock` is in progress → **ABORT** immediately. Do **not** touch nginx, active-slot, containers, compose, or Cloudflare. Concurrent agents must not both mutate the proxy.
+5. **Never point nginx at unhealthy/starting/missing containers** (including slot labels like bare `blue`/`green` without a live container name). Upstream must be a real container name whose IP already returned 200.
+6. **If site is DOWN (502 / timeout / no healthy origin): restore-only lane.** No feature merges, no risky cutovers, no experimental rebuilds. **Emergency restore = roll nginx only to an already-proven healthy container** (direct IP probe = 200). Never race a build as the restore target. Feature work resumes only after public health is restored and Morgan unfreezes if `CUTOVER_FROZEN` is set.
+7. **Website NAS mount is required on any container recreate.** Always include:
+   `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`
+   Without this mount, device videos/images will not load — treat a recreate without NAS as a failed deploy.
+8. **After any deploy: verify before declaring success.** Confirm healthy responses from:
+   - Origin: `http://192.168.0.187:3000` (HTTP 200)
+   - Public: `https://sandbox.mycosoft.com` and/or `https://mycosoft.com` (HTTP 200)
+   Purge Cloudflare when content changed. Do **not** claim success on build-only or container-start-only.
+
+---
+
+## MUST NOT
+
+- Stop/remove the live website container to free a port before the candidate is healthy
+- Swap ports / compose / nginx upstream while the new origin is still starting, 502, or timing out
+- Point nginx at a container that has not returned HTTP 200 on its **own IP**
+- Run a parallel deploy/restore that races another agent’s nginx or containers — **abort instead**
+- Merge features or do blue-green cutover while public site is down or while `CUTOVER_FROZEN=1`
+- Recreate `mycosoft-website` (or equivalent) without the NAS assets volume
+- Declare deploy complete without origin + public URL verification
+
+---
+
+## Safe blue-green outline (conceptual)
+
+1. Claim sole deploy ownership — if lock/freeze/other owner → **ABORT**
+2. Build new image **without** stopping primary
+3. Start secondary/candidate with NAS mount on a non-conflicting path
+4. Wait until candidate **IP** returns **HTTP 200** (prefer a short streak)
+5. Cut nginx **once** only then; keep old container until cutover verified
+6. Verify `187:3000` + public URLs → purge Cloudflare if needed → release ownership
+
+If site is already down → jump to **restore-only** (nginx → already-proven healthy container + NAS + verify 200); skip feature cutovers. Never race a build.
+
+---
+
+## Cross-references
+
+- Sole-owner never-502: `docs/BLUE_GREEN_NEVER_502_SOLE_OWNER_SEP23_2026.md`
+- Doc: `CODE/docs/BLUE_GREEN_NO_DOWNTIME_RULE_JUL15_2026.md`
+- Agent: `.cursor/agents/deploy-pipeline.md`
+- Related: `dev-deploy-pipeline.mdc`, `agent-must-execute-operations.mdc`, website NAS mount rules
