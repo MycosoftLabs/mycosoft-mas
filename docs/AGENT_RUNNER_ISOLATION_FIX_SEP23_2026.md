@@ -54,3 +54,8 @@ ss -ltn sport = :8001     → Recv-Q stays low while cycling
 
 - Optional: real (non-light) workspace SSH checks on a **dedicated worker process**, not uvicorn.
 - Optional: isolate CREP health probe from hot `/health` path (191 polls frequently).
+
+## Follow-up root cause (post-deploy)
+
+data/agent_work/cycles had grown to a multi-megabyte directory (hundreds of thousands of JSON files). Each _save_cycle into that directory stalled I/O and wedged uvicorn even for light presence cycles. Persist-to-disk is now **off by default** (AGENT_RUNNER_PERSIST_CYCLES=0).
+
