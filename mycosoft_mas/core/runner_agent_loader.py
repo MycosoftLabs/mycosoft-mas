@@ -2,6 +2,9 @@
 Runner Agent Loader
 
 Loads core registry agents into the 24/7 agent runner.
+
+Native agent cycles are hard-timeout wrapped so sync I/O (subprocess, DB)
+cannot stall the uvicorn event loop on :8001.
 """
 
 from __future__ import annotations
@@ -9,12 +12,18 @@ from __future__ import annotations
 import asyncio
 import importlib
 import inspect
+import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
 
 from mycosoft_mas.core.agent_registry import AgentDefinition, get_agent_registry
 from mycosoft_mas.core.agent_runner import get_agent_runner
+
+logger = logging.getLogger(__name__)
+
+NATIVE_CYCLE_TIMEOUT_SEC = float(os.getenv("AGENT_NATIVE_CYCLE_TIMEOUT_SEC", "10"))
 
 
 @dataclass
@@ -47,34 +56,77 @@ class LoadedRunnerAgent:
         self._cycle_count += 1
         cycle_time = datetime.utcnow().isoformat() + "Z"
 
-        if self.delegate is not None:
-            if hasattr(self.delegate, "run_cycle"):
-                result = await self.delegate.run_cycle()
-                if isinstance(result, dict):
-                    return result
-                return {
-                    "tasks_processed": 1,
-                    "insights_generated": 0,
-                    "knowledge_added": 0,
-                    "summary": f"{self.definition.display_name} native run_cycle completed",
-                }
-            if hasattr(self.delegate, "process_task"):
-                await self.delegate.process_task(
-                    {"type": "continuous_cycle", "timestamp": cycle_time, "source": "agent_runner"}
+        if self.delegate is not None and self.mode == "native":
+            try:
+                return await asyncio.wait_for(
+                    self._run_native(cycle_time),
+                    timeout=NATIVE_CYCLE_TIMEOUT_SEC,
                 )
-                return {
-                    "tasks_processed": 1,
-                    "insights_generated": 0,
-                    "knowledge_added": 0,
-                    "summary": f"{self.definition.display_name} processed cycle task",
-                }
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "Native cycle timeout for %s after %ss — falling back to presence",
+                    self.agent_id,
+                    NATIVE_CYCLE_TIMEOUT_SEC,
+                )
+                self.mode = "fallback"
+                self.error = f"native_timeout_{NATIVE_CYCLE_TIMEOUT_SEC}s"
+                # Drop delegate so subsequent cycles stay light.
+                self.delegate = None
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Native cycle error for %s: %s", self.agent_id, exc)
+                self.error = str(exc)[:300]
 
-        # Fallback low-resource cycle to keep all agents online in runner
+        return self._presence_result()
+
+    async def _run_native(self, cycle_time: str) -> Dict[str, Any]:
+        assert self.delegate is not None
+        if hasattr(self.delegate, "run_cycle"):
+            result = await self.delegate.run_cycle()
+            if isinstance(result, dict):
+                return result
+            return {
+                "tasks_processed": 1,
+                "insights_generated": 0,
+                "knowledge_added": 0,
+                "summary": f"{self.definition.display_name} native run_cycle completed",
+            }
+        if hasattr(self.delegate, "process_task"):
+            # Do not await heavy memory writes on the request loop path;
+            # process_task may still call record_task_completion — that path
+            # now has its own timeout in memory_mixin.
+            await self.delegate.process_task(
+                {
+                    "type": "continuous_cycle",
+                    "timestamp": cycle_time,
+                    "source": "agent_runner",
+                    "action": "process",
+                }
+            )
+            return {
+                "tasks_processed": 1,
+                "insights_generated": 0,
+                "knowledge_added": 0,
+                "summary": f"{self.definition.display_name} processed cycle task",
+            }
+        return self._presence_result()
+
+    def _presence_result(self) -> Dict[str, Any]:
         summary = (
-            f"{self.definition.display_name} online in fallback mode (cycle {self._cycle_count})"
+            f"{self.definition.display_name} online in {self.mode} mode "
+            f"(cycle {self._cycle_count})"
         )
         if self.error:
             summary += f"; reason: {self.error}"
+        # Touch heartbeat metrics without DB I/O.
+        try:
+            from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
+            hb = get_heartbeat_service()
+            metrics = hb.agent_metrics[self.agent_id]
+            metrics.status = "online"
+            metrics.last_cycle_time = datetime.utcnow().isoformat() + "Z"
+        except Exception:  # noqa: BLE001
+            pass
         return {
             "tasks_processed": 0,
             "insights_generated": 0,
@@ -97,7 +149,6 @@ def _instantiate_native_agent(definition: AgentDefinition) -> Any:
     module = importlib.import_module(definition.module_path)
     cls = getattr(module, definition.class_name)
 
-    # Try keyword style used by BaseAgent subclasses
     config = _build_agent_config(definition)
     attempts = (
         lambda: cls(agent_id=definition.agent_id, name=definition.display_name, config=config),
@@ -110,7 +161,6 @@ def _instantiate_native_agent(definition: AgentDefinition) -> Any:
         except Exception:  # noqa: BLE001
             pass
 
-    # Last try: construct with whatever optional params exist
     signature = inspect.signature(cls.__init__)
     kwargs: Dict[str, Any] = {}
     for name, param in signature.parameters.items():
@@ -128,14 +178,32 @@ def _instantiate_native_agent(definition: AgentDefinition) -> Any:
 
 
 def load_core_runner_agents() -> tuple[list[LoadedRunnerAgent], RunnerLoadResult]:
+    """
+    Load active registry agents.
+
+    Default is light presence (delegate=None) to keep :8001 responsive.
+    Set AGENT_RUNNER_NATIVE_CORE=1 to attempt native instantiation (risky).
+    """
     registry = get_agent_registry()
     active_definitions = registry.list_active()
     agents: list[LoadedRunnerAgent] = []
     native_loaded = 0
     fallback_loaded = 0
     failed = 0
+    allow_native = os.getenv("AGENT_RUNNER_NATIVE_CORE", "0") == "1"
 
     for definition in active_definitions:
+        if not allow_native:
+            agents.append(
+                LoadedRunnerAgent(
+                    definition=definition,
+                    delegate=None,
+                    mode="fallback",
+                    error="light_presence_core",
+                )
+            )
+            fallback_loaded += 1
+            continue
         try:
             delegate = _instantiate_native_agent(definition)
             agents.append(
@@ -171,6 +239,8 @@ async def restart_runner_with_core_agents() -> Dict[str, Any]:
         await asyncio.sleep(0.1)
 
     agents, load_result = await asyncio.to_thread(load_core_runner_agents)
+    # Longer interval for full-registry presence to reduce chatter.
+    runner.configure(cycle_interval=float(os.getenv("AGENT_CORE_CYCLE_INTERVAL_SEC", "300")))
     await runner.start(agents)
     status = await runner.get_status()
     return {

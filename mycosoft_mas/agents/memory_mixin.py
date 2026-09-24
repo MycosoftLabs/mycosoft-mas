@@ -18,7 +18,9 @@ Usage:
             await self.init_memory()
 """
 
+import asyncio
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -203,35 +205,55 @@ class AgentMemoryMixin:
             return False
 
     async def record_task_completion(
-        self, task_id: str, result: Dict[str, Any], success: bool
+        self, task_id: str, result: Dict[str, Any], success: bool = True
     ) -> None:
         """
         Record task completion as episodic memory.
 
-        Args:
-            task_id: ID of the completed task
-            result: Task result data
-            success: Whether task succeeded
+        Hard-timeout wrapped so runner/native cycles cannot stall uvicorn when
+        Postgres/Redis is slow. ``success`` defaults to True for legacy callers
+        that only passed (task_id, result).
         """
-        if not self._memory:
-            await self.init_memory()
-
-        if not self._memory:
+        if os.getenv("AGENT_SKIP_EPISODIC_WRITES", "0") == "1":
             return
 
-        try:
+        timeout_sec = float(os.getenv("AGENT_EPISODIC_WRITE_TIMEOUT_SEC", "3"))
+
+        async def _write() -> None:
+            if not self._memory:
+                await self.init_memory()
+
+            if not self._memory:
+                return
+
+            # Cap payload size — huge results saturate DB + event loop.
+            safe_result: Dict[str, Any]
+            if isinstance(result, dict):
+                safe_result = {k: result[k] for k in list(result)[:20]}
+            else:
+                safe_result = {"value": str(result)[:500]}
+
             await self._memory.record_episode(
                 agent_id=self._agent_namespace,
                 event_type="task_completion",
                 description=f"Task {task_id} {'succeeded' if success else 'failed'}",
                 context={
                     "task_id": task_id,
-                    "result": result,
+                    "result": safe_result,
                     "success": success,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 },
                 outcome="success" if success else "failure",
                 importance=0.6 if success else 0.8,
+            )
+
+        try:
+            await asyncio.wait_for(_write(), timeout=timeout_sec)
+        except asyncio.TimeoutError:
+            logger.warning(
+                "record_task_completion timed out after %ss for task %s",
+                timeout_sec,
+                task_id,
             )
         except Exception as e:
             logger.warning(f"Failed to record task completion: {e}")

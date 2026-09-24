@@ -15,6 +15,7 @@ NO MOCK DATA — All decisions based on real heartbeat service metrics.
 
 import asyncio
 import logging
+import os
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -208,15 +209,24 @@ class AgentSupervisor:
                 )
                 return
 
-            # Try to instantiate a fresh agent
-            try:
-                delegate = _instantiate_native_agent(definition)
+            # Prefer light presence restarts unless native core is explicitly enabled.
+            allow_native = os.getenv("AGENT_RUNNER_NATIVE_CORE", "0") == "1"
+            if allow_native:
+                try:
+                    delegate = _instantiate_native_agent(definition)
+                    new_agent = LoadedRunnerAgent(
+                        definition=definition, delegate=delegate, mode="native"
+                    )
+                except Exception as e:
+                    new_agent = LoadedRunnerAgent(
+                        definition=definition, delegate=None, mode="fallback", error=str(e)
+                    )
+            else:
                 new_agent = LoadedRunnerAgent(
-                    definition=definition, delegate=delegate, mode="native"
-                )
-            except Exception as e:
-                new_agent = LoadedRunnerAgent(
-                    definition=definition, delegate=None, mode="fallback", error=str(e)
+                    definition=definition,
+                    delegate=None,
+                    mode="fallback",
+                    error="light_presence_supervisor_restart",
                 )
 
             # Replace in runner's agent list
