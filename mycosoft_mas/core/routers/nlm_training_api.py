@@ -14,10 +14,9 @@ and delegates actual compute to a GPU Legion (default: voice at GPU_VOICE_IP / 1
 """
 
 import asyncio
-import hashlib
+import json
 import logging
 import os
-import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -76,6 +75,28 @@ class StartTrainingRequest(BaseModel):
     num_layers: Optional[int] = None
     categories: Optional[List[str]] = None
     resume_from: Optional[str] = None
+    # FormSpace coupling (P2) — chart IDs + evaluation gates; not LLM params
+    formspace_chart_ids: Optional[List[str]] = Field(
+        default=None,
+        description="FormSpace chart IDs injected into training eval",
+    )
+    formspace_eval: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Recovery / conformal / reachability gates for FormSpace eval",
+    )
+    # Device network / MDP sensor binding — required for sensor-trained NLM runs
+    device_ids: Optional[List[str]] = Field(
+        default=None,
+        description="MAS registry device_id values feeding this run",
+    )
+    sensor_ids: Optional[List[str]] = Field(
+        default=None,
+        description="Sensor channel ids (MDP / role catalog) on those devices",
+    )
+    ingest_bindings: Optional[List[Dict[str, str]]] = Field(
+        default=None,
+        description="[{device_id, sensor_id}, ...] explicit ingest map",
+    )
 
 
 class RunIdRequest(BaseModel):
@@ -101,7 +122,79 @@ class MutateRequest(BaseModel):
 class ExportRequest(BaseModel):
     run_id: Optional[str] = None
     checkpoint_id: Optional[str] = None
-    format: str = Field(default="gguf")
+    format: str = Field(default="safetensors", description="safetensors|onnx — never gguf/ollama")
+
+
+class AttestRequest(BaseModel):
+    """SHA-256 + Merkle + ECDSA attestation for frames / jobs / models."""
+    payloads: Optional[List[Dict[str, Any]]] = None
+    packet: Optional[Dict[str, Any]] = None
+    type: Optional[str] = None
+    modelId: Optional[str] = None
+    ownerId: Optional[str] = None
+    parent_frame_root: Optional[str] = None
+    source_device: Optional[str] = None
+
+
+class IngestBindRequest(BaseModel):
+    """Bind MAS registry devices + MDP sensor channels to an NLM training context."""
+    model_id: Optional[str] = None
+    run_id: Optional[str] = None
+    owner_id: Optional[str] = None
+    bindings: List[Dict[str, str]] = Field(default_factory=list)
+
+
+# In-memory ingest bindings (paired with training runs; Redis later)
+_ingest_bindings: List[Dict[str, Any]] = []
+
+
+def _normalize_bindings(raw: Optional[List[Dict[str, str]]]) -> List[Dict[str, str]]:
+    out: List[Dict[str, str]] = []
+    if not raw:
+        return out
+    for row in raw:
+        if not isinstance(row, dict):
+            continue
+        device_id = str(row.get("device_id") or row.get("deviceId") or "").strip()
+        sensor_id = str(row.get("sensor_id") or row.get("sensorId") or "").strip()
+        if device_id and sensor_id:
+            out.append({"device_id": device_id, "sensor_id": sensor_id})
+    return out
+
+
+async def _list_registry_devices() -> List[Dict[str, Any]]:
+    """Pull live MAS device registry for NLM ingest sources (no mocks)."""
+    try:
+        from mycosoft_mas.core.routers import device_registry_api as dra
+
+        # Prefer in-process registry when router is loaded in same app
+        devices = getattr(dra, "_device_registry", {}) or {}
+        last_seen = getattr(dra, "_device_last_seen", {}) or {}
+        rows: List[Dict[str, Any]] = []
+        for device_id, device in devices.items():
+            row = dict(device)
+            row["device_id"] = device_id
+            if device_id in last_seen:
+                row["last_seen"] = last_seen[device_id].isoformat()
+            rows.append(row)
+        if rows:
+            return rows
+    except Exception as e:
+        logger.debug("In-process device registry unavailable: %s", e)
+
+    # HTTP self-call fallback (when registry lives only via API surface)
+    try:
+        import httpx
+
+        base = os.getenv("MAS_API_URL", "http://127.0.0.1:8001").rstrip("/")
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(f"{base}/api/devices", params={"include_offline": "true"})
+            if r.status_code == 200:
+                data = r.json()
+                return list(data.get("devices") or [])
+    except Exception as e:
+        logger.warning("NLM ingest sources registry fetch failed: %s", e)
+    return []
 
 
 # ── Helper: get GPU node client ──────────────────────────────────────────────
@@ -151,209 +244,6 @@ def _update_run_metrics(run_id: str, metrics: Dict[str, Any]):
             break
 
 
-def _skip_startup_enabled() -> bool:
-    return os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-
-
-def _mindex_headers() -> Dict[str, str]:
-    headers = {"Accept": "application/json"}
-    token = (
-        os.getenv("MINDEX_INTERNAL_TOKEN")
-        or os.getenv("MAS_INTERNAL_TOKEN")
-        or os.getenv("MINDEX_INTERNAL_TOKENS", "").split(",")[0]
-        or ""
-    ).strip()
-    api_key = (os.getenv("MINDEX_API_KEY") or "").strip()
-    if token:
-        headers["X-Internal-Token"] = token
-    if api_key:
-        headers["X-API-Key"] = api_key
-    return headers
-
-
-async def _mindex_get(path: str, timeout: float = 8.0) -> Optional[Any]:
-    """GET a MINDEX /api/mindex path. Returns parsed JSON or None."""
-    try:
-        import httpx
-    except Exception as exc:  # pragma: no cover
-        logger.warning("httpx unavailable for MINDEX catalog: %s", exc)
-        return None
-
-    base = MINDEX_API_URL.rstrip("/")
-    url = f"{base}{path}"
-    try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.get(url, headers=_mindex_headers())
-            if response.status_code >= 400:
-                logger.warning("MINDEX %s returned %s", path, response.status_code)
-                return None
-            return response.json()
-    except Exception as exc:
-        logger.warning("MINDEX fetch failed %s: %s", path, exc)
-        return None
-
-
-def _normalize_items(payload: Any) -> List[Dict[str, Any]]:
-    if payload is None:
-        return []
-    if isinstance(payload, list):
-        return [row for row in payload if isinstance(row, dict)]
-    if not isinstance(payload, dict):
-        return []
-    for key in ("items", "taxa", "compounds", "data", "results", "rows", "observations"):
-        value = payload.get(key)
-        if isinstance(value, list):
-            return [row for row in value if isinstance(row, dict)]
-    return []
-
-
-_DISK_CHECKPOINT_TTL = 60.0
-_DISK_CHECKPOINT_CACHE: Dict[str, Any] = {"at": 0.0, "value": None}
-
-
-def _checkpoint_id_for(path: Path) -> str:
-    digest = hashlib.sha256(str(path).encode("utf-8")).hexdigest()[:16]
-    return f"disk-{path.stem}-{digest}"
-
-
-def _disk_checkpoints() -> List[Dict[str, Any]]:
-    now = time.monotonic()
-    cached = _DISK_CHECKPOINT_CACHE.get("value")
-    cached_at = float(_DISK_CHECKPOINT_CACHE.get("at") or 0.0)
-    if cached is not None and now - cached_at < _DISK_CHECKPOINT_TTL:
-        return list(cached)
-
-    from mycosoft_mas.nlm.formspace.scientific_loader import (
-        DEFAULT_NLM_HOME,
-        _unique_scan_roots,
-        _public_relpath,
-        nlm_home,
-    )
-
-    roots = _unique_scan_roots(
-        [
-            Path(NLM_CHECKPOINT_DIR),
-            Path(NLM_MODEL_DIR),
-            nlm_home(),
-            Path(DEFAULT_NLM_HOME),
-        ]
-    )
-    suffixes = {".pt", ".bin", ".safetensors", ".ckpt", ".pth", ".npz"}
-    found: List[Dict[str, Any]] = []
-    seen = set()
-    walked = 0
-    home = nlm_home()
-    for root in roots:
-        try:
-            if not root.exists():
-                continue
-            for path in root.rglob("*"):
-                walked += 1
-                if walked > 200:
-                    break
-                if not path.is_file() or path.suffix.lower() not in suffixes:
-                    continue
-                try:
-                    key = str(path.resolve())
-                except OSError:
-                    key = str(path)
-                if key in seen:
-                    continue
-                seen.add(key)
-                stat = path.stat()
-                checkpoint_id = _checkpoint_id_for(path)
-                found.append(
-                    {
-                        "id": checkpoint_id,
-                        "checkpoint_id": checkpoint_id,
-                        "name": path.name,
-                        "path": _public_relpath(home, path),
-                        "bytes": stat.st_size,
-                        "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                        "source": "disk",
-                    }
-                )
-            if walked > 200:
-                break
-        except OSError as exc:
-            logger.warning("Checkpoint scan failed under %s: %s", root.name, exc)
-    found.sort(key=lambda row: row.get("modified_at") or "", reverse=True)
-    limited = found[:50]
-    _DISK_CHECKPOINT_CACHE["at"] = now
-    _DISK_CHECKPOINT_CACHE["value"] = limited
-    return list(limited)
-
-
-def _checkpoint_catalog() -> List[Dict[str, Any]]:
-    return list(_checkpoints) + _disk_checkpoints()
-
-
-def _training_capacity() -> Dict[str, Any]:
-    skip = _skip_startup_enabled()
-    reason = None
-    if skip:
-        reason = (
-            "MAS skip-startup / FAIL-CLOSED: training jobs are not started and "
-            "no new model pulls are allowed. Loaded NLM and MINDEX catalogs remain visible."
-        )
-    return {
-        "jobs_available": False,
-        "skip_startup": skip,
-        "reason": reason
-        or "Training compute is fail-closed on MAS 188; catalogs and the loaded NLM remain available.",
-        "gpu_target": GPU_NODE_IP,
-    }
-
-
-async def _nlm_live_status() -> Dict[str, Any]:
-    """Honest NLM status. Never binds Ollama. Never stubs forecast p."""
-    try:
-        from mycosoft_mas.nlm.config import get_nlm_config
-        from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
-        from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
-        from mycosoft_mas.nlm.inference.service import get_nlm_service
-
-        service = get_nlm_service()
-        config = get_nlm_config()
-        probe = probe_scientific_nlm()
-        runtime = load_reference_runtime()
-        runtime_status = runtime.runtime_status()
-        loaded = bool(runtime.is_loaded or (probe.model_loaded and service.is_ready))
-        return {
-            "status": "loaded" if loaded else "unloaded",
-            "model_loaded": loaded,
-            "model_name": getattr(config, "model_name", "nlm"),
-            "model_version": getattr(config, "model_version", "0.0.0"),
-            "display_name": getattr(config, "model_display_name", "Nature Learning Model"),
-            "description": getattr(
-                config, "model_description", "Domain-specific model for mycology and natural sciences"
-            ),
-            "bound_to_ollama": False,
-            "forecast_qualified": False,
-            "forecast_p": None,
-            "qualification_status": runtime_status.get("qualification_status") or "unqualified",
-            "training_origin": runtime_status.get("training_origin") or "none",
-            "architecture_family": runtime_status.get("architecture_family"),
-            "weights_sha256": runtime_status.get("weights_sha256"),
-            "model_dir": "nlm-home",
-        }
-    except Exception as exc:
-        logger.warning("NLM live status failed: %s", exc)
-        return {
-            "status": "unavailable",
-            "model_loaded": False,
-            "bound_to_ollama": False,
-            "forecast_qualified": False,
-            "forecast_p": None,
-            "error": "nlm_status_unavailable",
-        }
-
-
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.get("/config")
@@ -365,122 +255,90 @@ async def get_training_config() -> Dict[str, Any]:
         return config.to_dict()
     except Exception as e:
         logger.error(f"Failed to get training config: {e}")
-        raise HTTPException(status_code=500, detail="training_config_unavailable")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/runs")
 async def list_training_runs() -> Dict[str, Any]:
     """List all training runs (active and historical)."""
+    from mycosoft_mas.nlm.training_store import list_runs as store_list_runs
+
+    persisted = store_list_runs(limit=200)
+    # Merge in-memory active with NAS/SQL history (memory wins on run_id)
+    by_id: Dict[str, Dict[str, Any]] = {}
+    for row in persisted.get("runs") or []:
+        rid = row.get("run_id")
+        if rid:
+            by_id[str(rid)] = row
+    for row in _training_runs:
+        rid = row.get("run_id")
+        if rid:
+            by_id[str(rid)] = row
+    runs = list(by_id.values())
+    runs.sort(key=lambda r: r.get("updated_at") or r.get("started_at") or "", reverse=True)
     return {
-        "runs": _training_runs,
+        "runs": runs,
         "active_run_id": _active_run_id,
-        "count": len(_training_runs),
+        "count": len(runs),
+        "empty": len(runs) == 0,
+        "store": persisted.get("store"),
+        "model_kind": "nature_learning_model",
+        "bound_to_ollama": False,
     }
+
+
+@router.get("/runs/latest")
+async def latest_training_run() -> Dict[str, Any]:
+    """Latest training run for NLM UI history panel."""
+    from mycosoft_mas.nlm.training_store import latest_run
+
+    active = _get_active_run()
+    if active:
+        return {
+            "status": "ok",
+            "empty": False,
+            "run": active,
+            "source": "active_memory",
+            "model_kind": "nature_learning_model",
+        }
+    return latest_run()
+
+
+@router.get("/runs/history")
+async def training_run_history(limit: int = 50) -> Dict[str, Any]:
+    """Persisted training history (NAS JSONL + optional MINDEX)."""
+    from mycosoft_mas.nlm.training_store import list_runs
+
+    return list_runs(limit=limit)
+
+
+@router.get("/mutations")
+async def list_mutations(limit: int = 50, run_id: Optional[str] = None) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.training_store import list_mutations as store_list_mutations
+
+    return store_list_mutations(limit=limit, run_id=run_id)
+
+
+@router.get("/grounding")
+async def list_grounding(limit: int = 50) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.training_store import list_grounding as store_list_grounding
+
+    return store_list_grounding(limit=limit)
+
+
+@router.get("/changelog")
+async def list_changelog(limit: int = 100) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.training_store import list_change_log
+
+    return list_change_log(limit=limit)
 
 
 @router.get("/checkpoints")
 async def list_checkpoints() -> Dict[str, Any]:
-    """List in-memory plus on-disk checkpoints. Empty disk is honest, not fake."""
-    disk = _disk_checkpoints()
-    combined = _checkpoint_catalog()
+    """List all saved checkpoints."""
     return {
-        "checkpoints": combined,
-        "count": len(combined),
-        "memory_count": len(_checkpoints),
-        "disk_count": len(disk),
-    }
-
-
-@router.get("/health")
-async def training_router_health() -> Dict[str, Any]:
-    """Router liveness. Orchestrator up is not the same as skip-startup collectors."""
-    capacity = _training_capacity()
-    return {
-        "status": "healthy",
-        "bound_to_ollama": False,
-        "forecast_qualified": False,
-        "skip_startup": capacity["skip_startup"],
-        "jobs_available": False,
-    }
-
-
-@router.get("/console")
-async def training_console() -> Dict[str, Any]:
-    """
-    Honest NLM training-app payload.
-
-    MAS skip-startup collector degradation is not a MAS outage.
-    NLM is never bound to Ollama. Unqualified forecast p stays null.
-    """
-    capacity = _training_capacity()
-    nlm = await _nlm_live_status()
-    stats = await _mindex_get("/api/mindex/stats")
-    taxa_payload = await _mindex_get(
-        "/api/mindex/taxa?limit=25&order=desc&order_by=observations_count"
-    )
-    compounds_payload = await _mindex_get("/api/mindex/compounds?limit=25")
-    taxa = _normalize_items(taxa_payload)
-    compounds = _normalize_items(compounds_payload)
-    stats_dict = stats if isinstance(stats, dict) else {}
-    checkpoints = _checkpoint_catalog()
-    try:
-        from mycosoft_mas.nlm.formspace.scientific_loader import inventory_nlm_weights
-
-        weight_inventory = inventory_nlm_weights()
-        loaded_sha = nlm.get("weights_sha256")
-        for row in weight_inventory.get("weights") or []:
-            row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
-    except Exception as exc:
-        logger.warning("NLM weight inventory failed: %s", exc)
-        weight_inventory = {
-            "weights": [],
-            "count": 0,
-            "bound_to_ollama": False,
-            "forecast_qualified": False,
-            "forecast_p": None,
-            "error": "weight_inventory_unavailable",
-        }
-
-    return {
-        "mas": {
-            "reachable": True,
-            "ui_status": "online",
-            "skip_startup": capacity["skip_startup"],
-            "health_note": (
-                "Orchestrator is up. Collectors may be skipped under "
-                "MAS_SKIP_BACKGROUND_STARTUP; that is not a MAS outage."
-            ),
-        },
-        "nlm": nlm,
-        "mindex": {
-            "reachable": bool(stats_dict or taxa or compounds),
-            "stats": stats_dict or None,
-            "taxa_count": stats_dict.get("total_taxa"),
-            "observation_count": stats_dict.get("total_observations"),
-            "genome_records": stats_dict.get("genome_records"),
-            "trait_records": stats_dict.get("trait_records"),
-            "taxa": taxa[:25],
-            "compounds": compounds[:25],
-            "compound_count": (
-                stats_dict.get("compound_count")
-                if stats_dict.get("compound_count") is not None
-                else stats_dict.get("total_compounds")
-            ),
-        },
-        "training": {
-            "jobs_available": False,
-            "reason": capacity["reason"],
-            "active_run_id": _active_run_id,
-            "runs": _training_runs,
-            "run_count": len(_training_runs),
-        },
-        "checkpoints": checkpoints,
-        "weights": weight_inventory.get("weights") or [],
-        "weight_count": weight_inventory.get("count") or 0,
-        "weight_home": weight_inventory.get("home"),
-        "bound_to_ollama": False,
-        "forecast_qualified": False,
-        "forecast_p": None,
+        "checkpoints": _checkpoints,
+        "count": len(_checkpoints),
     }
 
 
@@ -489,13 +347,10 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
     """
     Start a new NLM training run.
 
-    FAIL-CLOSED: skip-startup / no new model pulls. Do not fake a running train.
+    This creates a training run record and dispatches the actual training
+    to the GPU node via the NLM Trainer.
     """
     global _active_run_id
-
-    capacity = _training_capacity()
-    if capacity["skip_startup"] or not capacity["jobs_available"]:
-        raise HTTPException(status_code=503, detail=capacity["reason"])
 
     if _active_run_id:
         active = _get_active_run()
@@ -507,6 +362,23 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
 
     run_id = f"nlm_train_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
     categories = req.categories or DEFAULT_NLM_CATEGORIES
+    formspace_chart_ids = list(req.formspace_chart_ids or [])
+    formspace_eval = dict(req.formspace_eval or {})
+    if not formspace_eval and formspace_chart_ids:
+        formspace_eval = {
+            "recovery_gate": True,
+            "conformal_gate": False,
+            "reachability_check": True,
+            "note": "FormSpace eval hooks present; conformal pending calibrated weights.",
+        }
+    ingest_bindings = _normalize_bindings(req.ingest_bindings)
+    device_ids = list(req.device_ids or [])
+    sensor_ids = list(req.sensor_ids or [])
+    for b in ingest_bindings:
+        if b["device_id"] not in device_ids:
+            device_ids.append(b["device_id"])
+        if b["sensor_id"] not in sensor_ids:
+            sensor_ids.append(b["sensor_id"])
     config = {
         "learning_rate": req.learning_rate,
         "batch_size": req.batch_size,
@@ -518,12 +390,22 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
         "scheduler": req.scheduler,
         "grad_clip": req.grad_clip,
         "categories": categories,
+        "formspace_chart_ids": formspace_chart_ids,
+        "formspace_eval": formspace_eval,
+        "device_ids": device_ids,
+        "sensor_ids": sensor_ids,
+        "ingest_bindings": ingest_bindings,
+        "bound_to_ollama": False,
+        "model_kind": "nature_learning_model",
     }
 
     run = {
         "run_id": run_id,
         "status": "training",
         "config": config,
+        "device_ids": device_ids,
+        "sensor_ids": sensor_ids,
+        "ingest_bindings": ingest_bindings,
         "current_epoch": 0,
         "total_epochs": req.epochs,
         "metrics": {
@@ -534,6 +416,7 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
             "elapsed_seconds": 0,
             "loss_history": [],
             "accuracy_history": [],
+            "device_bindings": ingest_bindings,
         },
         "started_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat(),
@@ -541,6 +424,25 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
 
     _training_runs.append(run)
     _active_run_id = run_id
+
+    # Persist run + grounding to NAS / change log (real record, not mock metrics)
+    try:
+        from mycosoft_mas.nlm.training_store import persist_grounding, persist_run
+
+        await persist_run(run)
+        await persist_grounding(
+            {
+                "type": "training_run_start",
+                "run_id": run_id,
+                "config": {
+                    "epochs": req.epochs,
+                    "formspace_chart_ids": formspace_chart_ids,
+                    "model_kind": "nature_learning_model",
+                },
+            }
+        )
+    except Exception as persist_exc:
+        logger.warning("Training run persist failed: %s", persist_exc)
 
     # Dispatch to NLM Trainer (async — training runs in background)
     try:
@@ -560,6 +462,8 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
         "run_id": run_id,
         "config": run["config"],
         "message": f"NLM training run accepted by MAS; GPU execution target is {GPU_NODE_IP}",
+        "model_kind": "nature_learning_model",
+        "bound_to_ollama": False,
     }
 
 
@@ -699,7 +603,7 @@ async def save_checkpoint(req: CheckpointRequest) -> Dict[str, Any]:
 async def load_checkpoint(req: LoadCheckpointRequest) -> Dict[str, Any]:
     """Load a saved checkpoint for continued training or inference."""
     checkpoint = None
-    for cp in _checkpoint_catalog():
+    for cp in _checkpoints:
         if cp.get("id") == req.checkpoint_id or cp.get("checkpoint_id") == req.checkpoint_id:
             checkpoint = cp
             break
@@ -751,26 +655,219 @@ async def apply_mutation(req: MutateRequest) -> Dict[str, Any]:
         active["mutations"] = []
     active["mutations"].append(mutation)
 
+    try:
+        from mycosoft_mas.nlm.training_store import persist_grounding, persist_mutation
+
+        await persist_mutation(mutation)
+        await persist_grounding(
+            {
+                "type": "training_mutation",
+                "run_id": run_id,
+                "mutation_id": mutation_id,
+                "mutation_type": req.mutation_type,
+            }
+        )
+    except Exception as persist_exc:
+        logger.warning("Mutation persist failed: %s", persist_exc)
+
     logger.info(f"Mutation {req.mutation_type} applied to run {run_id}")
     return {"status": "applied", "mutation": mutation}
 
 
 @router.post("/export")
 async def export_model(req: ExportRequest) -> Dict[str, Any]:
-    """Export a trained model in the specified format."""
+    """Export a trained scientific NLM checkpoint (safetensors/onnx only — never GGUF/Ollama)."""
+    fmt = (req.format or "safetensors").lower().strip()
+    if fmt in ("gguf", "ollama", "llama", "chat"):
+        raise HTTPException(
+            status_code=400,
+            detail="NLM export refuses GGUF/Ollama/chat formats. Use safetensors or onnx. NLM is not an LLM.",
+        )
+    if fmt not in ("safetensors", "onnx", "pt"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported NLM export format '{fmt}'. Allowed: safetensors, onnx, pt",
+        )
     try:
         from mycosoft_mas.nlm.trainer import NLMTrainer
 
         trainer = NLMTrainer()
-        output_path = f"{NLM_MODEL_DIR}/exports/nlm_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{req.format}"
-        result = trainer.export_model(output_path=output_path, format=req.format)
+        output_path = f"{NLM_MODEL_DIR}/exports/nlm_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{fmt}"
+        result = trainer.export_model(output_path=output_path, format=fmt)
 
         return {
             "status": "exported",
             "path": result,
-            "format": req.format,
+            "format": fmt,
+            "bound_to_ollama": False,
+            "model_kind": "nature_learning_model",
             "message": f"Model exported to {output_path}",
         }
     except Exception as e:
         logger.error(f"Export failed: {e}")
-        raise HTTPException(status_code=500, detail="nlm_export_unavailable")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/attest")
+async def attest_artifacts(req: AttestRequest) -> Dict[str, Any]:
+    """SHA-256 Merkle root + ECDSA P-256 signature (+ transparent inclusion proofs)."""
+    from mycosoft_mas.nlm.merkle_attest import attest_payloads
+
+    payloads: List[Dict[str, Any]] = []
+    if req.payloads:
+        payloads.extend(req.payloads)
+    elif req.packet:
+        payloads.append(req.packet)
+    else:
+        payloads.append(
+            {
+                "type": req.type or "frame_commit",
+                "modelId": req.modelId,
+                "ownerId": req.ownerId,
+                "parent_frame_root": req.parent_frame_root,
+                "source_device": req.source_device,
+                "ts": datetime.now().isoformat(),
+            }
+        )
+
+    attestation = attest_payloads(payloads)
+    # Attach to active run lineage when present
+    active = _get_active_run()
+    if active is not None:
+        active.setdefault("attestations", []).append(
+            {
+                "merkle_root": attestation["merkle_root"],
+                "timestamp": attestation["timestamp"],
+                "signed": attestation.get("signature", {}).get("signed"),
+            }
+        )
+
+    return {
+        "status": "attested",
+        "model_kind": "nature_learning_model",
+        "attestation": attestation,
+    }
+
+
+@router.get("/ingest/sources")
+async def ingest_sources() -> Dict[str, Any]:
+    """
+    Device network sources for NLM training ingest.
+
+    Returns MAS registry devices with declared sensor channels.
+    Empty sensors when gateways have no MDP serial device — never fabricates samples.
+    """
+    devices = await _list_registry_devices()
+    ROLE_SENSORS = {
+        "psathyrella": [
+            "bme688_ambient",
+            "bme688_environment",
+            "hydrophone_low",
+            "hydrophone_high",
+            "transducer",
+        ],
+        "mushroom1": ["bme688", "imu", "gas", "spectral", "bioelectric"],
+        "hyphae1": ["bme688", "imu", "gas", "spectral"],
+        "sporebase": ["bme688", "particulate", "optical"],
+        "mycodrone": ["imu", "baro", "gps", "spectral"],
+        "standalone": ["bme688", "gas"],
+    }
+    rows: List[Dict[str, Any]] = []
+    for d in devices:
+        role = str(d.get("device_role") or d.get("role") or "standalone").lower()
+        sensors = list(d.get("sensors") or [])
+        for s in ROLE_SENSORS.get(role, []):
+            if s not in sensors:
+                sensors.append(s)
+        extra = d.get("extra") or {}
+        rows.append(
+            {
+                "device_id": d.get("device_id"),
+                "display_name": d.get("device_display_name")
+                or d.get("device_name")
+                or d.get("device_id"),
+                "role": role,
+                "status": d.get("status"),
+                "host": d.get("host"),
+                "mdp_device_id": extra.get("mdp_device_id"),
+                "sensor_channels": sensors,
+                "last_seen": d.get("last_seen"),
+                "source": "mas-device-registry",
+            }
+        )
+    return {
+        "devices": rows,
+        "count": len(rows),
+        "bindings_active": len(_ingest_bindings),
+        "note": "Live MAS registry only. Sensor samples require MDP telemetry.",
+    }
+
+
+@router.post("/ingest/bind")
+async def ingest_bind(req: IngestBindRequest) -> Dict[str, Any]:
+    """Persist device_id + sensor_id bindings for upcoming / active NLM runs."""
+    bindings = _normalize_bindings(req.bindings)
+    if not bindings:
+        raise HTTPException(status_code=400, detail="bindings[{device_id,sensor_id}] required")
+
+    registry = await _list_registry_devices()
+    known_ids = {str(d.get("device_id")) for d in registry}
+    validated: List[Dict[str, str]] = []
+    rejected: List[Dict[str, str]] = []
+    for b in bindings:
+        if known_ids and b["device_id"] not in known_ids:
+            rejected.append({**b, "reason": "device_not_in_registry"})
+        else:
+            validated.append(b)
+
+    if not validated:
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "No bindings matched MAS registry", "rejected": rejected},
+        )
+
+    record = {
+        "id": f"bind_{uuid.uuid4().hex[:10]}",
+        "model_id": req.model_id,
+        "run_id": req.run_id or _active_run_id,
+        "owner_id": req.owner_id,
+        "bindings": validated,
+        "rejected": rejected,
+        "created_at": datetime.now().isoformat(),
+    }
+    _ingest_bindings.append(record)
+
+    # Attach to active / named run when present
+    target_run_id = req.run_id or _active_run_id
+    if target_run_id:
+        for run in _training_runs:
+            if run.get("run_id") == target_run_id:
+                run["ingest_bindings"] = validated
+                run["device_ids"] = list({b["device_id"] for b in validated})
+                run["sensor_ids"] = list({b["sensor_id"] for b in validated})
+                cfg = run.setdefault("config", {})
+                cfg["ingest_bindings"] = validated
+                cfg["device_ids"] = run["device_ids"]
+                cfg["sensor_ids"] = run["sensor_ids"]
+                metrics = run.setdefault("metrics", {})
+                metrics["device_bindings"] = validated
+                run["updated_at"] = datetime.now().isoformat()
+                break
+
+    return {"status": "bound", "record": record}
+
+
+@router.get("/health")
+async def training_health() -> Dict[str, Any]:
+    """Training router health — scientific NLM only."""
+    return {
+        "status": "ok",
+        "active_run_id": _active_run_id,
+        "runs": len(_training_runs),
+        "ingest_bindings": len(_ingest_bindings),
+        "bound_to_ollama": False,
+        "model_kind": "nature_learning_model",
+        "export_formats": ["safetensors", "onnx", "pt"],
+        "merkle": {"hash": "SHA-256", "sign": "ECDSA-P256", "zk": "deferred_p2"},
+        "device_ingest": True,
+    }

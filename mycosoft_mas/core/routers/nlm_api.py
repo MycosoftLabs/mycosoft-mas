@@ -19,30 +19,15 @@ Endpoints:
 """
 
 import logging
-import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nlm", tags=["nlm"])
-
-
-def _external_nlm_base() -> Optional[str]:
-    """Proxy only a distinct standalone NLM. Never loop back to this MAS or obsolete :8200."""
-    raw = os.getenv("NLM_API_URL", "").strip().rstrip("/")
-    if not raw:
-        return None
-    lowered = raw.lower()
-    if any(
-        token in lowered
-        for token in (":8200", ":8001", "127.0.0.1", "localhost", "192.168.0.188")
-    ):
-        return None
-    return raw
 
 
 # ============================================================================
@@ -124,8 +109,6 @@ class HealthResponse(BaseModel):
     architecture_family: Optional[str] = Field(default=None)
     weights_sha256: Optional[str] = Field(default=None)
     bound_to_ollama: bool = Field(default=False)
-    model_dir: Optional[str] = Field(default=None, description="NAS path tensors were loaded from")
-    load_reason: Optional[str] = Field(default=None)
 
 
 class ModelInfoResponse(BaseModel):
@@ -191,7 +174,7 @@ async def health_check() -> HealthResponse:
         probe = probe_scientific_nlm()
         runtime = load_reference_runtime()
         runtime_status = runtime.runtime_status()
-        loaded = bool(runtime.is_loaded)
+        loaded = bool(runtime.is_loaded or (probe.model_loaded and service.is_ready))
         forecast = bool(probe.model_loaded and service.is_ready and not probe.is_legacy_reference)
 
         return HealthResponse(
@@ -206,8 +189,6 @@ async def health_check() -> HealthResponse:
             architecture_family=runtime_status.get("architecture_family"),
             weights_sha256=runtime_status.get("weights_sha256"),
             bound_to_ollama=False,
-            model_dir=runtime_status.get("model_dir") or None,
-            load_reason=runtime_status.get("reason"),
         )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -670,7 +651,7 @@ async def api_predict_fruiting(req: FruitingPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = _external_nlm_base()
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -723,7 +704,7 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = _external_nlm_base()
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -786,7 +767,7 @@ async def api_predict_sensors(req: SensorPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = _external_nlm_base()
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
         if nlm_url:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.post(
@@ -824,7 +805,7 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
 
         import httpx
 
-        nlm_url = _external_nlm_base()
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -872,7 +853,7 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
         }
     except Exception as e:
         logger.error(f"Environmental process failed: {e}")
-        raise HTTPException(status_code=500, detail="Environmental process failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class ForecastIssueRequest(BaseModel):
@@ -910,12 +891,7 @@ async def accept_observation(
 
     parsed = ObservationEnvelope.model_validate(envelope)
     if cutoff:
-        try:
-            cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=422, detail="Invalid cutoff timestamp"
-            ) from exc
+        cutoff_dt = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
     else:
         cutoff_dt = parsed.available_at
     if cutoff_dt.tzinfo is None:
@@ -969,52 +945,21 @@ async def refuse_forecast_patch(
     )
 
 
-@router.get("/weights")
-async def nlm_weights() -> Dict[str, Any]:
-    """Inventory every on-disk NLM artifact. Same service Fusarium and NatureOS consume."""
-    from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
-    from mycosoft_mas.nlm.formspace.scientific_loader import inventory_nlm_weights
-
-    inventory = inventory_nlm_weights()
-    runtime = load_reference_runtime()
-    loaded_sha = runtime.weights_sha256
-    for row in inventory.get("weights") or []:
-        row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
-    inventory["loaded_sha256"] = loaded_sha
-    inventory["model_dir"] = "nlm-home"
-    inventory["model_loaded"] = bool(runtime.is_loaded)
-    inventory["service"] = "mas-nlm"
-    return inventory
-
-
 @router.get("/runtime")
 async def nlm_runtime() -> Dict[str, Any]:
     from mycosoft_mas.nlm.formspace.reference_runtime import load_reference_runtime
-    from mycosoft_mas.nlm.formspace.scientific_loader import (
-        inventory_nlm_weights,
-        probe_scientific_nlm,
-    )
+    from mycosoft_mas.nlm.formspace.scientific_loader import probe_scientific_nlm
 
     runtime = load_reference_runtime()
     probe = probe_scientific_nlm()
-    inventory = inventory_nlm_weights()
     status = runtime.runtime_status()
-    loaded_sha = status.get("weights_sha256")
-    for row in inventory.get("weights") or []:
-        row["loaded"] = bool(loaded_sha and row.get("sha256") == loaded_sha)
     status["forecast_probe"] = {
         "model_loaded": probe.model_loaded,
         "is_legacy_reference": probe.is_legacy_reference,
         "reason": probe.reason,
-        "model_dir": "nlm-home",
+        "model_dir": probe.model_dir,
     }
-    if "model_dir" in status:
-        status["model_dir"] = "nlm-home"
-    status["weights"] = inventory.get("weights") or []
-    status["weight_count"] = inventory.get("count") or 0
     status["bound_to_ollama"] = False
-    status["forecast_p"] = None
-    status["service"] = "mas-nlm"
     return status
 
 
@@ -1024,10 +969,7 @@ async def nlm_decision_path(body: Optional[Dict[str, Any]] = None) -> Dict[str, 
     from mycosoft_mas.nlm.formspace.persist import persist_decision_bundle
 
     path = await run_decision_path(body or {})
-    try:
-        persist = await persist_decision_bundle(path)
-    except Exception as exc:
-        persist = {"ok": False, "reason": str(exc)}
+    persist = await persist_decision_bundle(path)
     path["retain"] = persist
     return path
 
@@ -1052,3 +994,86 @@ async def nlm_retain_get(embedding_id: str) -> Dict[str, Any]:
     from mycosoft_mas.nlm.formspace.persist import get_mindex_record
 
     return await get_mindex_record(embedding_id)
+
+
+# ---------------------------------------------------------------------------
+# FormSpace product engine (mounted under live /api/nlm so redeploy picks it up
+# even before a dedicated /api/formspace router ships). Scientific SSM only.
+# ---------------------------------------------------------------------------
+
+
+class FormSpaceGraphBody(BaseModel):
+    chart_id: str
+    series: Optional[List[float]] = None
+    use_demo_fixture: bool = False
+    graph_kind: str = "trajectory"
+    dt: float = Field(default=0.1, gt=0, le=10)
+    a: float = -0.5
+    b: float = 1.0
+
+
+class FormSpaceExperimentBody(BaseModel):
+    chart_id: str
+    kind: str = "recovery"
+    series: Optional[List[float]] = None
+    use_demo_fixture: bool = False
+    perturbation_index: int = Field(default=3, ge=0)
+    perturbation_delta: float = 0.3
+
+
+@router.get("/formspace/health")
+async def nlm_formspace_health() -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.engine import get_formspace_engine
+
+    payload = get_formspace_engine().health()
+    payload["mounted_under"] = "/api/nlm/formspace"
+    payload["bound_to_ollama"] = False
+    return payload
+
+
+@router.get("/formspace/demo")
+async def nlm_formspace_demo() -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.engine import get_formspace_engine
+
+    return get_formspace_engine().demo()
+
+
+@router.post("/formspace/graph")
+async def nlm_formspace_graph(body: FormSpaceGraphBody) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.engine import get_formspace_engine
+
+    return get_formspace_engine().graph(
+        chart_id=body.chart_id,
+        series=body.series,
+        use_demo_fixture=body.use_demo_fixture,
+        graph_kind=body.graph_kind,
+        dt=body.dt,
+        a=body.a,
+        b=body.b,
+    )
+
+
+@router.post("/formspace/experiment")
+async def nlm_formspace_experiment(
+    body: FormSpaceExperimentBody,
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
+) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.engine import get_formspace_engine
+
+    return get_formspace_engine().experiment(
+        chart_id=body.chart_id,
+        kind=body.kind,
+        series=body.series,
+        use_demo_fixture=body.use_demo_fixture,
+        perturbation_index=body.perturbation_index,
+        perturbation_delta=body.perturbation_delta,
+        user_id=(x_user_id or "").strip() or None,
+    )
+
+
+@router.get("/formspace/evidence")
+async def nlm_formspace_evidence(limit: int = 50) -> Dict[str, Any]:
+    from mycosoft_mas.nlm.formspace.engine import get_formspace_engine
+
+    return get_formspace_engine().evidence_list(limit=max(1, min(limit, 200)))
+
