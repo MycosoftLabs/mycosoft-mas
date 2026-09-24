@@ -149,19 +149,24 @@ async def restart_runner_with_critical_agents() -> Dict[str, Any]:
 
     # Critical watchers: shorter interval, hard timeout already in AgentCycleRunner.
     interval = float(os.getenv("AGENT_CRITICAL_CYCLE_INTERVAL_SEC", "60"))
-    timeout = float(os.getenv("AGENT_CRITICAL_CYCLE_TIMEOUT_SEC", "10"))
+    timeout = float(os.getenv("AGENT_CRITICAL_CYCLE_TIMEOUT_SEC", "5"))
     runner.configure(cycle_interval=interval, cycle_timeout=timeout)
     await runner.start(agents)
 
+    # Supervisor Redis publish has historically contended on the event loop.
+    # Opt-in only for critical watcher boots.
     supervisor_error = None
-    try:
-        from mycosoft_mas.core.agent_supervisor import get_supervisor
+    if os.getenv("AGENT_CRITICAL_START_SUPERVISOR", "0") == "1":
+        try:
+            from mycosoft_mas.core.agent_supervisor import get_supervisor
 
-        supervisor = get_supervisor()
-        if not getattr(supervisor, "_running", False):
-            await supervisor.start()
-    except Exception as exc:  # noqa: BLE001
-        supervisor_error = str(exc)
+            supervisor = get_supervisor()
+            if not getattr(supervisor, "_running", False):
+                await supervisor.start()
+        except Exception as exc:  # noqa: BLE001
+            supervisor_error = str(exc)
+    else:
+        supervisor_error = "skipped (AGENT_CRITICAL_START_SUPERVISOR!=1)"
 
     status = await runner.get_status()
     return {
