@@ -1,4 +1,4 @@
-# Cursor Docs Index – Internal Reference (Vital & Current Only)
+﻿# Cursor Docs Index – Internal Reference (Vital & Current Only)
 
 **Policy:** This file is the canonical list of **vital and current** docs for Cursor agents. It is updated continuously: **new docs replace old ones** in the list. Do not add deprecated or superseded docs; when a new doc replaces an old one, remove the old entry.
 
